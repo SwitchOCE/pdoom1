@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Desk, Grim</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=block" rel="stylesheet">
+<style>
+/* =====================================================================
+   H. THE DESK, GRIM -- the grim pass (fork/design/hifi2/).
+   Layout: concept A (fork/design/hifi/A/). Palette, panels and meters:
+   concept G. Paper is the only light thing. One 1920x1080 stage, scaled
+   uniformly to the window, so 1280x720 is the same layout at 2/3 size.
+   ?state=1..6 picks the moment; ?still=1 shows the dateline without
+   its type-on (renders); ?check=1 runs the layout check.
+   ===================================================================== */
+:root{
+  /* type scale: the only five sizes on the page */
+  --t1:16px; --t2:18px; --t3:22px; --t4:28px; --t5:40px;
+  /* grounds: near-black, warm, never comforting */
+  --void:#090807; --panel:rgba(16,14,12,.95); --panel-2:#1a1612; --well:#0d0b0a;
+  --frame:rgba(196,176,138,.16); --frame-hi:rgba(196,176,138,.28); --tick:#6a573a;
+  /* text: bone, never white */
+  --bone:#d6cebd; --muted:#aaa08e; --dim:#968d7c;
+  /* the two pools of Attention (G's plan/op pair, dulled) */
+  --plan:#c9a465; --plan-fill:#a8854b; --op:#93b3a9; --op-fill:#6c8f86;
+  /* accent: only where something needs attention */
+  --amber:#d9a03a; --amber-line:rgba(217,160,58,.62); --warn:#d58a52; --blood:#9b3328;
+  /* paper: the only light thing, aged and dirty */
+  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#231c14; --ink-soft:#43382a;
+  --mono:"IBM Plex Mono",Consolas,monospace; --sans:"IBM Plex Sans","Segoe UI",sans-serif;
+  --cond:"Barlow Condensed",sans-serif; --type:"Courier Prime","Courier New",monospace;
+  /* film grain (no image file): fractal noise, alpha only */
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .55 0'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>");
+  --smut:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.05'/></filter><rect width='600' height='600' filter='url(%23s)'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#050404}
+body{font-family:var(--sans);color:var(--bone)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:var(--void);transform-origin:0 0}
+.abs{position:absolute}
+
+/* ===== the room: Pip's office, dim, desaturated; the doom layer grades it ===== */
+.room-bg{position:absolute;inset:0;background:url(assets/office_wide_dawn.webp) center 46%/cover no-repeat}
+.room-grade,.room-glow{position:absolute;inset:0;pointer-events:none}
+.room-shade{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,6,8,.55) 0%,rgba(8,6,8,.12) 26%,rgba(8,6,6,.10) 56%,rgba(6,4,3,.78) 90%)}
+.grain{position:absolute;inset:0;pointer-events:none;background:var(--grain) 0 0/256px;opacity:.20;mix-blend-mode:overlay}
+.desk{position:absolute;left:0;right:0;top:940px;bottom:0;background:linear-gradient(180deg,#17110c,#0b0806)}
+.desk:before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(196,176,138,.12)}
+.dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 34% 50%,rgba(6,5,5,.66),rgba(6,5,5,.5) 70%)}
+
+/* ===== panels: G's dark panel, flatter and dirtier; hairline frame, worn corners ===== */
+.pnl{isolation:isolate;background:var(--panel);border:1px solid var(--frame);border-radius:2px;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.pnl:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;opacity:.16;mix-blend-mode:screen}
+.pnl:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:url(assets/tex_painted_metal_panel.webp) 0 0/512px;opacity:.05;mix-blend-mode:screen}
+.cn{position:absolute;width:12px;height:12px;border:0 solid var(--tick);pointer-events:none}
+.cn.tl{left:-1px;top:-1px;border-width:2px 0 0 2px}.cn.tr{right:-1px;top:-1px;border-width:2px 2px 0 0}
+.cn.bl{left:-1px;bottom:-1px;border-width:0 0 2px 2px}.cn.br{right:-1px;bottom:-1px;border-width:0 2px 2px 0}
+.ph{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-bottom:1px solid var(--frame);
+  font:600 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
+.key{display:inline-block;flex:none;font:500 var(--t1)/20px var(--mono);min-width:26px;text-align:center;padding:0 5px;border:1px solid rgba(214,206,189,.34);border-radius:2px;color:var(--muted)}
+
+/* Pip's icons, on dark plates, toned down so they belong */
+.ic{display:block;flex:none;filter:saturate(.42) sepia(.22) brightness(.95) contrast(1.05)}
+.plate-ic{display:flex;align-items:center;justify-content:center;flex:none;background:#0b0a09;border:1px solid rgba(196,176,138,.14)}
+.ic-kb{width:28px;height:28px}.pi-kb{width:36px;height:36px}
+.ic-hd{width:22px;height:22px}.pi-hd{width:28px;height:28px}
+
+/* ===== the dateline: typed in when the month changes ===== */
+.dl{left:56px;top:24px;height:44px;display:flex;align-items:center;font:700 var(--t4)/1 var(--type);letter-spacing:5px;color:#d9d1bf;white-space:nowrap;
+  text-shadow:0 0 1px rgba(217,209,191,.55),1px 0 0 rgba(217,209,191,.12)}
+.dl span{display:inline-block}
+.dl .caret{display:inline-block;width:14px;height:26px;margin-left:4px;background:#d9d1bf;opacity:0}
+.dl.typing span{opacity:0;animation:strike 90ms steps(1,end) forwards}
+.dl.typing .caret{animation:caret .5s steps(1,end) 3 forwards}
+@keyframes strike{0%{opacity:0}1%{opacity:1;color:#fff4dc;transform:translateY(-1px)}100%{opacity:var(--o,1);transform:translateY(var(--y,0))}}
+@keyframes caret{0%{opacity:.85}50%{opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){ .dl.typing span{animation:none;opacity:var(--o,1)} .dl.typing .caret{animation:none;opacity:0} }
+
+/* ===== wall instruments: P(Doom) and reputation, both in G's meter style ===== */
+.doomw{left:1400px;top:40px;width:280px;height:300px}
+.doomw svg{position:absolute;left:20px;top:46px}
+.d-pct{position:absolute;left:0;right:0;top:132px;text-align:center;font:600 var(--t5)/1 var(--mono);letter-spacing:-1px}
+.d-band{position:absolute;left:0;right:0;top:180px;text-align:center;font:600 var(--t3)/1 var(--mono);letter-spacing:3px}
+.d-trend{position:absolute;left:50%;top:216px;transform:translateX(-50%);font:600 var(--t1)/22px var(--mono);letter-spacing:2px;padding:0 10px;border:1px solid}
+.ladder{position:absolute;left:20px;right:20px;top:262px;display:flex;gap:3px;height:14px;align-items:center}
+.ladder i{display:block;height:6px;opacity:.42}
+.ladder i.on{height:14px;opacity:1}
+.repw{left:1696px;top:40px;width:184px;height:300px}
+.repw svg{position:absolute;left:12px;top:56px}
+.r-num{position:absolute;left:0;right:0;top:128px;text-align:center;font:600 var(--t5)/1 var(--mono);color:var(--bone)}
+.r-scale{position:absolute;left:18px;right:18px;top:176px;display:flex;justify-content:space-between;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.r-note{position:absolute;left:14px;right:14px;top:214px;font:400 var(--t1)/1.35 var(--sans);color:var(--dim);text-align:center}
+.r-note b{font-weight:500;color:#d27f6c}
+
+/* ===== shortcut rack: dark plates, one per menu, with its key ===== */
+.keys{left:1268px;top:612px;width:276px;height:428px;padding:18px 16px;display:flex;flex-direction:column;gap:10px}
+.kb{position:relative;height:46px;display:flex;align-items:center;gap:12px;padding:0 10px 0 4px;background:#14110f;border:1px solid rgba(196,176,138,.12);border-left:3px solid #3a3128;
+  font:600 var(--t2)/1 var(--cond);letter-spacing:2px;color:var(--bone)}
+.kb .lab{flex:1}
+.kb.on{background:#1f1913;border-color:rgba(217,160,58,.35);border-left-color:var(--amber);color:#e8dcc2}
+.kb.on .key{border-color:var(--amber-line);color:var(--amber)}
+.kb.off{opacity:.4}
+
+/* ===== the month: held hours (and in WATCH the clock) above a quiet Commit ===== */
+.held{left:1584px;width:296px}
+.held .row{display:flex;align-items:baseline;justify-content:space-between;padding:12px 16px 4px}
+.held .lbl{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted)}
+.held .val{font:600 var(--t4)/1 var(--mono);color:var(--bone)}
+.held .sub{padding:4px 16px 14px;font:400 var(--t1)/1.3 var(--sans);color:var(--dim)}
+.cmt{left:1584px;top:980px;width:296px;height:60px;display:flex;align-items:center;justify-content:center;gap:14px;
+  background:linear-gradient(#1d1813,#15110d);border:1px solid var(--amber-line);border-radius:2px;
+  font:700 var(--t3)/1 var(--cond);letter-spacing:3px;color:var(--amber);box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.05)}
+.cmt .key{border-color:var(--amber-line);color:var(--amber)}
+
+/* ===== PLAN (state 3): THE MONTH AHEAD ===== */
+.sheet{left:56px;top:88px;width:1196px;height:952px;display:flex;flex-direction:column;padding:22px 36px 0}
+.sheet .scan{position:absolute;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(255,240,210,.012) 3px 4px)}
+.p-head{display:flex;justify-content:space-between;align-items:center;height:50px;border-bottom:1px solid var(--frame-hi)}
+.p-title{font:700 var(--t4)/1 var(--cond);letter-spacing:6px;color:var(--bone)}
+.p-sub{font:400 var(--t1)/1 var(--mono);color:var(--muted)}
+
+/* Attention: filled = hours LEFT, empty = spent (G's flat pips) */
+.att{display:grid;grid-template-columns:142px 270px 190px 1fr;align-items:center;padding:12px 0 10px;border-bottom:1px solid var(--frame)}
+.att>*{height:38px;display:flex;align-items:center}
+.att .l{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--plan)}
+.att .l.op{color:var(--op)}
+.att .l.rs{color:var(--muted)}
+.att .v{font:500 var(--t2)/1 var(--mono);color:var(--bone);justify-content:flex-end;padding-right:28px;white-space:nowrap}
+.att .v.zero{color:var(--warn)}
+.att .why{font:400 var(--t1)/1 var(--sans);color:var(--muted);gap:6px}
+.att .why .o{color:var(--op)}
+.pips{gap:5px}
+.pip{width:16px;height:22px;flex:none;border:1px solid var(--plan-fill);background:var(--plan-fill)}
+.pip.used{background:transparent;border-color:rgba(168,133,75,.38)}
+.pip.spill{border-color:var(--op-fill);background:repeating-linear-gradient(135deg,rgba(108,143,134,.85) 0 2px,transparent 2px 5px)}
+.pip.o{border-color:var(--op-fill);background:var(--op-fill)}
+.pip.o.used{background:transparent;border-color:rgba(108,143,134,.4)}
+.res-b{display:inline-block;width:30px;height:28px;line-height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--bone);font:500 var(--t2)/26px var(--mono)}
+.res{gap:12px;font:500 var(--t2)/1 var(--mono);color:var(--bone)}
+.sys{grid-column:1 / -1;font:400 var(--t1)/1 var(--sans);color:var(--muted);gap:12px}
+.tag{display:inline-block;font:500 var(--t1)/22px var(--mono);padding:0 7px;border:1px solid var(--op-fill);color:var(--op);
+  background:repeating-linear-gradient(135deg,rgba(108,143,134,.16) 0 2px,transparent 2px 5px)}
+
+/* the queue: one row per play, each with its own order and remove targets */
+.q-h,.q-row{display:grid;grid-template-columns:48px 300px 146px 214px 78px 138px 1fr;align-items:center}
+.q-h{height:42px;padding-top:8px;font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--dim);border-bottom:1px solid var(--frame-hi)}
+.q-row{height:35px;font:400 var(--t2)/1 var(--sans);color:var(--bone);border-bottom:1px solid rgba(196,176,138,.08);position:relative}
+.q-row:before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:3px;background:var(--plan-fill);opacity:.8}
+.q-row.op:before{background:var(--op-fill)}
+.q-row .n{font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.q-row .k{font-size:var(--t1);color:var(--muted)}
+.q-row .k.top{color:var(--dim)}
+.q-row .pool{display:flex;align-items:center;gap:10px;font:400 var(--t1)/1 var(--mono);color:var(--plan)}
+.q-row .pool.op{color:var(--op)}
+.q-row .h{font:500 var(--t2)/1 var(--mono)}
+.q-row .c{font:400 var(--t2)/1 var(--mono)}
+.q-row .dash{color:var(--dim)}
+.q-ctl{display:flex;justify-content:flex-end;gap:8px}
+.q-ctl b{font:400 var(--t1)/24px var(--mono);width:30px;height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--muted)}
+.q-ctl b.na{border:1px dashed rgba(196,176,138,.16);color:var(--dim);background:repeating-linear-gradient(135deg,rgba(196,176,138,.05) 0 2px,transparent 2px 6px)}
+.q-row.spillrow{background:linear-gradient(90deg,rgba(108,143,134,.08),rgba(108,143,134,0) 70%)}
+.q-tools{display:flex;justify-content:space-between;align-items:center;height:60px}
+.q-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--frame-hi);padding:6px 12px;font:400 var(--t2)/1 var(--sans);color:var(--bone);margin-right:12px}
+.q-tot{font:500 var(--t2)/1 var(--mono);color:var(--bone)}
+.q-tot span{font:400 var(--t1)/1 var(--sans);color:var(--muted);margin-right:8px}
+
+/* at Commit: what the plan will leave */
+.ac{margin-top:auto;border:1px solid var(--frame-hi);background:rgba(0,0,0,.22);display:grid;grid-template-columns:236px 330px 1fr 1fr;height:96px;position:relative}
+.ac>div{padding:16px 20px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.ac>div+div{border-left:1px solid var(--frame)}
+.ac .h{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted)}
+.ac .t{font:700 var(--t3)/1 var(--cond);letter-spacing:4px;color:var(--bone);white-space:nowrap}
+.ac .b{font:500 var(--t3)/1 var(--mono);color:var(--bone);white-space:nowrap}
+.ac .b em{font-style:normal;color:var(--dim)}
+.ac .s{font:400 var(--t1)/1 var(--mono);color:var(--muted)}
+
+.foot{display:flex;align-items:center;justify-content:space-between;height:80px;margin:22px -36px 0;padding:0 28px;border-top:1px solid var(--frame)}
+.brand{font:600 var(--t1)/1 var(--cond);letter-spacing:3px;color:var(--dim);display:flex;align-items:center;gap:12px}
+.led{width:8px;height:8px;border-radius:50%;background:#5f7a4e;box-shadow:0 0 5px rgba(95,122,78,.7)}
+.rq{display:flex;align-items:center;gap:14px}
+.rq-label{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted)}
+.rq-sw{display:flex;border:1px solid var(--frame-hi)}
+.rq-sw span{font:400 var(--t1)/1 var(--sans);color:var(--muted);padding:10px 14px;min-width:96px;text-align:center}
+.rq-sw span+span{border-left:1px solid var(--frame)}
+.rq-sw span.on{background:#2a2119;color:#e6d9bd;box-shadow:inset 0 -2px 0 var(--plan-fill)}
+.esc{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);border:1px solid var(--frame-hi);padding:8px 12px;display:flex;gap:8px;align-items:center}
+
+/* self-check output (only with ?check=1) */
+#check{position:fixed;left:0;top:0;z-index:99;background:#000;color:#0f0;font:12px monospace;white-space:pre;max-height:100vh;overflow:auto}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+"use strict";
+var Q = new URLSearchParams(location.search);
+var STATE = String(Q.get("state") || "3");
+var STILL = !!Q.get("still") || !!Q.get("check");
+
+/* ------------------------------------------------------------------
+   Scale the 1920x1080 stage uniformly to the window.
+   ------------------------------------------------------------------ */
+var S = document.getElementById("stage");
+function fit(){
+  var s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  var x = (window.innerWidth - 1920*s)/2, y = (window.innerHeight - 1080*s)/2;
+  S.style.transform = "translate("+x+"px,"+y+"px) scale("+s+")";
+  S.dataset.scale = s;
+}
+fit(); window.addEventListener("resize", fit);
+
+/* ------------------------------------------------------------------
+   THE RUN (fork/design/hifi/run-state.md, revisions 2 and 3). One company.
+   ------------------------------------------------------------------ */
+// November 2017 queue (state 3). [play, where it lives ("" = top level), pool, hours, money, reputation]
+var NOV_QUEUE = [
+  ["Hire: Safety Researcher","Hire Staff","plan",1,60000,0],
+  ["Read the Literature","Scouting","plan",1,0,0],
+  ["Read the Literature","Scouting","plan",1,0,0],
+  ["Post Online","Scouting","plan",1,0,0],
+  ["Safety Audit","","op",2,40000,0],
+  ["Work Your Connections","","op",2,0,6],
+  ["Go to Meetups","Scouting","op",1,300,0],
+  ["Networking","Publicity","op",1,0,0],
+  ["Tour Offices","Office","op",1,0,0],
+  ["Go to Meetups","Scouting","op",1,300,0],
+  ["Order Office Supplies","Operations","op",1,2000,0]
+];
+var NOV = { month:"NOVEMBER", year:"2017", day:1, date:"Wed 1 Nov 2017", money:140000, compute:65, research:-12, papers:0,
+  rep:32, doom:40.2, trend:"rising", artBand:1, planTotal:12, opTotal:8, reserve:0 };
+
+/* Book the queue the way the game does (month_plan.gd _debit_hours): each play
+   bills its own pool; operating work past the operating hours spills into
+   planning hours; planning work never uses operating hours. */
+function book(d, queue){
+  var opLeft = d.opTotal, plan = 0, spill = 0, money = 0, rep = 0;
+  var rows = queue.map(function(r){
+    var row = {name:r[0], from:r[1], pool:r[2], hrs:r[3], money:r[4], rep:r[5], spill:0};
+    if (r[2] === "op"){ var fromOp = Math.min(r[3], opLeft); opLeft -= fromOp; row.spill = r[3]-fromOp; spill += row.spill; }
+    else plan += r[3];
+    money += r[4]; rep += r[5];
+    return row;
+  });
+  var p = {}; for (var k in d) p[k] = d[k];
+  p.rows = rows; p.planWork = plan; p.opWork = d.opTotal - opLeft + spill; p.spill = spill;
+  p.planLeft = d.planTotal - plan - spill; p.opLeft = opLeft;
+  p.qMoney = money; p.qRep = rep;
+  p.held = p.planLeft + p.opLeft;           // untyped; unspent remainder (+ explicit reserve, 0 here)
+  p.moneyAfter = d.money - money; p.repAfter = d.rep - rep;
+  return p;
+}
+
+/* ------------------------------------------------------------------
+   Icons (Pip's, godot/assets/icons/; "new_" = new, needs art)
+   ------------------------------------------------------------------ */
+var I = "assets/icons/";
+var ICON = {
+  "ACTIONS":I+"ui_guide_actions_64.png", "PLAN":I+"ui_config_date_64.png", "STAFF":I+"ui_staff_management_64.png",
+  "UPGRADES":I+"button_upgrade_normal_64.png", "LEDGER":I+"ui_budget_finance_64.png", "IN-TRAY":I+"new_inbox_tray.svg",
+  "GUIDE":I+"ui_guide_book_64.png", "P(DOOM)":I+"doom.png", "REPUTATION":I+"reputation.png"
+};
+function ic(key, icCls, plateCls){
+  var k = String(key).replace(/&amp;/g,"&");
+  return ICON[k] ? '<span class="plate-ic '+plateCls+'"><img class="ic '+icCls+'" src="'+ICON[k]+'" alt=""></span>' : "";
+}
+
+/* ------------------------------------------------------------------
+   helpers
+   ------------------------------------------------------------------ */
+function el(tag, cls, html, style){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; if(style) e.setAttribute("style",style); return e; }
+function add(e, parent){ (parent||S).appendChild(e); return e; }
+function money(n){ return (n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-US"); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function corners(box){ ["tl","tr","bl","br"].forEach(function(c){ box.appendChild(el("i","cn "+c)); }); return box; }
+function panel(cls, html, style){ return corners(add(el("div","abs pnl "+cls, html, style))); }
+
+/* ------------------------------------------------------------------
+   The doom meter colours (G): ThemeManager.DOOM_STOPS, get_doom_stroke_color
+   and DOOM_STATUS_BANDS (godot/autoload/theme_manager.gd). The meter keeps
+   its band colours; it is the one coloured thing allowed to stay bright.
+   ------------------------------------------------------------------ */
+var STOPS=[[0,[.30,.80,.35]],[15,[.30,.80,.35]],[30,[.88,.78,.18]],[45,[.92,.50,.13]],[60,[.82,.20,.17]],[74,[.48,.07,.14]],[87,[.40,.06,.48]],[100,[.28,.03,.46]]];
+function doomRGB(p){for(var i=0;i<STOPS.length-1;i++){var a=STOPS[i],b=STOPS[i+1];if(p<=b[0]){var t=(p-a[0])/((b[0]-a[0])||1);return [0,1,2].map(function(j){return a[1][j]+(b[1][j]-a[1][j])*t;});}}return STOPS[STOPS.length-1][1];}
+function doomStroke(p){var c=doomRGB(p),lum=.2126*c[0]+.7152*c[1]+.0722*c[2];if(lum<.22){var t=(.22-lum)/.22*.8,B=[.90,.40,.85];c=c.map(function(v,j){return v+(B[j]-v)*t;});}return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+var BANDS=[[15,'NOMINAL'],[37,'ELEVATED'],[52,'HIGH'],[67,'SEVERE'],[80,'EXTREME'],[92,'CATASTROPHIC'],[101,'TERMINAL']];
+/* Text needs 4.5:1 on the panel; the deep tiers' stroke colour is lifted toward a pale tint of itself for text only. */
+function lin(v){return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);}
+function doomText(p){var m=doomStroke(p).match(/\d+/g).map(function(v){return v/255;});var t=0,c=m;
+  while(t<1){c=m.map(function(v){return v+(1-v)*t;});var L=.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);if((L+.05)/(.006+.05)>=5)break;t+=.05;}
+  return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+function bandIndex(p){for(var i=0;i<BANDS.length;i++)if(p<BANDS[i][0])return i;return 6;}
+
+/* ------------------------------------------------------------------
+   The room and its doom layer ("doom is a layer, not a repaint": one
+   ambient grade, one glow source, the window sky). Every band starts
+   darker than A, but month 1 is not as dark as it gets: band 3 takes
+   the room down again, and band 4 (TERMINAL) still has headroom.
+   ------------------------------------------------------------------ */
+var DOOM_LAYER = {
+  0:{ filter:"brightness(.62) saturate(.55) contrast(1.06)", grade:"rgba(60,40,18,.16)", gradeMode:"multiply",
+      glow:"radial-gradient(ellipse 240px 170px at 1392px 486px,rgba(217,160,58,.10),transparent 70%)", sky:"" },
+  1:{ filter:"brightness(.55) saturate(.45) contrast(1.08)", grade:"rgba(40,34,30,.24)", gradeMode:"multiply",
+      glow:"radial-gradient(ellipse 280px 190px at 1392px 486px,rgba(213,138,82,.12),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(120,130,140,.10),rgba(90,100,110,.06))" },
+  2:{ filter:"brightness(.46) saturate(.35) contrast(1.1)", grade:"rgba(30,34,44,.34)", gradeMode:"multiply",
+      glow:"radial-gradient(ellipse 290px 200px at 1392px 486px,rgba(170,60,48,.18),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(70,90,140,.24),rgba(40,50,90,.2))" },
+  3:{ filter:"brightness(.36) saturate(.3) contrast(1.14)", grade:"rgba(80,14,24,.45)", gradeMode:"multiply",
+      glow:"radial-gradient(ellipse 330px 230px at 1392px 486px,rgba(110,52,130,.32),rgba(110,52,130,.08) 45%,transparent 72%)",
+      sky:"linear-gradient(180deg,rgba(110,52,130,.45),rgba(140,18,23,.35))" }
+};
+function room(d){
+  var L = DOOM_LAYER[d.artBand] || DOOM_LAYER[0];
+  add(el("div","room-bg",null,"filter:"+L.filter));
+  if (L.sky) add(el("div","abs",null,"left:968px;top:300px;width:520px;height:190px;pointer-events:none;background:"+L.sky+";mix-blend-mode:"+(d.artBand>=3?"color":"soft-light")+
+    ";-webkit-mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%)"));
+  add(el("div","room-grade",null,"background:"+L.grade+";mix-blend-mode:"+L.gradeMode));
+  add(el("div","room-glow",null,"background:"+L.glow+";mix-blend-mode:screen"));
+  add(el("div","room-shade"));
+  add(el("div","desk"));
+}
+
+/* The dateline: a spy-film title card, date only (the game names no place for the lab).
+   Each month change types it in afresh; renders (?still=1) and reduced motion show it whole. */
+var MONTHS = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+function dateline(d){
+  var text = d.month+" "+d.day+", "+d.year;
+  var dl = add(el("div","abs dl"+(STILL?"":" typing")));
+  // a worn ribbon: each strike lands a little lighter or lower (fixed pattern, not random)
+  var OP = [1,.86,.97,.9,1,.82,.95,1,.88], DY = [0,1,0,0,-1,0,1,0,0];
+  Array.prototype.forEach.call(text, function(ch,i){
+    var s = el("span", null, ch===" " ? "&nbsp;" : ch);
+    s.style.setProperty("--o", OP[i%OP.length]); s.style.setProperty("--y", DY[i%DY.length]+"px");
+    if (STILL){ s.style.opacity = OP[i%OP.length]; s.style.transform = "translateY("+DY[i%DY.length]+"px)"; }
+    else s.style.animationDelay = (260 + i*95 + (ch===" "?60:0))+"ms";
+    dl.appendChild(s);
+  });
+  var c = el("i","caret"); if (!STILL) c.style.animationDelay = (260 + text.length*95 + 120)+"ms"; dl.appendChild(c);
+}
+
+/* P(Doom): G's meter, drawn as a 270-degree tachometer. Level and band only, never a delta (ADR-0015). */
+function doomMeter(d){
+  var w = panel("doomw", "<div class=ph>"+ic("P(DOOM)","ic-hd","pi-hd")+"<span>P(DOOM)</span></div>");
+  var cx=120, cy=118, R=96, sw=16, start=-225, sweep=270;
+  function pt(v,r){ var a=(start + sweep*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); var large=(sweep*(v1-v0)/100)>180?1:0; return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 "+large+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var ring = doomStroke(d.doom), col = doomText(d.doom), bi = bandIndex(d.doom);
+  var s = '<svg width="240" height="210" viewBox="0 0 240 210" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,d.doom,R)+'" stroke="'+ring+'" stroke-width="'+sw+'" fill="none"/>';
+  // band boundaries as fine ticks outside the arc (a tachometer's scale, not a decoration)
+  var lo = 0; BANDS.forEach(function(b){ var v=Math.min(b[0],100); if (v<100){ var a=pt(v,R+10), z=pt(v,R+16); s += '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+z[0].toFixed(1)+'" y2="'+z[1].toFixed(1)+'" stroke="rgba(214,206,189,.32)" stroke-width="1.5"/>'; } lo=v; });
+  s += '</svg>';
+  w.insertAdjacentHTML("beforeend", s);
+  w.appendChild(el("div","d-pct",d.doom.toFixed(1)+"%","color:"+col));
+  w.appendChild(el("div","d-band",BANDS[bi][1],"color:"+col));
+  if (d.trend) w.appendChild(el("div","d-trend",d.trend.toUpperCase(),"color:"+col+";border-color:"+col));
+  var lad = el("div","ladder"); var l0 = 0;
+  BANDS.forEach(function(b,i){ var hi=Math.min(b[0],100), mid=(l0+hi)/2; lad.appendChild(el("i", i===bi?"on":"", null, "flex:"+(hi-l0)+";background:"+doomStroke(mid))); l0=hi; });
+  w.appendChild(lad);
+}
+
+/* Reputation: the same meter, as a semicircle. No band colours (they belong to doom);
+   the one red mark is the real rule: reputation 0 ends the run (game_state.gd). */
+function repMeter(d){
+  var w = panel("repw", "<div class=ph>"+ic("REPUTATION","ic-hd","pi-hd")+"<span>REPUTATION</span></div>");
+  var cx=80, cy=82, R=64, sw=14;
+  function pt(v,r){ var a=(180 + 180*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var s = '<svg width="160" height="90" viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,Math.max(0.5,d.rep),R)+'" stroke="#a99d88" stroke-width="'+sw+'" fill="none"/>';
+  var a=pt(0,R-sw/2-2), z=pt(0,R+sw/2+6); s += '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+z[0]+'" y2="'+z[1]+'" stroke="'+(d.rep<=10?"#d24a3a":"#9b3328")+'" stroke-width="4"/>';
+  s += '</svg>';
+  w.insertAdjacentHTML("beforeend", s);
+  w.appendChild(el("div","r-num",String(Math.round(d.rep))));
+  w.appendChild(el("div","r-scale","<span>0</span><span>100</span>"));
+  w.appendChild(el("div","r-note","<b>0</b> ends the run"));
+}
+
+/* the shortcut rack: every menu, one dark plate each, with its key */
+var SHORTCUTS = [["ACTIONS","A"],["PLAN","P"],["STAFF","E"],["UPGRADES","U"],["LEDGER","L"],["IN-TRAY","R"],["GUIDE","F1"]];
+function shortcutRack(active, list, hideKeys){
+  var k = panel("keys");
+  (list||SHORTCUTS).forEach(function(s){
+    k.appendChild(el("div","kb"+(active===s[0]?" on":"")+(s[2]?" off":""),ic(s[0],"ic-kb","pi-kb")+"<span class=lab>"+s[0]+"</span>"+(hideKeys?"":"<span class=key>"+s[1]+"</span>")));
+  });
+}
+/* The month: held hours in a small panel above a quiet Commit. Commit never moves;
+   the panel grows upward (WATCH adds the clock and speed). Enter shows only when no menu owns the keys. */
+function commit(d, menuOpen){
+  panel("held", "<div class=row><span class=lbl>HELD FOR EVENTS</span><span class=val>"+d.held+" hr</span></div>"+
+    "<div class=sub>untyped; what events do not use is gone at month end</div>", "top:856px;height:112px");
+  add(el("div","abs cmt","<span>COMMIT THE MONTH</span>"+(menuOpen?"":"<span class=key>Enter</span>")));
+}
+
+/* ------------------------------------------------------------------
+   STATE 3 -- the month's plan (P)
+   ------------------------------------------------------------------ */
+function attentionBars(p){
+  var s = "";
+  // planning: filled = left; then the hour operating work took; then planning's own spend
+  for (var i=0;i<p.planTotal;i++){
+    var cls = i < p.planLeft ? "pip" : (i < p.planLeft + p.spill ? "pip spill" : "pip used");
+    s += '<i class="'+cls+'"></i>';
+  }
+  var o = "";
+  for (var j=0;j<p.opTotal;j++) o += '<i class="pip o'+(j < p.opLeft ? "" : " used")+'"></i>';
+  return "<span class=l>PLANNING</span><span class=pips>"+s+"</span><span class='v"+(p.planLeft?"":" zero")+"'>"+p.planLeft+" of "+p.planTotal+" left</span>"+
+         "<span class=why>"+p.planWork+" hr planning work + <span class=o>"+p.spill+" hr operating (spill)</span></span>"+
+         "<span class='l op'>OPERATING</span><span class=pips>"+o+"</span><span class='v"+(p.opLeft?"":" zero")+"'>"+p.opLeft+" of "+p.opTotal+" left</span>"+
+         "<span class=why><span class=o>"+(p.opWork-p.spill)+" hr operating work</span></span>"+
+         "<span class='l rs'>RESERVE</span><span class=res><span class=res-b>-</span>"+p.reserve+" hr<span class=res-b>+</span></span><span></span>"+
+         "<span class=why>set aside now, untyped</span>"+
+         "<span class=sys><span class=tag>SPILL</span>"+p.spill+" hr of operating work is drawn from planning. Planning work never draws on operating hours.</span>";
+}
+function planScreen(p){
+  room(p); doomMeter(p); repMeter(p); shortcutRack("PLAN"); commit(p, true);
+  add(el("div","dim"));
+  add(el("div","grain"));
+  dateline(p);
+  var t = panel("sheet"); t.appendChild(el("div","scan"));
+
+  t.appendChild(el("div","p-head","<span class=p-title>THE MONTH AHEAD</span><span class=p-sub>"+p.rows.length+" plays queued &middot; 20 hr this month</span>"));
+  t.appendChild(el("div","att",attentionBars(p)));
+  t.appendChild(el("div","q-h","<span>#</span><span>PLAY</span><span>FROM</span><span>POOL</span><span>HOURS</span><span>COST</span><span style='text-align:right'>ORDER</span>"));
+  p.rows.forEach(function(r,i){
+    var cost = [r.money?money(r.money):"", r.rep?r.rep+" rep":""].filter(Boolean).join(" + ") || "<span class=dash>--</span>";
+    var pool = r.pool==="op" ? "operating"+(r.spill?"<span class=tag>SPILL "+r.spill+"</span>":"") : "planning";
+    var up = i===0 ? "<b class=na>^</b>" : "<b>^</b>", dn = i===p.rows.length-1 ? "<b class=na>v</b>" : "<b>v</b>";
+    t.appendChild(el("div","q-row"+(r.pool==="op"?" op":"")+(r.spill?" spillrow":""),
+      "<span class=n>"+pad2(i+1)+"</span><span>"+r.name+"</span>"+
+      "<span class='k"+(r.from?"":" top")+"'>"+(r.from||"top level")+"</span>"+
+      "<span class='pool"+(r.pool==="op"?" op":"")+"'>"+pool+"</span><span class=h>"+r.hrs+" hr</span><span class=c>"+cost+"</span>"+
+      "<span class=q-ctl>"+up+dn+"<b>x</b></span>"));
+  });
+  t.appendChild(el("div","q-tools","<span><span class=q-btn>Undo <span class=key>Z</span></span><span class=q-btn>Clear <span class=key>C</span></span></span>"+
+    "<span class=q-tot><span>queued cost</span>"+money(p.qMoney)+(p.qRep?" + "+p.qRep+" rep":"")+"</span>"));
+  t.appendChild(el("div","ac",
+    "<div><span class=t>AFTER COSTS</span><span class=s>Wed 1 Nov</span></div>"+
+    "<div><span class=h>MONEY</span><span class=b>"+money(p.money)+" <em>-&gt;</em> "+money(p.moneyAfter)+"</span></div>"+
+    "<div><span class=h>REPUTATION</span><span class=b>"+p.rep+" <em>-&gt;</em> "+p.repAfter+"</span></div>"+
+    "<div><span class=h>HELD FOR EVENTS</span><span class=b>"+p.held+" hr <em>untyped</em></span></div>"));
+
+  var f = el("div","foot");
+  f.appendChild(el("div","brand","<i class=led></i>LAB TERMINAL 1"));
+  var rq = el("div","rq","<span class=rq-label>RESEARCH QUALITY</span>");
+  var sw = el("div","rq-sw"); ["Rushed","Standard","Thorough"].forEach(function(x){ sw.appendChild(el("span",x==="Standard"?"on":"",x)); });
+  rq.appendChild(sw); f.appendChild(rq);
+  f.appendChild(el("div","esc","<span class=key>P</span><span class=key>Esc</span><span>BACK TO DESK</span>"));
+  t.appendChild(f);
+}
+
+/* ------------------------------------------------------------------
+   layout self-check (?check=1): overflow, text outside its box,
+   elements outside the stage, overlaps, font sizes under 16px, and a
+   TXT line per text box (position + colour) for the contrast measure.
+   ------------------------------------------------------------------ */
+function selfCheck(){
+  var leaves = Array.prototype.filter.call(document.querySelectorAll("#stage *"), function(e){
+    return Array.prototype.some.call(e.childNodes, function(n){ return n.nodeType===3 && n.textContent.trim(); });
+  });
+  var out = [], txt = [], st = S.getBoundingClientRect(), sizes = {}, sc = st.width/1920;
+  leaves.forEach(function(e){
+    var cs = getComputedStyle(e), t = "'"+e.textContent.trim().slice(0,30)+"'";
+    sizes[cs.fontSize] = (sizes[cs.fontSize]||0)+1;
+    if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+t);
+    var r = e.getBoundingClientRect();
+    if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+t);
+    var box = e.closest(".pnl,.cmt,.kb,.q-row,.ac,.att,.foot,.dl");
+    if (box && box!==e){ var b=box.getBoundingClientRect();
+      if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+t); }
+    if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+t);
+    // effective opacity (ancestors' opacity multiplies)
+    var op = 1; for (var a=e; a && a!==S; a=a.parentElement) op *= parseFloat(getComputedStyle(a).opacity);
+    txt.push("TXT "+[(r.left-st.left)/sc,(r.top-st.top)/sc,r.width/sc,r.height/sc].map(function(v){return v.toFixed(0);}).join(" ")+" "+cs.color.replace(/ /g,"")+" "+op.toFixed(2)+" "+t);
+  });
+  function root(e){ while (e.parentNode && e.parentNode!==S) e = e.parentNode; return e; }
+  var R = leaves.map(function(e){ return e.getBoundingClientRect(); });
+  for (var i=0;i<leaves.length;i++) for (var j=i+1;j<leaves.length;j++){
+    if (leaves[i].contains(leaves[j])||leaves[j].contains(leaves[i])) continue;
+    if (root(leaves[i])!==root(leaves[j])) continue;   // a layer laid over another covers it whole (checked by eye)
+    var a=R[i], b=R[j], w=Math.min(a.right,b.right)-Math.max(a.left,b.left), h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+    if (w>2&&h>2) out.push("OVERLAP '"+leaves[i].textContent.trim().slice(0,24)+"' x '"+leaves[j].textContent.trim().slice(0,24)+"'");
+  }
+  out.push("FONT SIZES (css px at 1920): "+Object.keys(sizes).sort().map(function(k){ return k+" x"+sizes[k]; }).join(", "));
+  var pre = document.createElement("pre"); pre.id="check"; pre.textContent = "CHECK-BEGIN\n"+out.concat(txt).join("\n")+"\nCHECK-END"; document.body.appendChild(pre);
+}
+
+/* ------------------------------------------------------------------
+   state dispatch (?state=1..6). PASS 1 builds state 3; the others follow.
+   ------------------------------------------------------------------ */
+var NOV_PLAN = book(NOV, NOV_QUEUE);
+var VIEWS = {
+  "3": function(){ planScreen(NOV_PLAN); }
+};
+(VIEWS[STATE] || VIEWS["3"])();
+if (Q.get("check")) document.fonts.ready.then(function(){ setTimeout(selfCheck, 200); });
+</script>
+</body>
+</html>
