@@ -32,3 +32,7 @@ Council members are started when the showcase exists.
   - opus: delegate-task:a6ebb49e-1bef-4908-8faa-bac63ee44a1d (Claude Opus 5.5, high)
   - sol: delegate-task:c890abfe-9d7d-4d19-9803-546e65f3f694 (gpt-6.2-sol, high)
   - neon: delegate-task:a50972c9-3484-4b42-bf2f-d7c0a673b953 (gemini-4-neon, high)
+
+## DONE (2026-11-22)
+
+Run finished: council GOOD TO GO from all three after one fix round. See report.md (summary at the top). Nothing is running.
