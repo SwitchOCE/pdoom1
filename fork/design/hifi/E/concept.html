@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rooms and Stations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+/* E. Rooms and Stations -- high-fidelity states. The stage is 1920x1080 and is scaled
+   uniformly to the window (as the game does: stretch mode canvas_items, aspect expand). */
+:root{
+  /* one type scale: 16 label/secondary, 18 body/operational, 22 plate, 28 title, 44 instrument value */
+  --f16:16px; --f18:18px; --f22:22px; --f28:28px; --f44:44px;
+  --ink:#2a1d12; --ink-soft:#5a4632; --ink-mute:#7a6650;
+  --paper:#ece2c8; --paper-2:#f4ecd8; --paper-edge:#a8987a;
+  --red:#8d2b1d; --warn:#9a2c17;
+  --amber:#F6A800; --crt:#F2B24C; --crt-hi:#FFD690; --crt-mid:#E9C27F; --crt-dim:#B98436; --crt-lo:#C99A52;
+  --plan:#E8A33D; --ops:#86B6D2;
+  --teal:#1EC3B3; --off:#E9F2F2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d0a08}
+body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:#1c1612}
+
+/* ---------- the room: Pip's mezzanine office, empty ---------- */
+.sc-bg{position:absolute;inset:0;background:url(assets/office_mezzanine.webp) center/cover;filter:brightness(.92) saturate(.95)}
+.sc-tint{position:absolute;inset:0;pointer-events:none}
+.band1 .sc-tint{background:radial-gradient(ellipse 1300px 420px at 52% 260px,rgba(233,117,46,.16),rgba(233,117,46,0) 75%)}
+.sc-vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 1250px 760px at 50% 48%,rgba(0,0,0,0) 55%,rgba(20,9,12,.55) 100%)}
+.sc-dim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(22,15,11,.52),rgba(22,15,11,.4))}
+
+/* ---------- Pip's icons, always on the same dark tile ---------- */
+.ic{display:inline-block;flex:none;vertical-align:middle;border-radius:6px;background:#1f2624;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+
+/* ---------- the fixed frame: calendar, P(Doom) dial, reputation gauge, Commit ---------- */
+.cal{position:absolute;left:48px;top:28px;width:184px;height:108px;background:var(--paper);color:var(--ink);border-radius:3px;z-index:30;
+  box-shadow:0 3px 0 var(--paper-edge),0 10px 18px rgba(0,0,0,.5);overflow:hidden;text-align:center}
+.cal::before,.cal::after{content:"";position:absolute;top:4px;width:10px;height:10px;border-radius:50%;background:#3a2a1c;box-shadow:inset 0 2px 2px rgba(0,0,0,.6)}
+.cal::before{left:24px}.cal::after{right:24px}
+.cal-band{height:26px;background:var(--red);color:#f3e6d0;font:600 var(--f18)/26px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.cal-mon{font:700 var(--f44)/50px "Barlow Condensed",sans-serif;letter-spacing:4px}
+.cal-no{font:700 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft);white-space:nowrap}
+
+.dm{position:absolute;left:776px;top:0;width:368px;height:156px;border-radius:0 0 12px 12px;z-index:30;
+  background:radial-gradient(ellipse 240px 140px at 50% 100%,#4a2a50,#2c1733 72%);
+  border:3px solid #6a5a44;border-top:none;box-shadow:0 10px 22px rgba(0,0,0,.6),inset 0 0 0 2px #1d0f22}
+.dm-lab{position:absolute;left:14px;top:8px;display:flex;align-items:center;gap:6px;font:600 var(--f18)/22px "Barlow Condensed",sans-serif;letter-spacing:3px;color:#d9c7dc}
+.dm-rise{position:absolute;right:14px;top:8px;display:flex;align-items:center;gap:6px;font:700 var(--f16)/22px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#ffb07a}
+.dm-svg{position:absolute;left:0;top:0;width:368px;height:156px}
+.dm-val{position:absolute;left:0;width:100%;top:62px;text-align:center;font:600 var(--f44)/48px "IBM Plex Mono",monospace}
+.dm-band{position:absolute;left:0;width:100%;top:112px;text-align:center;font:700 var(--f16)/22px "Barlow Condensed",sans-serif;letter-spacing:4px}
+
+.rp{position:absolute;left:1612px;top:28px;width:260px;height:108px;background:var(--paper);color:var(--ink);border-radius:3px;z-index:30;
+  box-shadow:0 3px 0 var(--paper-edge),0 10px 18px rgba(0,0,0,.5)}
+.rp-lab{position:absolute;left:14px;top:8px;display:flex;align-items:center;gap:6px;font:700 var(--f16)/22px "Barlow Condensed",sans-serif;letter-spacing:2px;color:var(--red)}
+.rp-val{position:absolute;left:16px;top:42px;font:700 var(--f44)/50px "IBM Plex Mono",monospace}
+.rp-svg{position:absolute;right:12px;top:14px;width:132px;height:86px}
+
+.cm{position:absolute;left:1500px;top:972px;width:372px;height:76px;border-radius:6px;z-index:40;
+  background:linear-gradient(180deg,#1fd0bf,#11998c);border:3px solid #0a5e56;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 5px 0 #08443e,0 0 24px rgba(30,195,179,.35);
+  color:#06211e;display:flex;align-items:center;justify-content:center;gap:12px}
+.cm-txt{font:700 var(--f28)/34px "Barlow Condensed",sans-serif;letter-spacing:3px;white-space:nowrap}
+.cm-key{height:34px;padding:0 10px;border-radius:4px;background:#e9fffb;font:700 var(--f16)/34px "IBM Plex Mono",monospace;box-shadow:0 3px 0 #0a5e56}
+
+/* ---------- shared bits ---------- */
+.chip{display:inline-block;height:24px;border-radius:3px;padding:0 7px;font:600 var(--f16)/21px "IBM Plex Mono",monospace;white-space:nowrap;border:1.5px solid}
+.key{display:inline-block;height:34px;border:1.5px solid var(--crt-dim);border-radius:3px;padding:0 12px;font:600 var(--f16)/31px "IBM Plex Mono",monospace;color:var(--crt-mid);white-space:nowrap}
+/* hatched = operating work drawn from a planning hour (one swatch, used everywhere it appears) */
+.spill-sw{background:repeating-linear-gradient(135deg,var(--ops) 0 3px,rgba(134,182,210,.18) 3px 7px)}
+
+/* ---------- PLAN station: the LABTERM CRT, brought forward ---------- */
+.crt{position:absolute;left:384px;top:164px;width:1080px;height:884px;border-radius:30px 30px 22px 22px;z-index:25;
+  background:linear-gradient(180deg,#d6cbad,#bdaf8c 62%,#a59672);
+  box-shadow:0 24px 48px rgba(0,0,0,.7),inset 0 -6px 0 #8f815f,inset 0 3px 0 #ebe2ca,inset 3px 0 0 #cfc4a6,inset -3px 0 0 #a99a77}
+.crt-scr{position:absolute;left:28px;top:24px;width:1024px;height:800px;border-radius:20px;overflow:hidden;
+  background:radial-gradient(ellipse 720px 520px at 50% 46%,#3b2711,#2c1c0d 68%,#1f1409);
+  box-shadow:inset 0 0 50px rgba(0,0,0,.7),0 0 0 4px #6f6448,0 0 0 7px #8c7f5e}
+.crt-scr::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(160deg,rgba(255,240,210,.07) 0,rgba(255,240,210,.02) 28%,rgba(255,240,210,0) 42%)}
+.crt-scr::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(180deg,rgba(0,0,0,.11) 0 1px,transparent 1px 3px)}
+.crt-chin{position:absolute;left:0;top:824px;width:100%;height:60px;display:flex;align-items:center;padding:0 46px;gap:18px}
+.crt-brand{font:700 var(--f16)/20px "Barlow Condensed",sans-serif;letter-spacing:5px;color:#6f6448}
+.crt-vent{flex:1;height:14px;background:repeating-linear-gradient(90deg,#9d8f6c 0 3px,transparent 3px 9px);opacity:.55;border-radius:2px}
+.crt-knob{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#cfc4a6,#7e7253);box-shadow:0 2px 0 #6f6448}
+.crt-led{width:12px;height:12px;border-radius:50%;background:#5ce38a;box-shadow:0 0 10px #5ce38a}
+.crt-in{position:absolute;inset:0;padding:20px 32px;color:var(--crt);text-shadow:0 0 6px rgba(242,178,76,.35)}
+
+.crt-h{display:flex;justify-content:space-between;align-items:center;height:54px;border-bottom:2px solid var(--crt-dim);padding-bottom:10px}
+.crt-h .t{display:inline-flex;align-items:center;gap:14px;font:600 var(--f28)/36px "IBM Plex Mono",monospace;letter-spacing:2px;white-space:nowrap}
+.crt-h .esc{height:36px;font:600 var(--f16)/36px "IBM Plex Mono",monospace;color:#1a1208;background:#e6dcc6;border-radius:3px;padding:0 12px;text-shadow:none;box-shadow:0 3px 0 #9d8f74;white-space:nowrap}
+
+/* Attention: filled = hours LEFT, empty = spent (council rule 1) */
+.hrs{margin-top:16px;display:flex;gap:40px;height:120px}
+.hrs-l{width:604px;display:grid;grid-template-columns:124px 354px 90px;grid-template-rows:32px 32px 26px;column-gap:18px;row-gap:12px;align-items:center}
+.hrs-l .l{font:600 var(--f18)/24px "IBM Plex Mono",monospace;letter-spacing:1px}
+.hrs-l .l.p{color:var(--plan)} .hrs-l .l.o{color:var(--ops)}
+.hrs-l .v{font:600 var(--f18)/24px "IBM Plex Mono",monospace;color:var(--crt-hi);white-space:nowrap}
+.bx{position:relative;display:flex;gap:6px;height:24px}
+.bx i{width:24px;height:24px;border-radius:2px;border:2px solid currentColor;display:block;flex:none}
+.bx.plan{color:var(--plan)} .bx.ops{color:var(--ops)}
+.bx i.left{background:currentColor;box-shadow:0 0 8px rgba(232,163,61,.45)}
+.bx.ops i.left{box-shadow:0 0 8px rgba(134,182,210,.45)}
+.bx i.spill{border-color:var(--ops)}
+.bx .lead{position:absolute;top:-20px;width:2px;height:20px;background:var(--ops)}
+.bx .lead::before{content:"";position:absolute;left:-5px;top:-1px;border:6px solid transparent;border-bottom:7px solid var(--ops);border-top:none}
+.hrs-note{grid-column:1 / span 3;display:flex;align-items:center;gap:10px;font:500 var(--f16)/22px "IBM Plex Mono",monospace;color:var(--crt-mid);white-space:nowrap}
+.hrs-note .sw{width:18px;height:18px;border-radius:2px;border:2px solid var(--ops);flex:none}
+.held{flex:1;border:1.5px solid var(--crt-dim);border-radius:4px;padding:9px 14px;display:flex;flex-direction:column;justify-content:space-between;background:rgba(242,178,76,.05)}
+.held .r1{display:flex;align-items:center;gap:10px;font:600 var(--f16)/24px "IBM Plex Mono",monospace;letter-spacing:.5px;white-space:nowrap}
+.held .r2{display:flex;align-items:center;justify-content:space-between}
+.held .big{font:600 var(--f28)/36px "IBM Plex Mono",monospace;color:var(--crt-hi)}
+.held .big small{font:500 var(--f16)/36px "IBM Plex Mono",monospace;color:var(--crt-mid);margin-left:8px}
+.rsv{display:flex;align-items:center;gap:8px;font:600 var(--f16)/30px "IBM Plex Mono",monospace;color:var(--crt-mid)}
+.rsv .b{width:30px;height:30px;border:1.5px solid var(--crt-dim);border-radius:3px;text-align:center;font:600 var(--f18)/27px "IBM Plex Mono",monospace}
+.rsv .n{width:30px;text-align:center;color:var(--crt-hi)}
+
+/* the queue */
+.q-head,.q-row{display:grid;grid-template-columns:64px 1fr 130px 116px 120px 112px;align-items:center;column-gap:12px}
+.q-head{margin-top:18px;height:32px;font:500 var(--f16)/32px "IBM Plex Mono",monospace;color:var(--crt-lo);border-bottom:1px solid rgba(185,132,54,.5);letter-spacing:.5px}
+.q-head .r,.q-row .r{text-align:right}
+.q-row{height:38px;font:500 var(--f18)/38px "IBM Plex Mono",monospace;border-bottom:1px dotted rgba(185,132,54,.3)}
+.q-row .n{color:var(--crt-lo);white-space:nowrap}
+.q-row .qn{display:flex;align-items:center;gap:10px;white-space:nowrap;min-width:0}
+.q-row .wh{font:500 var(--f16)/38px "IBM Plex Mono",monospace;color:var(--crt-lo);white-space:nowrap;letter-spacing:.5px}
+.q-row .hr{display:flex;align-items:center;gap:6px}
+.q-row .hr .sw{width:18px;height:18px;border-radius:2px;border:2px solid var(--ops);flex:none}
+.q-row.grp .qn{color:var(--crt-hi)}
+.q-row.sub{height:34px;line-height:34px;color:var(--crt-mid)}
+.q-row.sub .qn{padding-left:24px}
+.q-row.sub .n{padding-left:10px}
+.mult{color:var(--crt-hi);font-weight:600}
+.q-tg{height:26px;border:1.5px solid var(--crt-dim);border-radius:3px;padding:0 7px;font:600 var(--f16)/23px "IBM Plex Mono",monospace;color:var(--crt-mid)}
+.ctl{display:flex;gap:8px;justify-content:flex-end}
+.q-btn{width:32px;height:30px;border:1.5px solid var(--crt-dim);border-radius:3px;font:600 var(--f16)/27px "IBM Plex Mono",monospace;text-align:center;color:var(--crt-mid)}
+.q-btn.blank{visibility:hidden}
+.chip.plan{color:var(--plan);border-color:var(--plan)}
+.chip.ops{color:var(--ops);border-color:var(--ops)}
+.q-foot{margin-top:14px;display:flex;gap:12px;align-items:center;height:36px}
+.q-foot .sum{margin-left:auto;font:500 var(--f18)/34px "IBM Plex Mono",monospace;color:var(--crt-hi);white-space:nowrap}
+
+/* ---------- the printout beside Commit: what Commit will do to the books ---------- */
+.tape{position:absolute;left:1532px;top:574px;width:308px;z-index:26;color:var(--ink);transform:rotate(.8deg);
+  filter:drop-shadow(0 12px 20px rgba(0,0,0,.55))}
+.tape-p{background:linear-gradient(180deg,#efe7d1,var(--paper-2));padding:22px 20px 18px;
+  -webkit-mask:linear-gradient(#000,#000) 0 10px/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at 50% 10px,#000 90deg,#0000 0) 0 0/16px 10px repeat-x;
+  mask:linear-gradient(#000,#000) 0 10px/100% calc(100% - 10px) no-repeat,conic-gradient(from -45deg at 50% 10px,#000 90deg,#0000 0) 0 0/16px 10px repeat-x}
+.tape-h{font:700 var(--f18)/24px "Courier Prime",monospace;letter-spacing:2px;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:6px}
+.tape-r{display:flex;align-items:center;gap:10px;height:30px;font:700 var(--f18)/30px "Courier Prime",monospace;white-space:nowrap}
+.tape-r .k{flex:1}
+.tape-r.sub{font-weight:400;color:var(--ink-soft);padding-left:34px}
+.tape-r.tot{border-top:1.5px dashed var(--ink-mute);margin-top:4px;height:34px;line-height:34px;color:var(--ink);font-weight:700}
+.tape-r.tot .v{font-size:var(--f22)}
+.tape-r.warn{color:var(--warn)}
+.tape-gap{height:10px}
+.tape-foot{margin-top:4px;padding-left:34px;font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft)}
+.tape-foot.warn{color:var(--warn)}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var state = parseInt(q.get("state") || "3", 10);
+  if (!(state >= 1 && state <= 6)) state = 3;
+
+  // ---------- the run (fork/design/hifi/run-state.md) ----------
+  // Values are run-state.md's sourced lines or godot/data/; fixtures are listed in notes.md.
+  var NOV = {year:"2017", mon:"NOV", day:"WED 1", no:5, full:"NOVEMBER 2017", money:140000, compute:65, research:-12, papers:0, rep:32, doom:40.2, rising:true};
+  var S = NOV;
+
+  // ---------- Pip's icons (assets/icons, copied from godot/assets/icons); new_*.svg = drawn here, needs art ----------
+  var ICON = {
+    doom:"doom.png", rising:"indicator_doom_rising_64.png", reputation:"reputation.png", commit:"ui_control_confirm_64.png",
+    money:"money.png", research:"research.png", hours:"resource_action_points_64.png", st_plan:"ui_config_date_64.png",
+    hire_safety_researcher:"employee_role_safety_specialist_64.png",  // Pip's mapping (icon_mapping.json)
+    scout_read:"ui_guide_book_64.png",
+    scout_shitpost:"new_post_online.svg",
+    audit_safety:"employee_role_auditor_64.png",                       // Pip's mapping
+    use_connections:"action_publicity_network_64.png",                 // Pip's mapping
+    scout_meetups:"new_meetup_badge.svg",
+    network:"network_64.png",                                          // Pip's mapping
+    tour_offices:"ui_home_hq_64.png",
+    office_maintenance:"new_maintenance.svg",
+    order_supplies:"new_supplies.svg"
+  };
+  function ic(key, size){ return '<img class="ic" src="assets/icons/'+ICON[key]+'" width="'+size+'" height="'+size+'" alt="">'; }
+  function money(n){ var s = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); return (n<0?"-$":"$")+s; }
+  function chip(k,t){ return '<span class="chip '+k+'">'+t+'</span>'; }
+
+  // ---------- state 3: the month's plan (run-state.md, state 3 table) ----------
+  // pool: P = planning (hour_type approvals / none), O = operating (doors, audits)
+  var PLAYS = [
+    {id:"hire_safety_researcher", nm:"Hire: Safety Researcher", wh:"HIRE STAFF", pool:"P", h:1, cost:"$60,000"},
+    {id:"scout_read",      nm:"Read the Literature",   wh:"SCOUTING",   pool:"P", h:1, cost:""},
+    {id:"scout_read",      nm:"Read the Literature",   wh:"SCOUTING",   pool:"P", h:1, cost:""},
+    {id:"scout_shitpost",  nm:"Post Online",           wh:"SCOUTING",   pool:"P", h:1, cost:""},
+    {id:"audit_safety",    nm:"Safety Audit",          wh:"",           pool:"O", h:2, cost:"$40,000"},
+    {id:"use_connections", nm:"Work Your Connections", wh:"",           pool:"O", h:2, cost:"6 rep"},
+    {id:"scout_meetups",   nm:"Go to Meetups",         wh:"SCOUTING",   pool:"O", h:1, cost:"$300"},
+    {id:"network",         nm:"Networking",            wh:"PUBLICITY",  pool:"O", h:1, cost:""},
+    {id:"tour_offices",    nm:"Tour Offices",          wh:"OFFICE",     pool:"O", h:1, cost:""},
+    {id:"office_maintenance", nm:"Office Maintenance", wh:"OPERATIONS", pool:"O", h:1, cost:"$5,000"},
+    {id:"order_supplies",  nm:"Order Office Supplies", wh:"OPERATIONS", pool:"O", h:1, cost:"$2,000"}
+  ];
+  var PLAN_H = 12, OPS_H = 8, RESERVE = 0;
+  var planWork = 0, opsWork = 0, cashOut = 0, repOut = 0;
+  PLAYS.forEach(function(p){
+    if (p.pool === "P") planWork += p.h; else opsWork += p.h;
+    if (p.cost.charAt(0) === "$") cashOut += parseInt(p.cost.replace(/[$,]/g,""),10);
+    if (/rep$/.test(p.cost)) repOut += parseInt(p.cost,10);
+  });
+  var spill = Math.max(0, opsWork - OPS_H);                 // operating work past 8h uses planning hours
+  var opsLeft = Math.max(0, OPS_H - opsWork);
+  var planLeft = PLAN_H - planWork - spill;                  // 12 - 4 - 1 = 7
+  var held = planLeft + opsLeft + RESERVE;                   // untyped, evaporates at month end
+  // which play carries the spilled hour: the operating hour past 8, in queue order
+  var spillIdx = -1, acc = 0;
+  PLAYS.forEach(function(p,i){ if (p.pool === "O"){ acc += p.h; if (spillIdx < 0 && acc > OPS_H) spillIdx = i; } });
+
+  function boxes(kind, total, left, spillN){
+    var h = '<span class="bx '+kind+'">';
+    for (var i=0;i<total;i++){
+      var cls = i < left ? "left" : (i < left + spillN ? "spill spill-sw" : "");
+      h += '<i'+(cls?' class="'+cls+'"':'')+'></i>';
+    }
+    return h + '</span>';
+  }
+
+  function planHTML(){
+    var h = '<div class="crt"><div class="crt-scr"><div class="crt-in">'+
+      '<div class="crt-h"><span class="t">'+ic("st_plan",36)+'THE MONTH AHEAD &middot; '+S.full+'</span><span class="esc">[Esc] Back to desk</span></div>';
+
+    // Attention
+    var opsBx = boxes("ops", OPS_H, opsLeft, 0);
+    if (spill) opsBx = opsBx.replace('</span>', '<b class="lead" style="left:'+((OPS_H-1)*30+11)+'px"></b></span>');
+    h += '<div class="hrs"><div class="hrs-l">'+
+        '<span class="l p">PLANNING</span>'+boxes("plan", PLAN_H, planLeft, spill)+'<span class="v">'+planLeft+' left</span>'+
+        '<span class="l o">OPERATING</span>'+opsBx+'<span class="v">'+opsLeft+' left</span>'+
+        (spill ? '<span class="hrs-note"><span class="sw spill-sw"></span>'+spill+'h of operating work is using a planning hour</span>' : '')+
+      '</div>'+
+      '<div class="held"><div class="r1">'+ic("hours",24)+'HELD FOR EVENTS AT COMMIT</div>'+
+        '<div class="r2"><span class="big">'+held+'h</span><span class="rsv">RESERVE <span class="b">-</span><span class="n">'+RESERVE+'h</span><span class="b">+</span></span></div>'+
+        '<div class="r1" style="font-weight:500;color:var(--crt-mid)">'+(held-RESERVE)+'h unspent + '+RESERVE+'h reserve</div>'+
+      '</div></div>';
+
+    // queue: one row per play; repeats of one play are a group that opens into its plays (council rule 4)
+    h += '<div class="q-head"><span>#</span><span>PLAY, IN ORDER</span><span>WHERE</span><span>HOURS</span><span class="r">COST</span><span class="r">ORDER</span></div>';
+    var ctl3 = '<span class="ctl"><span class="q-btn">^</span><span class="q-btn">v</span><span class="q-btn">x</span></span>';
+    var ctl2 = '<span class="ctl"><span class="q-btn">^</span><span class="q-btn">v</span><span class="q-btn blank">x</span></span>';
+    function hrs(p, i){
+      var c = chip(p.pool === "P" ? "plan" : "ops", p.h+'h '+(p.pool === "P" ? "PLAN" : "OPS"));
+      return '<span class="hr">'+c+(i === spillIdx ? '<span class="sw spill-sw"></span>' : '')+'</span>';
+    }
+    function nn(i){ return (i<9?'0':'')+(i+1); }
+    for (var i=0;i<PLAYS.length;i++){
+      var p = PLAYS[i], n = 1;
+      while (i+n < PLAYS.length && PLAYS[i+n].nm === p.nm) n++;
+      if (n === 1){
+        h += '<div class="q-row"><span class="n">'+nn(i)+'</span><span class="qn">'+ic(p.id,28)+p.nm+'</span><span class="wh">'+(p.wh||'TOP LEVEL')+'</span>'+hrs(p,i)+
+             '<span class="r">'+(p.cost||'--')+'</span>'+ctl3+'</div>';
+        continue;
+      }
+      h += '<div class="q-row grp"><span class="n">'+nn(i)+'-'+nn(i+n-1)+'</span><span class="qn">'+ic(p.id,28)+p.nm+' <span class="mult">x'+n+'</span><span class="q-tg">[-]</span></span>'+
+           '<span class="wh">'+(p.wh||'--')+'</span><span class="hr">'+chip(p.pool === "P" ? "plan" : "ops", (p.h*n)+'h '+(p.pool === "P" ? "PLAN" : "OPS"))+'</span><span class="r">'+(p.cost||'--')+'</span>'+ctl2+'</div>';
+      for (var k=0;k<n;k++)
+        h += '<div class="q-row sub"><span class="n">'+nn(i+k)+'</span><span class="qn">'+ic(p.id,24)+p.nm+'</span><span class="wh"></span>'+hrs(p,i+k)+
+             '<span class="r">'+(p.cost||'--')+'</span>'+ctl3+'</div>';
+      i += n-1;
+    }
+    h += '<div class="q-foot"><span class="key">[Z] Undo</span><span class="key">[C] Clear</span>'+
+         '<span class="sum">'+PLAYS.length+' plays &middot; queued cost '+money(cashOut)+(repOut?' + '+repOut+' rep':'')+'</span></div>';
+    h += '</div></div><div class="crt-chin"><span class="crt-brand">LABTERM 90</span><span class="crt-vent"></span><span class="crt-knob"></span><span class="crt-knob"></span><span class="crt-led"></span></div></div>';
+
+    // the printout: the books after Commit
+    h += '<div class="tape"><div class="tape-p"><div class="tape-h">AFTER COMMIT</div>'+
+      '<div class="tape-r" style="margin-top:8px">'+ic("money",24)+'<span class="k">Money</span><span class="v">'+money(S.money)+'</span></div>'+
+      '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+money(cashOut)+'</span></div>'+
+      '<div class="tape-r tot sub"><span class="k">after</span><span class="v">'+money(S.money-cashOut)+'</span></div>'+
+      '<div class="tape-gap"></div>'+
+      '<div class="tape-r">'+ic("reputation",24)+'<span class="k">Reputation</span><span class="v">'+S.rep+'</span></div>'+
+      '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+repOut+'</span></div>'+
+      '<div class="tape-r tot sub"><span class="k">after</span><span class="v">'+(S.rep-repOut)+'</span></div>'+
+      '<div class="tape-gap"></div>'+
+      '<div class="tape-r warn">'+ic("research",24)+'<span class="k">Research</span><span class="v">'+S.research+'</span></div>'+
+      '<div class="tape-foot warn">Below zero: research plays are blocked.</div>'+
+      '</div></div>';
+    return h;
+  }
+
+  // ---------- frame ----------
+  function arc(cx,cy,r,a0,a1){
+    function pt(a){ var t=Math.PI*(1-a); return [cx+r*Math.cos(t), cy-r*Math.sin(t)]; }
+    var p0=pt(a0), p1=pt(a1);
+    return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1);
+  }
+  // godot/autoload/theme_manager.gd: DOOM_STOPS (colour) and DOOM_STATUS_BANDS (label)
+  var STOPS = [[0,[.30,.80,.35]],[15,[.30,.80,.35]],[30,[.88,.78,.18]],[45,[.92,.50,.13]],[60,[.82,.20,.17]],[74,[.48,.07,.14]],[87,[.40,.06,.48]],[100,[.28,.03,.46]]];
+  var BANDS = [[15,"NOMINAL"],[37,"ELEVATED"],[52,"HIGH"],[67,"SEVERE"],[80,"EXTREME"],[92,"CATASTROPHIC"],[101,"TERMINAL"]];
+  function doomRGB(d){
+    for (var i=0;i<STOPS.length-1;i++){ var a=STOPS[i], b=STOPS[i+1];
+      if (d <= b[0]){ var t=(d-a[0])/((b[0]-a[0])||1); return a[1].map(function(v,j){ return v+(b[1][j]-v)*t; }); } }
+    return STOPS[STOPS.length-1][1];
+  }
+  function stroke(d){ // get_doom_stroke_color: lift dark tiers toward a bright magenta so they stay legible
+    var c = doomRGB(d), lum = .299*c[0]+.587*c[1]+.114*c[2], k = lum < .22 ? (.22-lum)/.22*.85 : 0, B=[.90,.40,.85];
+    return "rgb("+c.map(function(v,j){ return Math.round(255*(v+(B[j]-v)*k)); }).join(",")+")";
+  }
+  function bandOf(d){ for (var i=0;i<BANDS.length;i++) if (d < BANDS[i][0]) return BANDS[i][1]; return "TERMINAL"; }
+  function doomHTML(){
+    var d=S.doom, cx=184, cy=120, r=84;
+    var svg = '<svg class="dm-svg" viewBox="0 0 368 156">';
+    var edges=[0,15,37,52,67,80,92,100];
+    for (var i=0;i<edges.length-1;i++)
+      svg += '<path d="'+arc(cx,cy,r,edges[i]/100+.004,edges[i+1]/100-.004)+'" stroke="'+stroke((edges[i]+edges[i+1])/2)+'" stroke-width="10" fill="none" opacity=".9"/>';
+    for (var j=0;j<=10;j++){ var t=Math.PI*(1-j/10), r0=r+7, r1=r+(j%5?10:13);
+      svg += '<line x1="'+(cx+r0*Math.cos(t)).toFixed(1)+'" y1="'+(cy-r0*Math.sin(t)).toFixed(1)+'" x2="'+(cx+r1*Math.cos(t)).toFixed(1)+'" y2="'+(cy-r1*Math.sin(t)).toFixed(1)+'" stroke="#d9c7dc" stroke-width="'+(j%5?1.5:2.5)+'"/>'; }
+    svg += '<path d="'+arc(cx,cy,r+17,0,d/100)+'" stroke="#fff1d6" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    svg += '<text x="'+(cx-r)+'" y="'+(cy+26)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="16" text-anchor="middle">0</text>';
+    svg += '<text x="'+(cx+r)+'" y="'+(cy+26)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="16" text-anchor="middle">100</text></svg>';
+    var col = stroke(d);
+    return '<div class="dm">'+svg+'<div class="dm-lab">'+ic("doom",22)+'P(DOOM)</div>'+(S.rising?'<div class="dm-rise">'+ic("rising",22)+'RISING</div>':'')+
+      '<div class="dm-val" style="color:'+col+';text-shadow:0 0 14px '+col.replace("rgb","rgba").replace(")",",.4)")+'">'+d.toFixed(1)+'%</div>'+
+      '<div class="dm-band" style="color:'+col+'">'+bandOf(d)+'</div></div>';
+  }
+  function repHTML(){
+    var v=S.rep, cx=66, cy=58, r=48, t=Math.PI*(1-v/100);
+    var svg = '<svg class="rp-svg" viewBox="0 0 132 86">'+
+      '<path d="'+arc(cx,cy,r,0,.1)+'" stroke="#8a1f10" stroke-width="9" fill="none"/>'+
+      '<path d="'+arc(cx,cy,r,.1,1)+'" stroke="#7a6a55" stroke-width="9" fill="none" opacity=".55"/>'+
+      '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+(r-2)*Math.cos(t)).toFixed(1)+'" y2="'+(cy-(r-2)*Math.sin(t)).toFixed(1)+'" stroke="#2a1d12" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#2a1d12"/>'+
+      '<text x="'+(cx-r)+'" y="'+(cy+22)+'" fill="#8a1f10" font-family="IBM Plex Mono" font-size="16" font-weight="600" text-anchor="middle">0</text>'+
+      '<text x="'+(cx+r)+'" y="'+(cy+22)+'" fill="#4a3a28" font-family="IBM Plex Mono" font-size="16" font-weight="600" text-anchor="middle">100</text></svg>';
+    return '<div class="rp"><div class="rp-lab">'+ic("reputation",22)+'REPUTATION</div><div class="rp-val">'+v+'</div>'+svg+'</div>';
+  }
+  function frameHTML(){
+    return '<div class="cal"><div class="cal-band">'+S.year+'</div><div class="cal-mon">'+S.mon+'</div><div class="cal-no">'+S.day+' &middot; MONTH '+S.no+'</div></div>'+
+      doomHTML()+repHTML()+
+      '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span><span class="cm-key">Enter</span></div>';
+  }
+
+  // ---------- assemble ----------
+  var stage = document.getElementById("stage");
+  stage.classList.add("band1");
+  var h = '<div class="sc-bg"></div><div class="sc-tint"></div><div class="sc-vign"></div><div class="sc-dim"></div>';
+  h += planHTML();
+  h += frameHTML();
+  stage.innerHTML = h;
+
+  // ---------- scale the 1920x1080 stage to the window ----------
+  function fit(){
+    var s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+    stage.style.transform = "scale("+s+")";
+    stage.style.left = Math.round((window.innerWidth-1920*s)/2)+"px";
+    stage.style.top = Math.round((window.innerHeight-1080*s)/2)+"px";
+  }
+  fit(); window.addEventListener("resize", fit);
+
+  // ---------- ?check=1: overflow, out-of-stage and font-size report (read with --dump-dom) ----------
+  if (q.get("check")) document.fonts.ready.then(function(){
+    var out = [], sb = stage.getBoundingClientRect(), sc = sb.width/1920;
+    stage.querySelectorAll("*").forEach(function(el){
+      var cs = getComputedStyle(el), r = el.getBoundingClientRect();
+      if (!r.width || cs.visibility === "hidden") return;
+      var own = Array.prototype.some.call(el.childNodes, function(n){ return n.nodeType === 3 && n.textContent.trim(); });
+      var tag = el.tagName+"."+(el.className && el.className.baseVal === undefined ? el.className : "")+" '"+(el.textContent||"").trim().slice(0,30)+"'";
+      if (own && parseFloat(cs.fontSize) < 16) out.push("FONT "+cs.fontSize+" "+tag);
+      if (own && (el.scrollWidth > el.clientWidth + 1 && cs.overflow !== "visible" || el.scrollWidth > el.clientWidth + 1 && cs.whiteSpace === "nowrap" && el.clientWidth)) out.push("OVERFLOW "+el.scrollWidth+">"+el.clientWidth+" "+tag);
+      if ((r.left < sb.left-1 || r.top < sb.top-1 || r.right > sb.right+1 || r.bottom > sb.bottom+1) && !el.closest(".sc-bg,.sc-tint,.sc-vign,.sc-dim")) out.push("OUTSIDE "+tag);
+      if (own && el.parentElement){ var pr = el.parentElement.getBoundingClientRect();
+        if (r.right > pr.right + 1 || r.left < pr.left - 1) out.push("SPILLS-PARENT "+tag); }
+    });
+    var pre = document.createElement("pre"); pre.id = "chk"; pre.textContent = "CHECK "+out.length+"\n"+out.join("\n");
+    document.body.appendChild(pre);
+  });
+})();
+</script>
+</body>
+</html>

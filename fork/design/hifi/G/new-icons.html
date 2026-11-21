@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>G new icons</title>
+<style>
+/* Source for the "new, needs art" icons. Each cell is 256x256; render-icons.py
+   screenshots this page and cuts each cell down to a 64px PNG in assets/icons/.
+   Style follows Pip's painted set: dark teal ground with a soft vignette, a muted
+   stone/sage object with soft shading and a dark edge, one orange accent. */
+html,body{margin:0;background:#000;width:1536px;height:256px;overflow:hidden}
+.row{display:flex}
+svg{display:block;width:256px;height:256px}
+</style></head><body><div class="row" id="row"></div>
+<script>
+var DEFS =
+'<defs>'+
+ '<radialGradient id="g" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#2b4046"/><stop offset=".6" stop-color="#18262a"/><stop offset="1" stop-color="#0b1214"/></radialGradient>'+
+ '<linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9cbb6"/><stop offset=".55" stop-color="#959c88"/><stop offset="1" stop-color="#5d665a"/></linearGradient>'+
+ '<linearGradient id="stone2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b3b7a1"/><stop offset="1" stop-color="#4f584d"/></linearGradient>'+
+ '<linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcd8c2"/><stop offset="1" stop-color="#9e9c86"/></linearGradient>'+
+ '<linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48a5a"/><stop offset="1" stop-color="#6d4e2c"/></linearGradient>'+
+ '<linearGradient id="org" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc25a"/><stop offset="1" stop-color="#e2741c"/></linearGradient>'+
+ '<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb347" stop-opacity=".75"/><stop offset="1" stop-color="#ff8a1c" stop-opacity="0"/></radialGradient>'+
+ '<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".6"/></filter>'+
+ '<filter id="noise"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .22 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>'+
+'</defs>';
+var E = 'stroke="#1d2622" stroke-width="5" stroke-linejoin="round"';
+function ground(){return '<rect width="256" height="256" rx="22" fill="url(#g)"/>';}
+function noise(){return '<rect width="256" height="256" rx="22" fill="#888" filter="url(#noise)"/>';}
+var ICONS = {
+ /* Post Online: a speech bubble with three dots and an orange "loud" spark */
+ post_online:
+  '<g filter="url(#sh)"><path d="M48 62 h150 a18 18 0 0 1 18 18 v74 a18 18 0 0 1 -18 18 h-86 l-40 34 l6 -34 h-30 a18 18 0 0 1 -18 -18 v-74 a18 18 0 0 1 18 -18z" fill="url(#stone)" '+E+'/>'+
+  '<circle cx="92" cy="117" r="13" fill="#2a3330"/><circle cx="133" cy="117" r="13" fill="#2a3330"/><circle cx="174" cy="117" r="13" fill="#2a3330"/></g>'+
+  '<circle cx="206" cy="58" r="30" fill="url(#glow)"/><path d="M206 38 l6 14 l15 2 l-11 10 l3 15 l-13 -8 l-13 8 l3 -15 l-11 -10 l15 -2z" fill="url(#org)" stroke="#7a3a08" stroke-width="3"/>',
+ /* Go to Meetups: two glasses tilted together, orange liquid */
+ meetups:
+  '<circle cx="128" cy="74" r="40" fill="url(#glow)"/>'+
+  '<g filter="url(#sh)">'+
+   '<g transform="rotate(-14 98 140)"><path d="M70 66 h56 l-8 58 a20 20 0 0 1 -40 0z" fill="url(#stone2)" '+E+'/><path d="M76 92 h44 l-4 30 a18 18 0 0 1 -36 0z" fill="url(#org)" opacity=".92"/>'+
+    '<rect x="94" y="140" width="8" height="44" fill="url(#stone)" '+E+'/><rect x="74" y="182" width="48" height="12" rx="5" fill="url(#stone)" '+E+'/></g>'+
+   '<g transform="rotate(14 158 140)"><path d="M130 66 h56 l-8 58 a20 20 0 0 1 -40 0z" fill="url(#stone2)" '+E+'/><path d="M136 92 h44 l-4 30 a18 18 0 0 1 -36 0z" fill="url(#org)" opacity=".92"/>'+
+    '<rect x="154" y="140" width="8" height="44" fill="url(#stone)" '+E+'/><rect x="134" y="182" width="48" height="12" rx="5" fill="url(#stone)" '+E+'/></g>'+
+  '</g>'+
+  '<path d="M128 40 v-14 M108 46 l-8 -10 M148 46 l8 -10" stroke="#ffb347" stroke-width="6" stroke-linecap="round"/>',
+ /* Order Office Supplies: an open carton with pencils and a ruler */
+ supplies:
+  '<g filter="url(#sh)">'+
+   '<rect x="96" y="52" width="14" height="86" rx="3" fill="url(#org)" stroke="#6b3207" stroke-width="4" transform="rotate(-10 103 95)"/>'+
+   '<rect x="124" y="40" width="14" height="96" rx="3" fill="url(#stone)" '+E+' transform="rotate(4 131 88)"/>'+
+   '<rect x="150" y="58" width="22" height="80" rx="2" fill="url(#paper)" '+E+' transform="rotate(12 161 98)"/>'+
+   '<path d="M52 118 h152 l-10 92 h-132z" fill="url(#card)" '+E+'/>'+
+   '<path d="M52 118 l-18 -22 l46 0 l14 22z M204 118 l18 -22 l-46 0 l-14 22z" fill="#8f6a3f" '+E+'/>'+
+   '<rect x="98" y="150" width="60" height="22" rx="3" fill="#d9c9a4" stroke="#4a3520" stroke-width="3"/>'+
+   '<path d="M108 161 h40" stroke="#4a3520" stroke-width="4"/>'+
+  '</g>',
+ /* Advertise a Role: a notice pinned to a board, with a plus */
+ advertise:
+  '<g filter="url(#sh)"><path d="M66 50 h124 v160 h-124z" fill="url(#paper)" '+E+' transform="rotate(-4 128 130)"/>'+
+  '<g transform="rotate(-4 128 130)"><path d="M128 96 v52 M102 122 h52" stroke="#3b4a40" stroke-width="14" stroke-linecap="round"/>'+
+  '<path d="M90 172 h76 M90 190 h56" stroke="#6f7566" stroke-width="7" stroke-linecap="round"/></g></g>'+
+  '<circle cx="124" cy="56" r="26" fill="url(#glow)"/><circle cx="124" cy="56" r="13" fill="url(#org)" stroke="#6b3207" stroke-width="4"/>',
+ /* Travel & Conferences: a suitcase with an orange luggage tag */
+ travel:
+  '<g filter="url(#sh)"><path d="M100 78 v-20 a10 10 0 0 1 10 -10 h36 a10 10 0 0 1 10 10 v20" fill="none" stroke="#5d665a" stroke-width="12"/>'+
+  '<rect x="42" y="76" width="172" height="124" rx="16" fill="url(#stone)" '+E+'/>'+
+  '<path d="M90 78 v120 M166 78 v120" stroke="#5d665a" stroke-width="10"/>'+
+  '<path d="M42 132 h172" stroke="#4b544a" stroke-width="5"/></g>'+
+  '<circle cx="196" cy="152" r="34" fill="url(#glow)"/>'+
+  '<path d="M184 126 l30 0 l0 46 l-30 0 l-10 -10 v-26z" fill="url(#org)" stroke="#6b3207" stroke-width="4"/><circle cx="182" cy="134" r="4" fill="#6b3207"/>',
+ /* Publicity: a megaphone with sound arcs */
+ publicity:
+  '<g filter="url(#sh)"><path d="M52 104 h30 l84 -46 v140 l-84 -46 h-30z" fill="url(#stone)" '+E+'/>'+
+  '<rect x="40" y="100" width="26" height="56" rx="6" fill="url(#stone2)" '+E+'/>'+
+  '<path d="M82 152 l12 46 h22 l-10 -38" fill="url(#stone2)" '+E+'/></g>'+
+  '<circle cx="196" cy="128" r="44" fill="url(#glow)"/>'+
+  '<path d="M184 104 a34 34 0 0 1 0 48 M200 88 a56 56 0 0 1 0 80" fill="none" stroke="url(#org)" stroke-width="10" stroke-linecap="round"/>'
+};
+var row = document.getElementById('row');
+Object.keys(ICONS).forEach(function(k){
+  row.insertAdjacentHTML('beforeend','<svg viewBox="0 0 256 256" data-k="'+k+'">'+DEFS+ground()+noise()+ICONS[k]+'</svg>');
+});
+document.title = Object.keys(ICONS).join(',');
+</script></body></html>

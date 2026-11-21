@@ -195,3 +195,13 @@ same run, all **fixture**:
 - Attention 12/12 planning, 8/8 operating.
 - Liability Ledger: clean.
 - Research 4: Safety Research still blocked (short 6).
+
+## Corrections found by the designers
+
+- (Designer A) "No hour_type = planning" is the default for queued actions
+  (GameActions.hour_type), but actions that charge themselves in code bill
+  OPERATING by default: Work Your Connections (hiring_pipeline.gd
+  use_connections) is operating. The tables above are right.
+- (Designer A) The spill refusal is in today's UI pre-checks only
+  (main_ui.gd ~1737, submenu_controller.gd ~143); the core
+  (month_plan.gd can_spend_hours / _debit_hours) already allows the spill.

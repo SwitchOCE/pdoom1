@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paperwork Desk</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=VT323&display=block" rel="stylesheet">
+<style>
+/* C. The Paperwork Desk -- high-fidelity run.
+   One 1920x1080 stage, scaled uniformly to the window (Godot: canvas_items, expand).
+   Type scale (px at 1920): 16 label/caption . 18 body/value . 22 heading . 30 title . display 40/64/96 (instruments only). */
+:root{
+  --paper:#efe6d0; --paper2:#e6dbc0; --paper-line:#c9d3d6;
+  --ink:#24201b; --ink2:#4a4238; --print:#2c5a4d; --print-soft:#8fa89f;
+  --red:#b02a22; --red-ink:rgba(176,42,34,.92);
+  --plan:#8a5a0e; --plan-fill:#d9a441; --plan-fill2:#c78f2c;
+  --op:#17605f; --op-fill:#3f9a96; --op-fill2:#2f8580;
+  --manila:#d6b77c; --lamp-off:#4a3328; --board:#7a5a3a; --board-dk:#4a3420;
+  --t-label:16px; --t-body:18px; --t-head:22px; --t-title:30px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#17100d}
+body{font-family:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;color:var(--ink)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:#2b1f1c}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+img{display:block}
+.ic{flex:none;border-radius:6px}
+.ic.tile{background:radial-gradient(circle at 50% 40%,#3a4744,#141c1a);border:1px solid #55665f;padding:2px}
+.i24{width:24px;height:24px}.i28{width:28px;height:28px}.i36{width:36px;height:36px}
+.key{display:inline-block;font:700 var(--t-label)/20px "Courier Prime",monospace;padding:0 6px;border:1.5px solid currentColor;border-radius:3px;white-space:nowrap}
+.lbl{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:1.5px;text-transform:uppercase}
+.p{color:var(--plan);font-weight:700}.o{color:var(--op);font-weight:700}
+
+/* ---------- the office (Pip's art) ---------- */
+.art{position:absolute;inset:0;background:url(assets/office_wide_dawn.webp) center 40%/cover}
+.art::before{content:"";position:absolute;inset:0;background:var(--wash)}
+.art::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 72% 62% at 50% 44%,rgba(20,12,16,0) 38%,rgba(20,12,16,.6))}
+
+/* ---------- wall instruments ---------- */
+.wall{position:absolute;z-index:2}
+.cal{left:48px;top:32px;width:156px;height:180px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.45);text-align:center}
+.cal::before{content:"";position:absolute;left:72px;top:-6px;width:12px;height:12px;border-radius:50%;background:#9b9b9b;box-shadow:0 2px 2px rgba(0,0,0,.5)}
+.cal-yr{height:36px;background:var(--red);color:#f6ece0;font:600 var(--t-head)/36px Oswald;letter-spacing:4px}
+.cal-mo{margin-top:6px;font:700 64px/76px Oswald;color:var(--ink);letter-spacing:3px}
+.cal-sub{margin-top:8px;color:var(--ink2)}
+.acc{left:228px;top:48px;height:76px;padding:0 18px;display:flex;align-items:center;gap:20px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.45);transform:rotate(-.6deg)}
+.acc::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#9b9b9b}
+.acc .cell{display:flex;align-items:center;gap:8px}
+.acc .lbl{letter-spacing:1px}
+.acc .lbl{display:block;color:var(--ink2)}
+.acc b{display:block;font:700 var(--t-head)/26px "Courier Prime";color:var(--ink);white-space:nowrap}
+.acc b.neg{color:var(--red)}
+.doom{left:800px;top:28px;width:400px;height:184px;padding:12px 18px;border-radius:6px;
+  background:linear-gradient(180deg,#5d4a3a,#46372b);border:3px solid #2b2019;box-shadow:inset 0 1px 0 rgba(255,220,170,.25),3px 5px 0 rgba(0,0,0,.45)}
+.doom-l{display:flex;align-items:center;gap:10px;font:600 var(--t-label)/28px Oswald;letter-spacing:3px;color:#f3e3c4}
+.doom-scr{margin-top:6px;height:92px;border-radius:4px;border:2px solid #1f1612;position:relative;overflow:hidden;padding:0 18px;
+  background:radial-gradient(ellipse at 50% 50%,#4a2416,#341a12 75%);display:flex;align-items:center;justify-content:space-between}
+.doom-scr::after{content:"";position:absolute;inset:0;background:url(assets/tex_amber_scanlines_512.webp);background-size:256px;opacity:.18;mix-blend-mode:screen;pointer-events:none}
+.doom-v{font:400 96px/88px VT323;letter-spacing:3px;color:var(--doomc);text-shadow:0 0 14px var(--doomc)}
+.doom-b{display:flex;flex-direction:column;align-items:flex-end;gap:2px;color:var(--doomc);text-shadow:0 0 8px var(--doomc)}
+.doom-b .band{font:400 40px/36px VT323;letter-spacing:3px}
+.doom-b .dir{font:400 24px/24px VT323;letter-spacing:2px;opacity:.85}
+.lamps{margin-top:10px;display:flex;gap:4px}
+.lamp{flex:1;height:14px;border-radius:2px;background:var(--lamp-off);border:1px solid #2a1c16}
+.lamp.on{background:var(--doomc);box-shadow:0 0 6px var(--doomc)}
+.lamp.end{background:#6d1814}
+.rep{right:48px;top:32px;width:240px;height:180px;border-radius:6px;padding:12px 16px;
+  background:linear-gradient(180deg,#e9dfc8,#d9ccb0);border:3px solid #6b5636;box-shadow:3px 5px 0 rgba(0,0,0,.45)}
+.rep-top{display:flex;justify-content:space-between;align-items:center}
+.rep-top .lbl{display:flex;align-items:center;gap:8px;color:var(--ink2)}
+.rep-v{font:700 40px/40px Oswald;color:var(--ink)}
+.rep svg{display:block;margin:4px auto 0}
+
+/* ---------- desk band ---------- */
+.dk{position:absolute;left:0;top:846px;width:1920px;height:234px;z-index:2;
+  background:linear-gradient(180deg,rgba(30,18,10,.55),rgba(30,18,10,0) 26px),linear-gradient(rgba(122,88,52,.5),rgba(96,68,40,.6)),url(assets/tex_plywood_stained_512.webp);
+  background-size:auto,auto,512px;box-shadow:0 -4px 12px rgba(0,0,0,.45)}
+.dko{position:absolute;z-index:4}
+.stamp-obj{right:48px;top:856px;width:280px;height:196px;border-radius:6px;padding:14px 16px;
+  background:linear-gradient(180deg,#7a5230,#5b3b1f);border:3px solid #3b2612;box-shadow:3px 5px 0 rgba(0,0,0,.45),inset 0 2px 0 rgba(255,220,170,.3)}
+.stamp-face{height:120px;border-radius:3px;background:var(--red);display:flex;align-items:center;justify-content:center;gap:14px;
+  box-shadow:inset 0 0 0 3px #e8c9b8,inset 0 0 0 6px var(--red),inset 0 0 0 8px #e8c9b8}
+.stamp-face .t{font:700 28px/32px Oswald;letter-spacing:1.5px;color:#fbf1e6;text-transform:uppercase}
+.stamp-note{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:#f2e2c4}
+
+/* ---------- menus ---------- */
+.dim{position:absolute;inset:0;background:rgba(28,18,22,.55);z-index:5}
+
+/* the schedule: the clipboard, lifted off the desk */
+.board{position:absolute;left:48px;top:236px;width:1512px;height:860px;z-index:6;border-radius:8px 8px 0 0;
+  background:linear-gradient(180deg,#866343,#6e5034);border:3px solid var(--board-dk);box-shadow:0 12px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,220,170,.25)}
+.clip{position:absolute;left:50%;top:-14px;width:150px;height:40px;margin-left:-75px;border-radius:6px;z-index:2;
+  background:linear-gradient(180deg,#d4d8dc,#9aa1a6 60%,#7d8489);border:2px solid #4f5559;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.clip::after{content:"";position:absolute;left:52px;top:9px;width:42px;height:12px;border-radius:6px;background:#5d6367;box-shadow:inset 0 2px 2px rgba(0,0,0,.5)}
+.sheet{position:absolute;left:14px;right:14px;top:14px;bottom:0;padding:30px 32px 0 56px;
+  background-color:var(--paper);
+  background-image:linear-gradient(rgba(239,230,208,.88),rgba(239,230,208,.88)),url(assets/tex_grid_graphpaper_aged_512.webp);background-size:auto,512px;
+  box-shadow:0 1px 0 rgba(0,0,0,.25),inset 0 0 60px rgba(120,90,40,.12)}
+.hole{position:absolute;left:20px;width:20px;height:20px;border-radius:50%;background:#5b4029;box-shadow:inset 0 2px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.4)}
+.fm-top{display:flex;align-items:flex-end;gap:40px;height:78px;border-bottom:4px double var(--print);padding-bottom:12px}
+.fm-no{color:var(--print)}
+.fm-title{display:flex;align-items:center;gap:12px;margin-top:6px;font:700 var(--t-title)/36px Oswald;letter-spacing:1px;color:var(--print);text-transform:uppercase}
+.fm-for{display:flex;align-items:baseline;gap:12px}
+.fm-for .lbl{color:var(--print)}
+.fm-for b{font:700 var(--t-head)/28px "Courier Prime";border-bottom:1.5px solid var(--print);padding:0 8px}
+.btn-x{margin-left:auto;height:44px;padding:0 14px;border-radius:3px;display:flex;align-items:center;gap:10px;
+  background:#e2d6ba;border:1.5px solid var(--print);font:600 var(--t-body)/20px "IBM Plex Sans Condensed";box-shadow:2px 3px 0 rgba(0,0,0,.25)}
+.fm-body{display:grid;grid-template-columns:852px 480px;gap:58px;margin-top:18px}
+
+/* the register (left) */
+.tbl-h,.tbl-r{display:grid;grid-template-columns:44px 76px 390px 198px 104px 40px;align-items:center}
+.tbl-h{height:34px;color:var(--print);border-bottom:1.5px solid var(--print)}
+.tbl-r{height:44px;border-bottom:1px solid var(--print-soft);position:relative}
+.tbl-r.spill{background:linear-gradient(90deg,rgba(217,164,65,.22),rgba(217,164,65,.06))}
+.c-n{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--print);text-align:center}
+.c-mv{display:flex;gap:6px;padding-left:8px}
+.c-mv button,.c-x button{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px}
+.c-mv button.off{opacity:.3}
+.c-it{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 0 10px}
+.c-it .nm{font:700 var(--t-body)/22px "Courier Prime";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-it .src{font:500 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--ink2);margin-left:8px}
+.c-h{display:flex;align-items:center;gap:8px;padding-left:8px;font:400 var(--t-body)/22px "Courier Prime";white-space:nowrap}
+.tag{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--plan);border:1.5px solid var(--plan);border-radius:2px;padding:0 5px;background:rgba(239,230,208,.7);white-space:nowrap}
+.c-c{font:400 var(--t-body)/22px "Courier Prime";text-align:right;padding-right:12px;white-space:nowrap}
+.c-x{display:flex;justify-content:center}
+.tbl-h .c-c{font:inherit}
+.tot{display:flex;align-items:center;height:48px;border-top:4px double var(--print);margin-top:0;font:400 var(--t-body)/22px "Courier Prime"}
+.tot>.lbl{color:var(--print);width:130px;padding-left:12px}
+.tot .k{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:1.5px;text-transform:uppercase;color:var(--print);margin-right:12px}
+.tot .hrs{font-weight:700}
+.tot .cst{margin-left:auto;padding-right:60px;font-weight:700}
+.tools{display:flex;gap:14px;margin-top:16px}
+.tools button{height:44px;padding:0 18px;border-radius:3px;display:flex;align-items:center;gap:10px;font:600 var(--t-body)/20px "IBM Plex Sans Condensed";color:#2e2312}
+.t-pencil{background:linear-gradient(180deg,#e5b94a,#c99a2b);border:2px solid #7d5c16}
+.t-eraser{background:linear-gradient(180deg,#e8a7a0,#cf8a83);border:2px solid #84463f}
+.fine{margin-top:22px;max-width:860px;padding-top:10px;border-top:1px solid var(--print-soft);font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.fine b{color:var(--print);letter-spacing:1px}
+
+/* the side column (right) */
+.sec{display:flex;align-items:center;gap:10px;color:var(--print);border-bottom:1.5px solid var(--print);padding-bottom:6px;margin-bottom:12px}
+.side>section+section{margin-top:26px}
+.hr-l{display:flex;align-items:baseline;gap:16px;height:24px}
+.hr-l .pen{margin-left:auto;margin-right:30px}
+.hr-l em{font:700 var(--t-body)/22px "Courier Prime";font-style:normal;color:var(--ink)}
+.hr-l em.zero{color:var(--red)}
+.boxes{display:flex;gap:6px;margin-top:6px}
+.bx{width:34px;height:28px;border:1.5px solid var(--print);background:rgba(255,255,255,.45);position:relative}
+.bx.pl{background:repeating-linear-gradient(135deg,var(--plan-fill) 0 4px,var(--plan-fill2) 4px 7px);border-color:var(--plan)}
+.bx.op{background:repeating-linear-gradient(135deg,var(--op-fill) 0 4px,var(--op-fill2) 4px 7px);border-color:var(--op)}
+.bx.sp{border:2px solid var(--op)}
+.bx.sp::after{content:"";position:absolute;left:-1px;top:12px;width:34px;height:2.5px;background:var(--op);transform:rotate(-38deg)}
+.hrs-wrap{position:relative}
+.hrs-wrap svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.pen{font:700 var(--t-label)/20px "Courier Prime";color:var(--op)}
+.led{margin-top:16px}
+.ln{display:flex;align-items:center;height:32px;font:400 var(--t-body)/22px "Courier Prime"}
+.ln .k{white-space:nowrap}
+.ln .dots{flex:1;margin:0 8px;height:2px;align-self:center;margin-top:10px;background:radial-gradient(circle,var(--ink2) 1px,transparent 1.4px) 0 0/8px 2px repeat-x;opacity:.6}
+.ln .v{white-space:nowrap;font-weight:700}
+.ln.sub{padding-left:22px;color:var(--ink2)}
+.ln.sub .v{color:var(--op)}
+.ln.big{height:40px;border-top:3px double var(--print);margin-top:6px;font-size:var(--t-head)}
+.ln.big .k{font-weight:700}
+.stp{display:flex;align-items:center;gap:6px}
+.stp .val{width:44px;height:30px;border:1.5px solid var(--print);background:rgba(255,255,255,.55);font:700 var(--t-body)/27px "Courier Prime";text-align:center}
+.stp button{width:30px;height:30px;border:1.5px solid var(--print);border-radius:2px;font:700 var(--t-body)/26px "Courier Prime";color:var(--print);text-align:center}
+.cap{margin-top:6px;font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.rq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rq button{height:44px;border:2px solid var(--print-soft);border-radius:3px;font:600 var(--t-body)/40px Oswald;letter-spacing:1px;color:var(--ink2);text-align:center;text-transform:uppercase}
+.rq button.on{border-color:var(--red);color:var(--red);box-shadow:inset 0 0 0 1px var(--red);background:rgba(255,255,255,.35)}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+var Q=new URLSearchParams(location.search);
+var STATE=+(Q.get('state')||3);
+
+/* ---------------- Pip's icons (assets/icons, copied from godot/assets/icons) + "new, needs art" SVGs ---------------- */
+var I={
+ money:'resource_money_64.png',compute:'resource_compute_small_64.png',research:'resource_research_small_64.png',papers:'resource_papers_small_64.png',
+ rep:'resource_reputation_64.png',doom:'resource_doom_small_64.png',hours:'resource_action_points_64.png',
+ schedule:'ui_config_date_64.png',commit:'button_confirm_normal_64.png',
+ close:'ui_control_cancel_64.png',undo:'ui_control_back_64.png',clear:'ui_control_clear_64.png',
+ up:'ui_control_up_64.png',down:'ui_control_down_64.png',remove:'ui_control_remove_64.png',
+ hire_safety:'employee_role_safety_specialist_64.png',read:'ui_guide_book_64.png',post:'new_post_online_bubble.svg',
+ audit:'employee_role_auditor_64.png',connections:'action_publicity_network_64.png',meetups:'new_meetup_badge.svg',
+ networking:'network_64.png',tour:'ui_infrastructure_facilities_64.png',maintenance:'employee_role_engineer_64.png',supplies:'new_supplies_box.svg'
+};
+var TILE={networking:1};
+function ic(k,sz){return '<img class="ic i'+sz+(TILE[k]?' tile':'')+'" src="assets/icons/'+I[k]+'" alt="">';}
+
+/* ---------------- the run (fork/design/hifi/run-state.md) ---------------- */
+var DOOMC={HIGH:{c:'#E9752E',wash:'rgba(233,117,46,.14)'},ELEVATED:{c:'#F6A800',wash:'rgba(246,168,0,.07)'}};
+var NOV={yr:'2017',mo:'NOV',sub:'Plan, month 5',month:'NOVEMBER 2017',money:'$140,000',compute:'65',research:'-12',papers:'0',rep:32,doom:40.2,band:'HIGH',dir:'RISING'};
+/* State 3: the month's plan. [icon, play, where it lives, hours, pool, cost] -- run-state.md table */
+var PLAN3=[
+ ['hire_safety','Hire: Safety Researcher','Hire Staff',1,'plan','$60,000'],
+ ['read','Read the Literature','Scouting',1,'plan',''],
+ ['read','Read the Literature','Scouting',1,'plan',''],
+ ['post','Post Online','Scouting',1,'plan',''],
+ ['audit','Safety Audit','',2,'op','$40,000'],
+ ['connections','Work Your Connections','',2,'op','6 rep'],
+ ['meetups','Go to Meetups','Scouting',1,'op','$300'],
+ ['networking','Networking','Publicity',1,'op',''],
+ ['tour','Tour Offices','Office',1,'op',''],
+ ['maintenance','Office Maintenance','Operations',1,'op','$5,000'],
+ ['supplies','Order Office Supplies','Operations',1,'op','$2,000']
+];
+
+/* ---------------- wall ---------------- */
+function wall(st){
+  var d=DOOMC[st.band], lamps='', lit=Math.floor(st.doom/10);
+  for(var i=0;i<10;i++) lamps+='<div class="lamp'+(i<lit?' on':'')+(i==9?' end':'')+'"></div>';
+  var cx=104,cy=82,r=68;
+  function pt(f,rr){var a=Math.PI*(1-f);return [(cx+Math.cos(a)*rr).toFixed(1),(cy-Math.sin(a)*rr).toFixed(1)];}
+  function arc(a0,a1,col){var p0=pt(a0,r),p1=pt(a1,r);return '<path d="M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 0 1 '+p1[0]+' '+p1[1]+'" stroke="'+col+'" stroke-width="8" fill="none"/>';}
+  var ticks='';for(var t=0;t<=10;t++){var a=pt(t/10,r-12),b=pt(t/10,r+2);ticks+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#4a4238" stroke-width="'+(t%5?1.5:2.5)+'"/>';}
+  var ang=Math.PI*(1-st.rep/100), n=[(cx+Math.cos(ang)*(r-8)).toFixed(1),(cy-Math.sin(ang)*(r-8)).toFixed(1)];
+  var dial='<svg width="208" height="104" viewBox="0 0 208 104">'+arc(0,1,'#b9ab8e')+arc(0,.1,'#b02a22')+ticks+
+    '<text x="24" y="102" font-family="IBM Plex Sans Condensed" font-weight="700" font-size="16" fill="#b02a22">0</text>'+
+    '<text x="156" y="102" font-family="IBM Plex Sans Condensed" font-weight="700" font-size="16" fill="#4a4238">100</text>'+
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+n[0]+'" y2="'+n[1]+'" stroke="#24201b" stroke-width="4" stroke-linecap="round"/><circle cx="'+cx+'" cy="'+cy+'" r="7" fill="#24201b"/></svg>';
+  var neg=st.research.charAt(0)=='-';
+  return '<div class="art" style="--wash:'+d.wash+'"></div>'+
+   '<div class="wall cal"><div class="cal-yr">'+st.yr+'</div><div class="cal-mo">'+st.mo+'</div><div class="cal-sub lbl">'+st.sub+'</div></div>'+
+   '<div class="wall acc">'+
+     cell('money','Money',st.money)+cell('compute','Compute',st.compute)+cell('research','Research',st.research,neg)+cell('papers','Papers',st.papers)+'</div>'+
+   '<div class="wall doom" style="--doomc:'+d.c+'"><div class="doom-l">'+ic('doom',28)+'P(DOOM)</div>'+
+     '<div class="doom-scr"><span class="doom-v">'+st.doom.toFixed(1)+'%</span><span class="doom-b"><span class="band">'+st.band+'</span>'+(st.dir?'<span class="dir">'+st.dir+'</span>':'')+'</span></div>'+
+     '<div class="lamps">'+lamps+'</div></div>'+
+   '<div class="wall rep"><div class="rep-top"><span class="lbl">'+ic('rep',28)+'Reputation</span><span class="rep-v">'+st.rep+'</span></div>'+dial+'</div>';
+  function cell(k,l,v,bad){return '<span class="cell">'+ic(k,28)+'<span><span class="lbl">'+l+'</span><b'+(bad?' class="neg"':'')+'>'+v+'</b></span></span>';}
+}
+
+/* ---------------- desk ---------------- */
+function desk(st,o){
+  o=o||{};
+  return '<div class="dk"></div>'+
+   '<div class="dko stamp-obj"><div class="stamp-face">'+ic('commit',36)+'<span class="t">Commit the<br>month</span></div>'+
+   '<div class="stamp-note"><span>Held for events: '+o.held+' hr</span>'+(o.menu?'':'<span class="key">Enter</span>')+'</div></div>';
+}
+
+/* ---------------- the schedule (Form A-20) ---------------- */
+function schedule(st,rows,o){
+  var planCap=12, opCap=8;
+  var planWork=0, opWork=0;
+  rows.forEach(function(r){ if(r[4]=='plan') planWork+=r[3]; else opWork+=r[3]; });
+  var spill=Math.max(0,opWork-opCap);                 // ADR-0011 2026-07-28: operating may eat planning hours
+  var planLeft=planCap-planWork-spill, opLeft=Math.max(0,opCap-opWork);
+  var held=planLeft+opLeft+o.reserve;                 // unspent remainder + explicit reserve (none here)
+  // which row's hours spilled: the operating work beyond the 8th operating hour, in queue order
+  var acc=0, spillRow=-1;
+  rows.forEach(function(r,i){ if(r[4]=='op'){ acc+=r[3]; if(acc>opCap && spillRow<0) spillRow=i; } });
+
+  var h='<div class="dim"></div><div class="board"><div class="clip"></div><div class="sheet">'+
+    '<span class="hole" style="top:150px"></span><span class="hole" style="top:560px"></span>'+
+    '<div class="fm-top"><div><div class="fm-no lbl">Form A-20 / Founder\'s office</div><div class="fm-title">'+ic('schedule',36)+'Schedule of the month</div></div>'+
+    '<div class="fm-for"><span class="lbl">For the month of</span><b>'+st.month+'</b></div>'+
+    '<button class="btn-x">'+ic('close',24)+'Close <span class="key">Esc</span></button></div>'+
+    '<div class="fm-body"><div>';
+  h+='<div class="tbl-h lbl"><span class="c-n">No.</span><span style="padding-left:8px">Order</span><span style="padding-left:10px">Play</span><span style="padding-left:8px">Hours</span><span class="c-c" style="font:inherit">Cost</span><span></span></div>';
+  rows.forEach(function(r,i){
+    var hrs='<span>'+r[3]+' <span class="'+(r[4]=='op'?'o':'p')+'">'+r[4]+' hr</span></span>';
+    if(i==spillRow) hrs+='<span class="tag">from planning</span>';
+    h+='<div class="tbl-r'+(i==spillRow?' spill':'')+'"><span class="c-n">'+(i+1)+'</span>'+
+       '<span class="c-mv"><button class="'+(i==0?'off':'')+'">'+ic('up',24)+'</button><button class="'+(i==rows.length-1?'off':'')+'">'+ic('down',24)+'</button></span>'+
+       '<span class="c-it">'+ic(r[0],28)+'<span class="nm">'+r[1]+(r[2]?'<span class="src">'+r[2]+'</span>':'')+'</span></span>'+
+       '<span class="c-h">'+hrs+'</span><span class="c-c">'+r[5]+'</span>'+
+       '<span class="c-x"><button>'+ic('remove',24)+'</button></span></div>';
+  });
+  h+='<div class="tot"><span class="lbl">Totals</span><span class="hrs"><span class="k">Hours</span>'+planWork+' <span class="p">plan hr</span> + '+opWork+' <span class="o">op hr</span></span><span class="cst"><span class="k">Cost</span>'+o.cost+'</span></div>'+
+     '<div class="tools"><button class="t-pencil">'+ic('undo',24)+'Undo <span class="key">Z</span></button><button class="t-eraser">'+ic('clear',24)+'Clear form <span class="key">C</span></button></div>'+
+     '<div class="fine"><b>PARA. 2.</b> Operating work may spill into planning hours. Planning work may never use operating hours.</div>';
+  h+='</div><div class="side">';
+
+  // Founder's hours: filled box = hour LEFT (council rule 1); the spilled hour is struck in operating teal
+  function boxes(cap,left,cls,sp){var b='';for(var i=0;i<cap;i++){var c=i<left?cls:(i>=cap-sp?'sp':'');b+='<i class="bx '+c+'"></i>';}return b;}
+  // geometry for the spill arrow (box 34 + gap 6)
+  var bw=40, planY=24+6, opY=planY+28+18+24+6;  // top of planning boxes, top of operating boxes (relative to .hrs-wrap)
+  var opEnd=opCap*bw-6, spX=(planCap-1)*bw+17;
+  var arrow=spill?'<svg width="480" height="140">'+
+     '<path d="M'+(opEnd+8)+' '+(opY+14)+' H'+(spX-14)+' Q'+spX+' '+(opY+14)+' '+spX+' '+(opY)+' V'+(planY+38)+'" fill="none" stroke="#17605f" stroke-width="2.5" stroke-dasharray="6 4"/>'+
+     '<path d="M'+(spX-7)+' '+(planY+42)+' L'+spX+' '+(planY+31)+' L'+(spX+7)+' '+(planY+42)+'" fill="none" stroke="#17605f" stroke-width="2.5" stroke-linejoin="round"/>'+
+     '</svg>':'';
+  h+='<section><div class="sec lbl">'+ic('hours',24)+'Founder\'s hours</div>'+
+     '<div class="hrs-wrap">'+
+       '<div class="hr-l"><span class="lbl p">Planning</span><em class="'+(planLeft==0?'zero':'')+'">'+planLeft+' of '+planCap+' left</em></div>'+
+       '<div class="boxes">'+boxes(planCap,planLeft,'pl',spill)+'</div>'+
+       '<div class="hr-l" style="margin-top:18px"><span class="lbl o">Operating</span><em class="'+(opLeft==0?'zero':'')+'">'+opLeft+' of '+opCap+' left</em>'+(spill?'<span class="pen">'+spill+' hr spills up</span>':'')+'</div>'+
+       '<div class="boxes">'+boxes(opCap,opLeft,'op',0)+'</div>'+
+       arrow+'</div>'+
+     '<div class="led">'+
+       '<div class="ln"><span class="k">Planning work</span><span class="dots"></span><span class="v">'+planWork+' hr</span></div>'+
+       '<div class="ln"><span class="k">Operating work</span><span class="dots"></span><span class="v">'+opWork+' hr</span></div>'+
+       (spill?'<div class="ln sub"><span class="k">of which from planning hours</span><span class="dots"></span><span class="v">'+spill+' hr</span></div>':'')+
+       '<div class="ln"><span class="k">Set aside for events</span><span class="dots"></span><span class="stp"><span class="val">'+o.reserve+'</span><button>-</button><button>+</button></span></div>'+
+       '<div class="ln big"><span class="k">Held for events at Commit</span><span class="dots"></span><span class="v">'+held+' hr</span></div>'+
+       '<div class="cap">Hours not spent at Commit wait for this month\'s events, then lapse at month end.</div>'+
+     '</div></section>';
+  h+='<section><div class="sec lbl">'+ic('money',24)+'After Commit</div>'+
+     '<div class="ln"><span class="k">Money</span><span class="dots"></span><span class="v">'+st.money+' -&gt; '+o.moneyAfter+'</span></div>'+
+     '<div class="ln"><span class="k">Reputation</span><span class="dots"></span><span class="v">'+st.rep+' -&gt; '+o.repAfter+'</span></div></section>';
+  h+='<section><div class="sec lbl">'+ic('research',24)+'Research quality</div>'+
+     '<div class="rq"><button>Rushed</button><button class="on">Standard</button><button>Thorough</button></div>'+
+     '<div class="cap">Standard: baseline speed. No side effects.</div></section>';
+  h+='</div></div></div></div>';
+  return {html:h,held:held};
+}
+
+/* ---------------- states ---------------- */
+function state3(){
+  var f=schedule(NOV,PLAN3,{reserve:0,cost:'$107,300 + 6 rep',moneyAfter:'$32,700',repAfter:26});
+  return wall(NOV)+desk(NOV,{menu:1,held:f.held})+f.html;
+}
+var stage=document.getElementById('stage');
+stage.innerHTML=state3();
+
+/* ---------------- fit the 1920x1080 stage to the window ---------------- */
+function fit(){
+  var s=Math.min(innerWidth/1920,innerHeight/1080);
+  stage.style.transform='translate('+((innerWidth-1920*s)/2)+'px,'+((innerHeight-1080*s)/2)+'px) scale('+s+')';
+}
+fit(); addEventListener('resize',fit);
+
+/* ---------------- ?check=1: layout self-check (overflow, off-stage, small text) ---------------- */
+if(Q.get('check')){
+  (document.fonts?document.fonts.ready:Promise.resolve()).then(function(){
+    var out=[], sr=stage.getBoundingClientRect(), s=sr.width/1920;
+    stage.querySelectorAll('*').forEach(function(e){
+      var cs=getComputedStyle(e); if(cs.display=='none'||cs.visibility=='hidden') return;
+      var hasText=[].some.call(e.childNodes,function(n){return n.nodeType==3&&n.textContent.trim();});
+      if(hasText){
+        var fs=parseFloat(cs.fontSize); if(fs<16) out.push('SMALL '+fs+'px: '+e.textContent.trim().slice(0,40));
+        if(e.scrollWidth>e.clientWidth+1&&cs.overflow!='visible') out.push('CLIP-X '+e.className+': '+e.textContent.trim().slice(0,40));
+      }
+      var r=e.getBoundingClientRect();
+      if(r.width&&(r.right>sr.right+1||r.bottom>sr.bottom+1||r.left<sr.left-1||r.top<sr.top-1)&&!e.closest('.art,.dk,.dim,.board'))
+        out.push('OFFSTAGE '+e.className+' '+Math.round((r.left-sr.left)/s)+','+Math.round((r.top-sr.top)/s)+' '+Math.round(r.width/s)+'x'+Math.round(r.height/s));
+    });
+    var objs=[].slice.call(stage.querySelectorAll('.wall,.dko'));
+    objs.forEach(function(x,i){objs.slice(i+1).forEach(function(y){var A=x.getBoundingClientRect(),B=y.getBoundingClientRect();
+      if(A.left<B.right&&B.left<A.right&&A.top<B.bottom&&B.top<A.bottom) out.push('OVERLAP '+x.className+' / '+y.className);});});
+    var pre=document.createElement('pre');pre.id='chk';pre.textContent='CHECK '+(out.length?out.join('\n'):'OK');document.body.appendChild(pre);
+  });
+}
+})();
+</script>
+</body>
+</html>
