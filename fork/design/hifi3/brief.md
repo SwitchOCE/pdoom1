@@ -143,3 +143,72 @@ hold.
    results, the decisions still open (plain sentences), new art and sound
    needed, disk. Commit and push (git pull --rebase first). Delete the
    hifi2 full-size PNGs on the box once hifi3 is pushed.
+
+## Addendum (2026-11-22): outside feedback, one extra round for H
+
+After the current re-check finishes (do not interrupt it), run one more
+round on H only. C, E and G stay as they are now.
+
+An artist and visual designer Alex trusts reviewed the designs. In short,
+his points (paraphrased; his message is private and must not be committed
+or put on the page):
+
+- Better than the previous UI in almost every way; he likes the dark
+  colour scheme and the day/month progress shown as small shapes that fill.
+- The weak spot is visual hierarchy: apart from the P(Doom) meter,
+  everything feels equally important, which reads as "not seeing" things
+  strategically, as if something were hidden.
+- He likes that the room changes colour as things get worse and suggests
+  pushing it further: colour change can exert real pressure and tension.
+- Maybe every resource needs a meter visible at all or most times.
+- He framed a spectrum: HighFleet's dense, grimy instrument panels (the UI
+  you play) at one end, the newer Doom games' near-absent UI at the other,
+  incremental games' panels close to what we have.
+
+Alex's decisions on it:
+
+> "I think all of these I agree with one, two, and four the most.
+> Highfleet I'm the least aligned with, but I think we can draw some
+> inspiration from it in maybe we should do one take withdrawing
+> inspiration from it, one without"
+
+(One = clearer hierarchy, two = stronger doom colour, four = a meter per
+resource.) So:
+
+1. **H, revised** (fork/design/hifi3/H/, replacing the current renders):
+   - **Hierarchy.** Rank what matters for this month's decision and show
+     it: P(Doom) first, then Attention left and money, then the plan; the
+     rest recedes (smaller, dimmer, lower contrast but still 4.5:1 for
+     text). A first-time viewer should see where to look in one glance.
+   - **Stronger doom colour.** Push the room's colour shift by doom band
+     further so pressure rises visibly from band to band (still "a layer,
+     not a repaint"; controls stay put and readable). Show it across the
+     six states, and add a strip of the same screen at each doom band to
+     the page.
+   - **A meter per resource.** Money, compute, research, papers and
+     reputation each get a small always-visible meter in G's meter style
+     (a bar or small dial; what full means must come from the game's data
+     or be stated, never invented). This adds to the screen, so keep it
+     compact and below P(Doom) in the hierarchy: Alex's "much less on one
+     screen" steer still holds. Respect ADR-0001/ADR-0015 (no new hidden
+     information, no printed doom deltas).
+2. **H-HF, the HighFleet-inspired take**: the same revised H (same layout,
+   hierarchy, colour and meters) with texture drawn from HighFleet and
+   amber Soviet-style control panels: worn painted metal, analogue dials
+   and needles, stencilled labels, rivets, warning plates. Texture only:
+   not HighFleet's density, no extra controls. Build in
+   fork/design/hifi3/H-HF/. References: find 4 to 8 HighFleet screenshots
+   (Steam store page, press kit) and save them, never committed, in
+   fork/design/research/reference-games/shots/highfleet-*.jpg; add them
+   to .git/info/exclude and to the grim gallery. If fetches fail, work
+   from notes.
+3. Update spec.md for the revised H (hierarchy order, resource meters,
+   colour by band) and note H-HF as a texture variant in one short
+   section.
+4. The page: H first, then H-HF as "the same design, heavier texture",
+   then C, E and G. Add the doom-band strip.
+5. Council: one round on the revised H and H-HF (did hierarchy, colour
+   and meters land; does H-HF keep the layout and stay readable; the usual
+   defect and 4.5:1 checks; Neon also listens to the sound if it
+   changed), one fix round, Opus and Sol then Neon. Then the report and
+   push as briefed.
