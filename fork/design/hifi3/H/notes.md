@@ -11,7 +11,7 @@ Files:
 - Renders: `s1.png`..`s6.png` (1920x1080), `s1-720.png`..`s6-720.png`
   (1280x720), `s1.webp`..`s6.webp`.
 - `assets/`: only what the page uses (Pip's office background and cat, one
-  texture, 29 icons).
+  texture, 24 icons and 5 placeholders).
 - `dateline-sound.wav`: the dateline sound rendered from the page's own
   code (see "hifi3").
 
@@ -299,7 +299,7 @@ Balance hiring.* (core.json has `costs: {}`; see E's notes).
 
 ## Icons
 
-29 of Pip's icons, plus A's new placeholders:
+24 of Pip's icons, plus A's 5 new placeholders (29 files):
 - rack: ui_guide_actions, ui_config_date, ui_staff_management,
   button_upgrade_normal, ui_budget_finance, ui_guide_book; new_inbox_tray,
   new_feed_tape;
