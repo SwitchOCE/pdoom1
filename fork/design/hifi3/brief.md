@@ -180,8 +180,16 @@ resource.) So:
      it: P(Doom) first, then Attention left and money, then the plan; the
      rest recedes (smaller, dimmer, lower contrast but still 4.5:1 for
      text). A first-time viewer should see where to look in one glance.
-   - **Stronger doom colour.** Push the room's colour shift by doom band
-     further so pressure rises visibly from band to band (still "a layer,
+   - **Stronger doom colour.** Alex, after reading the feedback: "I
+     definitely agree with a lot of what he said, especially with the
+     screen darkening or changing texture and color palettes as time goes
+     on and the chance of doom gets worse. I think it should start off
+     maybe even a little bit brighter than it does now and maybe can
+     darken over time." So month 1 (the lowest band) starts a little
+     brighter than now (still a dim, grimy office, not cheerful; paper
+     stays the lightest thing), and each band darkens and shifts the
+     palette and texture further, so pressure rises visibly from band to
+     band (still "a layer,
      not a repaint"; controls stay put and readable). Show it across the
      six states, and add a strip of the same screen at each doom band to
      the page.
