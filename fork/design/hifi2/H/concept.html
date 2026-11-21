@@ -29,12 +29,12 @@
   /* accent: only where something needs attention */
   --amber:#d9a03a; --amber-line:rgba(217,160,58,.62); --warn:#d58a52; --blood:#9b3328;
   /* paper: the only light thing, aged and dirty */
-  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#231c14; --ink-soft:#43382a;
+  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#1e1810; --ink-soft:#30281d;
   --mono:"IBM Plex Mono",Consolas,monospace; --sans:"IBM Plex Sans","Segoe UI",sans-serif;
   --cond:"Barlow Condensed",sans-serif; --type:"Courier Prime","Courier New",monospace;
   /* film grain (no image file): fractal noise, alpha only */
   --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .55 0'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>");
-  --smut:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.05'/></filter><rect width='600' height='600' filter='url(%23s)'/></svg>");
+  --smut:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.05'/></filter><rect width='600' height='600' filter='url(%23s)'/></svg>");
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#050404}
@@ -63,7 +63,7 @@ body{font-family:var(--sans);color:var(--bone)}
 .cn.bl{left:-1px;bottom:-1px;border-width:0 0 2px 2px}.cn.br{right:-1px;bottom:-1px;border-width:0 2px 2px 0}
 .ph{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-bottom:1px solid var(--frame);
   font:600 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
-.key{display:inline-block;flex:none;font:500 var(--t1)/20px var(--mono);min-width:26px;text-align:center;padding:0 5px;border:1px solid rgba(214,206,189,.34);border-radius:2px;color:var(--muted)}
+.key{display:inline-block;flex:none;letter-spacing:0;font:500 var(--t1)/20px var(--mono);min-width:26px;text-align:center;padding:0 5px;border:1px solid rgba(214,206,189,.34);border-radius:2px;color:var(--muted)}
 
 /* Pip's icons, on dark plates, toned down so they belong */
 .ic{display:block;flex:none;filter:saturate(.42) sepia(.22) brightness(.95) contrast(1.05)}
@@ -83,15 +83,17 @@ body{font-family:var(--sans);color:var(--bone)}
 @media (prefers-reduced-motion: reduce){ .dl.typing span{animation:none;opacity:var(--o,1)} .dl.typing .caret{animation:none;opacity:0} }
 
 /* ===== wall instruments: P(Doom) and reputation, both in G's meter style ===== */
-.doomw{left:1400px;top:40px;width:280px;height:300px}
+.doomw{left:1400px;top:40px;width:280px;height:330px}
 .doomw svg{position:absolute;left:20px;top:46px}
 .d-pct{position:absolute;left:0;right:0;top:132px;text-align:center;font:600 var(--t5)/1 var(--mono);letter-spacing:-1px}
 .d-band{position:absolute;left:0;right:0;top:180px;text-align:center;font:600 var(--t3)/1 var(--mono);letter-spacing:3px}
+.d-band.long{font-size:var(--t2);letter-spacing:1px;top:182px}
+.d-lab{position:absolute;left:0;right:0;top:292px;text-align:center;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
 .d-trend{position:absolute;left:50%;top:216px;transform:translateX(-50%);font:600 var(--t1)/22px var(--mono);letter-spacing:2px;padding:0 10px;border:1px solid}
 .ladder{position:absolute;left:20px;right:20px;top:262px;display:flex;gap:3px;height:14px;align-items:center}
 .ladder i{display:block;height:6px;opacity:.42}
 .ladder i.on{height:14px;opacity:1}
-.repw{left:1696px;top:40px;width:184px;height:300px}
+.repw{left:1696px;top:40px;width:184px;height:330px}
 .repw svg{position:absolute;left:12px;top:56px}
 .r-num{position:absolute;left:0;right:0;top:128px;text-align:center;font:600 var(--t5)/1 var(--mono);color:var(--bone)}
 .r-scale{position:absolute;left:18px;right:18px;top:176px;display:flex;justify-content:space-between;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
@@ -113,9 +115,9 @@ body{font-family:var(--sans);color:var(--bone)}
 .held .lbl{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted)}
 .held .val{font:600 var(--t4)/1 var(--mono);color:var(--bone)}
 .held .sub{padding:4px 16px 14px;font:400 var(--t1)/1.3 var(--sans);color:var(--dim)}
-.cmt{left:1584px;top:980px;width:296px;height:60px;display:flex;align-items:center;justify-content:center;gap:14px;
+.cmt{left:1584px;top:980px;width:296px;height:60px;display:flex;align-items:center;justify-content:center;gap:12px;
   background:linear-gradient(#1d1813,#15110d);border:1px solid var(--amber-line);border-radius:2px;
-  font:700 var(--t3)/1 var(--cond);letter-spacing:3px;color:var(--amber);box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.05)}
+  font:700 var(--t3)/1 var(--cond);letter-spacing:2.5px;color:var(--amber);white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.05)}
 .cmt .key{border-color:var(--amber-line);color:var(--amber)}
 
 /* ===== PLAN (state 3): THE MONTH AHEAD ===== */
@@ -191,6 +193,164 @@ body{font-family:var(--sans);color:var(--bone)}
 .rq-sw span.on{background:#2a2119;color:#e6d9bd;box-shadow:inset 0 -2px 0 var(--plan-fill)}
 .esc{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);border:1px solid var(--frame-hi);padding:8px 12px;display:flex;gap:8px;align-items:center}
 
+/* ===== disabled controls: told apart by a dashed, hatched plate, never by fading text below 4.5:1 ===== */
+.kb.off{opacity:1;color:var(--dim);border-style:dashed;border-left-style:solid;border-left-color:#2a241e;background:repeating-linear-gradient(135deg,rgba(196,176,138,.04) 0 2px,transparent 2px 7px),#100e0c}
+.kb.off .ic{opacity:.45}
+.kb.off .key{border-style:dashed;color:var(--dim)}
+.kb.hint{border-color:var(--amber-line);border-left-color:var(--amber);color:#e8dcc2;box-shadow:0 0 0 2px rgba(217,160,58,.5),0 0 24px rgba(217,160,58,.26)}
+.kb.hint .key{border-color:var(--amber-line);color:var(--amber)}
+
+/* ===== the month panel in WATCH: clock, pause, speed, held ===== */
+.held .ph{color:var(--muted)}
+.clk{margin:14px 16px 0;height:92px;background:var(--well);border:1px solid var(--frame);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.clk b{font:500 var(--t5)/1 var(--mono);color:var(--bone);letter-spacing:1px}
+.clk span{font:400 var(--t1)/1 var(--mono);color:var(--muted)}
+.paused{margin:12px 16px 0;height:48px;border:1px solid rgba(190,70,55,.7);background:rgba(155,51,40,.14);display:flex;align-items:center;justify-content:center;gap:12px;
+  font:700 var(--t3)/1 var(--cond);letter-spacing:3px;color:#e3a99b}
+.paused i{width:10px;height:10px;border-radius:50%;background:#c4483a;box-shadow:0 0 6px rgba(196,72,58,.6)}
+.speed{margin:12px 16px 0;display:flex;border:1px solid var(--frame-hi)}
+.speed span{flex:1;text-align:center;font:400 var(--t1)/38px var(--mono);color:var(--muted)}
+.speed span+span{border-left:1px solid var(--frame)}
+.speed span.on{background:#2a2119;color:#e6d9bd;box-shadow:inset 0 -2px 0 var(--plan-fill)}
+.cmt.off{border:1px dashed rgba(196,176,138,.3);color:var(--dim);background:#110f0d;box-shadow:none}
+.d-warn{position:absolute;left:0;right:0;top:292px;text-align:center;font:600 var(--t1)/1 var(--mono);letter-spacing:.5px}
+
+/* ===== home terminal panel: Attention's home and the plan at a glance ===== */
+.term{left:56px;top:612px;width:560px;height:428px;padding:18px 24px 0;display:flex;flex-direction:column}
+.t-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--frame-hi);padding-bottom:10px}
+.t-title{font:700 var(--t3)/1 var(--cond);letter-spacing:4px;color:var(--bone)}
+.t-sub{font:400 var(--t1)/1 var(--mono);color:var(--muted)}
+.t-att{display:grid;grid-template-columns:118px 1fr auto;align-items:center;row-gap:10px;padding:14px 0 12px;border-bottom:1px solid var(--frame)}
+.t-att .l{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--plan)}
+.t-att .l.op{color:var(--op)}
+.t-att .v{font:500 var(--t2)/1 var(--mono);color:var(--bone);text-align:right}
+.t-att .pips,.m-hrs .pips{display:flex;gap:4px}
+.t-att .pip{width:13px;height:20px}
+.t-q{padding-top:8px;font:400 var(--t2)/31px var(--sans);color:var(--bone)}
+.t-q .n{font:400 var(--t1)/31px var(--mono);color:var(--dim);display:inline-block;width:40px}
+.t-q .row{display:flex;justify-content:space-between}
+.t-q .dim2{color:var(--muted)}
+.t-q .op{color:var(--op)}
+.t-q .key{margin-left:8px}
+.t-foot{margin:auto -24px 0;height:46px;border-top:1px solid var(--frame);padding:0 20px;display:flex;align-items:center}
+.mbar{display:flex;gap:3px;align-items:center;height:22px;margin:12px 0 4px}
+.mbar i{flex:1;height:10px;background:rgba(214,206,189,.08)}
+.mbar i.f{background:var(--plan-fill)}
+.mbar i.now{height:22px;background:var(--bone)}
+
+/* ===== the office cat's photo on the desk: a print, so paper; aged and dim ===== */
+.catf{left:652px;top:800px;width:124px;height:150px;padding:8px 8px 22px;isolation:isolate;background:linear-gradient(#a99d84,#93866b);transform:rotate(1.5deg);box-shadow:0 10px 18px rgba(0,0,0,.65),inset 0 0 14px rgba(60,40,20,.35)}
+.catf img{display:block;width:108px;height:120px;object-fit:cover;object-position:50% 30%;filter:sepia(.35) saturate(.5) brightness(.72) contrast(1.05)}
+.cat-glow{position:absolute;pointer-events:none;border-radius:50%}
+
+/* ===== paper: the only light thing, aged, dimmed, dirty ===== */
+.paper{isolation:isolate;background:linear-gradient(172deg,#bcb095,#b0a387 62%,#a79a7e);color:var(--ink);border-radius:1px;
+  box-shadow:0 22px 44px rgba(0,0,0,.72),inset 0 0 46px rgba(70,48,22,.3),inset 0 0 5px rgba(60,40,20,.45)}
+.paper:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;mix-blend-mode:multiply;opacity:.16}
+.paper .key{color:var(--ink);border-color:rgba(35,28,20,.6)}
+
+/* tutorial: the advisor's note (cold open hand-off) */
+.adv{left:842px;top:618px;width:400px;padding:20px 22px 18px;transform:rotate(-.5deg)}
+.adv .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d}
+.adv p{font:400 var(--t2)/1.4 var(--type);margin-top:12px;color:var(--ink)}
+.adv .ptr{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(35,28,20,.4);font:700 var(--t1)/1 var(--type);color:var(--ink)}
+.adv-arrow{position:absolute;right:-30px;top:30px;width:30px;height:2px;background:var(--amber)}
+.adv-arrow:after{content:"";position:absolute;right:-2px;top:-6px;border:7px solid transparent;border-left:10px solid var(--amber);border-right:0}
+
+/* ===== ACTIONS (state 2): E's card file, dark ===== */
+.cf{left:56px;top:88px;width:1196px;height:952px;padding:20px 28px 0;display:flex;flex-direction:column}
+.cf-head{display:flex;align-items:center;justify-content:space-between;height:50px;border-bottom:1px solid var(--frame-hi)}
+.cf-title{display:flex;align-items:center;gap:14px;font:700 var(--t4)/1 var(--cond);letter-spacing:6px;color:var(--bone)}
+.pi-t{width:40px;height:40px}.ic-t{width:30px;height:30px}
+.cf-res{display:grid;grid-template-columns:200px 150px 250px 130px 1fr;margin-top:14px;border:1px solid var(--frame);background:rgba(0,0,0,.22);height:66px}
+.cf-res>div{display:flex;align-items:center;gap:12px;padding:0 14px}
+.cf-res>div+div{border-left:1px solid var(--frame)}
+.cf-res .k{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted);white-space:nowrap}
+.cf-res .v{font:500 var(--t3)/1 var(--mono);color:var(--bone);margin-top:6px;white-space:nowrap}
+.cf-res .neg .k,.cf-res .neg .v{color:var(--warn)}
+.pi-r{width:36px;height:36px}.ic-r{width:28px;height:28px}
+.m-hrs{display:grid;grid-template-columns:auto auto auto;align-items:center;column-gap:10px;row-gap:6px}
+.m-hrs em{font:600 var(--t1)/1 var(--cond);font-style:normal;letter-spacing:2px;color:var(--plan)}
+.m-hrs em.op{color:var(--op)}
+.m-hrs .pip{width:9px;height:14px}
+.m-hrs .n{font:500 var(--t1)/1 var(--mono);color:var(--bone)}
+.cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.cf-col{display:flex;flex-direction:column;gap:8px}
+.card{position:relative;height:64px;display:grid;grid-template-columns:48px 1fr 44px;column-gap:12px;align-items:center;padding:0 8px 0 8px;
+  background:#16130f;border:1px solid rgba(196,176,138,.13)}
+.card.door{background:#1a1612;border-left:3px solid #4d3f2a;padding-left:6px}
+.card .pi-c{width:46px;height:46px}.card .ic-c{width:36px;height:36px}
+.card .tx{min-width:0;display:flex;flex-direction:column;gap:7px}
+.card .l1{display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
+.card .nm{font:500 var(--t2)/1 var(--sans);color:var(--bone)}
+.card .l2{display:flex;align-items:center;gap:8px;font:400 var(--t1)/1 var(--sans);color:var(--muted);white-space:nowrap}
+.card .why{font:500 var(--t1)/1 var(--sans);color:var(--warn)}
+.card .stamp{font:500 var(--t1)/20px var(--mono);color:var(--bone);border:1px solid var(--frame-hi);padding:0 7px}
+.card .tab{height:44px;display:flex;align-items:center;justify-content:center;font:500 var(--t3)/1 var(--mono);color:var(--muted);border:1px solid var(--frame-hi);background:rgba(0,0,0,.25)}
+.card.off{background:repeating-linear-gradient(135deg,rgba(196,176,138,.035) 0 2px,transparent 2px 7px),#100e0c;border-style:dashed}
+.card.off .nm{color:var(--muted)}
+.card.off .ic{opacity:.45}
+.card.off .tab{border-style:dashed;color:var(--dim)}
+.card.focus{border-color:var(--amber-line);box-shadow:0 0 0 1px var(--amber-line),0 0 18px rgba(217,160,58,.14);background:#1f1913}
+.card.focus .tab{border-color:var(--amber-line);color:var(--amber)}
+.chip{display:inline-block;font:500 var(--t1)/22px var(--mono);padding:0 7px;border:1px solid var(--frame-hi);color:var(--bone);white-space:nowrap}
+.chip.plan{border-color:rgba(201,164,101,.55);color:var(--plan)}
+.chip.ops{border-color:rgba(147,179,169,.5);color:var(--op)}
+.chip.ghost{border-style:dashed;color:var(--muted)}
+.card.off .chip{color:var(--muted);border-color:rgba(196,176,138,.18)}
+.cf-det{margin-top:14px;height:84px;display:flex;align-items:center;gap:16px;padding:0 16px;border:1px solid var(--amber-line);background:#1b1612}
+.cf-det .pi-c{width:54px;height:54px}.cf-det .ic-c{width:42px;height:42px}
+.cf-det .tx{flex:1;display:flex;flex-direction:column;gap:10px}
+.cf-det .t1{font:500 var(--t2)/1 var(--sans);color:var(--bone)}
+.cf-det .t2{display:flex;align-items:center;gap:8px;font:400 var(--t1)/1 var(--sans);color:var(--muted)}
+.cf-det .go{display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border:1px solid var(--amber-line);font:700 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--amber)}
+.cf-det .go .key{border-color:var(--amber-line);color:var(--amber)}
+
+/* ===== WATCH (state 4): the event, on paper ===== */
+.ev{left:668px;top:96px;width:640px;padding:26px 30px 24px;transform:rotate(-.5deg)}
+.ev-k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d;display:flex;justify-content:space-between}
+.ev-t{font:700 var(--t4)/1.1 var(--type);margin:14px 0 10px;color:var(--ink)}
+.ev-p{font:400 var(--t2)/1.4 var(--type);color:var(--ink)}
+.ev-o{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:62px;border:1px solid rgba(35,28,20,.45);padding:0 14px;font:700 var(--t2)/1 var(--type);color:var(--ink);background:rgba(255,248,230,.06)}
+.ev-o>div.on{border:2px solid var(--ink);background:rgba(255,246,222,.16);padding:0 13px;box-shadow:inset 4px 0 0 var(--amber)}
+.ev-o i{font:700 var(--t1)/1 var(--cond);font-style:normal;background:#2b231a;color:#c9bc9f;text-align:center;padding:4px 0;width:28px}
+.ev-o span{font:400 var(--t1)/1 var(--type);color:var(--ink-soft);display:flex;align-items:center;gap:12px}
+.ev-o .nm{display:flex;flex-direction:column;gap:6px}
+.ev-o .nm em{font:700 var(--t1)/1 var(--type);font-style:normal;color:#0f2e28}
+.ev-o .nm em.none{color:var(--ink-soft);font-weight:400}
+.ev-f{margin-top:14px;font:400 var(--t1)/1 var(--type);color:var(--ink-soft);display:flex;justify-content:space-between}
+
+/* ===== month review (state 5): the printout, on paper ===== */
+.rv{left:56px;top:190px;width:1184px;height:850px;padding:30px 44px 28px;display:flex;flex-direction:column}
+.rv:after{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(35,28,20,.16) 22px 30px);border-bottom:1px dashed rgba(35,28,20,.35)}
+.rv-k{display:flex;justify-content:space-between;font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d;margin-top:4px}
+.rv-head{display:flex;align-items:baseline;gap:24px;margin:12px 0 4px}
+.rv-t{font:700 var(--t4)/1.1 var(--type)}
+.rv-lede{font:400 var(--t2)/1.4 var(--type)}
+.rv-at{font:400 var(--t1)/1.4 var(--type)}
+.rv-cols{flex:1;display:grid;grid-template-columns:1fr 330px;gap:32px;margin-top:16px;min-height:0}
+.rv h5{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-soft);padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.rv-res{display:grid;grid-template-columns:34px 240px 1fr;column-gap:8px;font:400 var(--t1)/1.3 var(--type);color:var(--ink)}
+.rv-res>span{padding:4px 0;border-bottom:1px dotted rgba(35,28,20,.4)}
+.rv-res .d{color:var(--ink-soft)}
+.rv-res .n{font-weight:700}
+.rv-res .ok{color:#0f2e28;font-weight:700}
+.rv-res .evn{color:#4c140d;font-weight:700}
+.rv-res .last{border-bottom:none}
+.rv-res .g{grid-column:1 / -1;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:#4c140d;padding:8px 0 3px;border-bottom:1px solid rgba(35,28,20,.55)}
+.rv-right{display:flex;flex-direction:column}
+.rv-mv{display:grid;grid-template-columns:78px 1fr;font:400 var(--t2)/1.3 var(--type)}
+.rv-mv>span{padding:9px 0;border-bottom:1px dotted rgba(35,28,20,.4)}
+.rv-mv .s{font:700 var(--t1)/1.5 var(--cond);letter-spacing:2px;color:var(--ink-soft)}
+.rv-mv .x{display:block;font-size:var(--t1);color:var(--ink-soft);margin-top:2px}
+.rv-mv .bad{color:#4c140d;font-weight:700}
+.rv-go{margin-top:auto;padding-top:16px;border-top:1px dashed rgba(35,28,20,.4);display:flex;flex-direction:column;gap:14px}
+.rv-go .note{font:400 var(--t1)/1.35 var(--type);color:var(--ink-soft)}
+.rv-btn{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 10px 0 14px;background:#221b14;color:#cfc2a5;font:700 var(--t2)/1 var(--cond);letter-spacing:1px;white-space:nowrap;gap:12px;
+  box-shadow:0 0 0 2px var(--amber-line)}
+.rv-btn .key{color:#cfc2a5;border-color:rgba(207,194,165,.5)}
+
 /* self-check output (only with ?check=1) */
 #check{position:fixed;left:0;top:0;z-index:99;background:#000;color:#0f0;font:12px monospace;white-space:pre;max-height:100vh;overflow:auto}
 </style>
@@ -232,6 +392,12 @@ var NOV_QUEUE = [
   ["Go to Meetups","Scouting","op",1,300,0],
   ["Order Office Supplies","Operations","op",1,2000,0]
 ];
+var JUL = { month:"JULY", year:"2017", day:4, date:"Tue 4 Jul 2017", money:245000, compute:100, research:0, papers:0,
+  rep:50, doom:20.0, trend:"", artBand:0, planTotal:12, opTotal:8, reserve:0 };
+var DEC = { month:"DECEMBER", year:"2017", day:1, date:"Fri 1 Dec 2017", money:12400, compute:65, research:-6, papers:0,
+  rep:34, doom:56.7, trend:"", artBand:2, planTotal:12, opTotal:8, reserve:0 };
+var APR = { month:"APRIL", year:"2018", day:2, date:"Mon 2 Apr 2018", money:12300, compute:65, research:4, papers:0,
+  rep:21, doom:81.4, trend:"", artBand:3, planTotal:12, opTotal:8, reserve:0 };
 var NOV = { month:"NOVEMBER", year:"2017", day:1, date:"Wed 1 Nov 2017", money:140000, compute:65, research:-12, papers:0,
   rep:32, doom:40.2, trend:"rising", artBand:1, planTotal:12, opTotal:8, reserve:0 };
 
@@ -263,7 +429,18 @@ var I = "assets/icons/";
 var ICON = {
   "ACTIONS":I+"ui_guide_actions_64.png", "PLAN":I+"ui_config_date_64.png", "STAFF":I+"ui_staff_management_64.png",
   "UPGRADES":I+"button_upgrade_normal_64.png", "LEDGER":I+"ui_budget_finance_64.png", "IN-TRAY":I+"new_inbox_tray.svg",
-  "GUIDE":I+"ui_guide_book_64.png", "P(DOOM)":I+"doom.png", "REPUTATION":I+"reputation.png"
+  "GUIDE":I+"ui_guide_book_64.png", "FEED":I+"new_feed_tape.svg", "P(DOOM)":I+"doom.png", "REPUTATION":I+"reputation.png",
+  // readouts (the game's round resource set)
+  "MONEY":I+"money.png", "COMPUTE":I+"compute.png", "RESEARCH":I+"research.png", "PAPERS":I+"paper.png",
+  // the 17 top-level actions
+  "Fundraising":I+"ui_guide_resources_64.png", "Financing":I+"action_funding_loan_64.png", "Hire Staff":I+"button_hire_normal_64.png",
+  "Advertise a Role":I+"new_advertise_notice.svg", "Work Your Connections":I+"action_publicity_network_64.png",
+  "Onboard New Hires":I+"employee_status_training_64.png", "Safety Research":I+"resource_safety_small_64.png",
+  "Capability Research":I+"action_research_ml_fundamentals_64.png", "Publish Safety Paper":I+"paper.png",
+  "Safety Audit":I+"employee_role_auditor_64.png", "Travel & Conferences":I+"new_travel_suitcase.svg",
+  "Scouting":I+"employee_status_investigating_64.png", "Publicity":I+"new_publicity_megaphone.svg",
+  "Purchase Compute":I+"compute.png", "Operations":I+"ui_system_settings_64.png", "Office":I+"ui_infrastructure_facilities_64.png",
+  "Strategic":I+"ui_guide_strategy_64.png"
 };
 function ic(key, icCls, plateCls){
   var k = String(key).replace(/&amp;/g,"&");
@@ -324,6 +501,7 @@ function room(d){
   add(el("div","room-glow",null,"background:"+L.glow+";mix-blend-mode:screen"));
   add(el("div","room-shade"));
   add(el("div","desk"));
+  if (d.artBand>=3) lateLayer();
 }
 
 /* The dateline: a spy-film title card, date only (the game names no place for the lab).
@@ -359,8 +537,11 @@ function doomMeter(d){
   s += '</svg>';
   w.insertAdjacentHTML("beforeend", s);
   w.appendChild(el("div","d-pct",d.doom.toFixed(1)+"%","color:"+col));
-  w.appendChild(el("div","d-band",BANDS[bi][1],"color:"+col));
+  w.appendChild(el("div","d-band"+(BANDS[bi][1].length>8?" long":""),BANDS[bi][1],"color:"+col));
   if (d.trend) w.appendChild(el("div","d-trend",d.trend.toUpperCase(),"color:"+col+";border-color:"+col));
+  // the game's own free warning at band 5+ (main_ui.gd: "Very close to game over!")
+  if (bi>=5) w.appendChild(el("div","d-warn","Very close to game over","color:"+col));
+  else w.appendChild(el("div","d-lab","band "+(bi+1)+" of 7"));
   var lad = el("div","ladder"); var l0 = 0;
   BANDS.forEach(function(b,i){ var hi=Math.min(b[0],100), mid=(l0+hi)/2; lad.appendChild(el("i", i===bi?"on":"", null, "flex:"+(hi-l0)+";background:"+doomStroke(mid))); l0=hi; });
   w.appendChild(lad);
@@ -394,7 +575,17 @@ function shortcutRack(active, list, hideKeys){
 }
 /* The month: held hours in a small panel above a quiet Commit. Commit never moves;
    the panel grows upward (WATCH adds the clock and speed). Enter shows only when no menu owns the keys. */
-function commit(d, menuOpen){
+function commit(d, menuOpen, watch){
+  if (watch){
+    panel("held", "<div class=ph><span>THE MONTH</span></div>"+
+      "<div class=clk><b>"+watch.clock+"</b><span>workday "+watch.day+" of "+watch.days+"</span></div>"+
+      (watch.paused?"<div class=paused><i></i>PAUSED FOR YOU</div>":"")+
+      "<div class=speed>"+["Pause","1x","2x","4x"].map(function(x,i){ return "<span"+(i===0?" class=on":"")+">"+x+"</span>"; }).join("")+"</div>"+
+      "<div class=row style='padding-top:16px'><span class=lbl>HELD FOR EVENTS</span><span class=val>"+d.held+" hr</span></div>", "top:612px;height:356px");
+    // Commit keeps its place; while the month runs it cannot be pressed
+    add(el("div","abs cmt off","<span>MONTH RUNNING</span>"));
+    return;
+  }
   panel("held", "<div class=row><span class=lbl>HELD FOR EVENTS</span><span class=val>"+d.held+" hr</span></div>"+
     "<div class=sub>untyped; what events do not use is gone at month end</div>", "top:856px;height:112px");
   add(el("div","abs cmt","<span>COMMIT THE MONTH</span>"+(menuOpen?"":"<span class=key>Enter</span>")));
@@ -457,6 +648,211 @@ function planScreen(p){
   t.appendChild(f);
 }
 
+
+/* ------------------------------------------------------------------
+   The desk at rest: the other moments of the run
+   ------------------------------------------------------------------ */
+function pips(free,total,round){ var s=""; for(var i=0;i<total;i++){ s+='<i class="pip'+(round?' o':'')+(i>=free?' used':'')+'"></i>'; } return s; }
+
+/* the office cat's photo; its glow is part of the doom layer */
+var CAT_GLOW = ["radial-gradient(circle,rgba(217,160,58,.10),transparent 70%)","radial-gradient(circle,rgba(213,138,82,.12),transparent 70%)",
+  "radial-gradient(circle,rgba(170,60,48,.18),transparent 70%)","radial-gradient(circle,rgba(110,52,130,.5),rgba(110,52,130,.14) 45%,transparent 70%)"];
+function officeCat(d){
+  // band 3: smoke rises from the cat's glow (the palette's "aura + smoke")
+  if (d.artBand>=3) add(el("div","room-glow",null,"background:radial-gradient(ellipse 40px 150px at 690px 690px,rgba(130,100,128,.18),transparent 70%),radial-gradient(ellipse 30px 120px at 742px 640px,rgba(130,100,128,.12),transparent 70%),radial-gradient(ellipse 50px 110px at 716px 560px,rgba(130,100,128,.08),transparent 70%);filter:blur(8px)"));
+  add(el("div","cat-glow",null,"left:594px;top:742px;width:240px;height:260px;background:"+CAT_GLOW[d.artBand]+";mix-blend-mode:screen"));
+  var f = add(el("div","abs catf",'<img src="assets/office_cat_doom-cat.webp" alt="">'));
+  if (d.artBand>=3) f.style.boxShadow = "0 10px 18px rgba(0,0,0,.65),0 0 0 1px rgba(110,52,130,.6),0 0 26px rgba(110,52,130,.45)";
+}
+
+/* the desk terminal: Attention (its one home) and the plan at a glance */
+function terminalShell(title, sub){
+  var t = panel("term");
+  t.appendChild(el("div","t-head","<span class=t-title>"+title+"</span><span class=t-sub>"+sub+"</span>"));
+  return t;
+}
+function terminalFoot(t){ t.appendChild(el("div","t-foot","<div class=brand><i class=led></i>LAB TERMINAL 1</div>")); }
+function terminal(p){
+  var t = terminalShell(p.month+" PLAN", p.rows.length? p.rows.length+" plays" : "nothing queued");
+  t.appendChild(el("div","t-att",
+    "<span class=l>PLANNING</span><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span class=v>"+p.planLeft+" of "+p.planTotal+" left</span>"+
+    "<span class='l op'>OPERATING</span><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class=v>"+p.opLeft+" of "+p.opTotal+" left</span>"));
+  var qh = "";
+  if (p.rows.length){
+    p.rows.slice(0,3).forEach(function(q,i){ qh += "<div><span class=n>"+pad2(i+1)+"</span>"+q.name+"</div>"; });
+    if (p.rows.length>3) qh += "<div class='row dim2'><span>+ "+(p.rows.length-3)+" more</span><span class=key>P</span></div>";
+  } else qh = "<div class='row dim2'><span>Plan is empty</span><span>open Actions<span class=key>A</span></span></div>";
+  t.appendChild(el("div","t-q",qh));
+  terminalFoot(t);
+}
+function home(p, opts){
+  opts = opts || {};
+  room(p); officeCat(p); doomMeter(p); repMeter(p); terminal(p);
+  shortcutRack(opts.active, opts.rack); commit(p, !!opts.menuOpen);
+  add(el("div","grain"));
+  if (!opts.menuOpen) dateline(p);
+}
+
+/* ---------- STATE 1: month 1, the first screen after the cold open ---------- */
+function firstScreen(){
+  var p = book(JUL, []);
+  home(p);
+  // the advisor hand-off from the cold open (cold_open_sequence.gd HANDOFF_HINT_TEXT); the glowing
+  // control is ACTIONS, because Scouting lives in the hand
+  document.querySelector(".kb").classList.add("hint");
+  add(el("div","abs paper adv",
+    "<div class=k>ADVISOR</div>"+
+    "<p>You do not know anything yet.<br>Go and find out -- scouting<br>(the glowing button).</p>"+
+    "<div class=ptr><span>ACTIONS &gt; Scouting</span><span class=key>A</span></div><i class=adv-arrow></i>"));
+}
+
+/* ---------- STATE 2: the hand (Actions), E's card file, adding Safety Audit ---------- */
+function chip(k,t){ return "<span class='chip "+k+"'>"+t+"</span>"; }
+function cardFile(p){
+  var have = p.research, q = function(door){ return p.rows.filter(function(r){ return r.from===door; }).length; };
+  function short(need){ return "<span class=why>x "+(need-have)+" research short</span>"; }
+  // [name, opts]; door = a menu of choices (>), otherwise a play you add (+). E's two columns, E's order.
+  var colA = [
+    ["Fundraising",{door:"4 choices"}],
+    ["Hire Staff",{door:"7 roles", each:chip("plan","1 hr PLAN")+"<span>each</span>", stamp:q("Hire Staff")}],
+    ["Advertise a Role",{off:"coming soon", l2:chip("ops","3 hr OPS")+chip("","$8,000")}],
+    ["Work Your Connections",{l2:chip("ops","2 hr OPS")+chip("","6 rep")}],
+    ["Onboard New Hires",{off:"nobody hired yet", l2:"<span>OPS hours + money, per step</span>"}],
+    ["Safety Research",{l2:chip("plan","1 hr PLAN")+chip("","10 research"), why:short(10), off:true}],
+    ["Capability Research",{l2:chip("plan","1 hr PLAN")+chip("","10 research"), why:short(10), off:true}],
+    ["Publish Safety Paper",{l2:chip("plan","1 hr PLAN")+chip("","20 research"), why:short(20), off:true}],
+    ["Safety Audit",{l2:chip("ops","2 hr OPS")+chip("","$40,000"), focus:true}]
+  ];
+  var colB = [
+    ["Travel &amp; Conferences",{door:"4 choices", extra:"<span class=why>x Submit Paper: "+(15-have)+" research short</span>"}],
+    ["Purchase Compute",{l2:chip("","$50,000")+chip("ghost","no hours")}],
+    ["Operations",{door:"3 choices"}],
+    ["Office",{door:"4 choices"}],
+    ["Publicity",{door:"5 choices"}],
+    ["Financing",{door:"7 choices"}],
+    ["Scouting",{door:"3 choices", stamp:q("Scouting")}],
+    ["Strategic",{door:"4 choices"}]
+  ];
+  function card(c){
+    var nm = c[0], a = c[1], off = !!a.off;
+    var right = typeof a.off==="string" ? "<span class=why>x "+a.off+"</span>" : (a.why || (a.stamp ? "<span class=stamp>"+a.stamp+" queued</span>" : ""));
+    var l2 = a.door ? "<span>door &middot; "+a.door+(a.each?" &middot;":"")+"</span>"+(a.each||"")+(a.extra||"") : a.l2;
+    return "<div class='card"+(a.door?" door":"")+(off?" off":"")+(a.focus?" focus":"")+"'>"+ic(nm,"ic-c","pi-c")+
+      "<div class=tx><div class=l1><span class=nm>"+nm+"</span>"+right+"</div><div class=l2>"+l2+"</div></div>"+
+      "<div class=tab>"+(a.door?"&gt;":"+")+"</div></div>";
+  }
+  var f = panel("cf");
+  f.appendChild(el("div","cf-head","<span class=cf-title>"+ic("ACTIONS","ic-t","pi-t")+"ACTIONS</span>"+
+    "<span class=esc><span class=key>A</span><span class=key>Esc</span><span>BACK TO DESK</span></span>"));
+  var cell = function(k,v,neg){ return "<div"+(neg?" class=neg":"")+">"+ic(k,"ic-r","pi-r")+"<div><div class=k>"+k+(neg?" &middot; BELOW ZERO":"")+"</div><div class=v>"+v+"</div></div></div>"; };
+  f.appendChild(el("div","cf-res", cell("MONEY",money(p.money))+cell("COMPUTE",p.compute)+cell("RESEARCH",p.research,p.research<0)+cell("PAPERS",p.papers)+
+    "<div><div class=m-hrs><span class=k>HOURS LEFT</span><span></span><span></span>"+
+    "<em>PLANNING</em><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span class=n>"+p.planLeft+"/"+p.planTotal+"</span>"+
+    "<em class=op>OPERATING</em><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class=n>"+p.opLeft+"/"+p.opTotal+"</span></div></div>"));
+  var g = el("div","cf-grid"), a = el("div","cf-col"), b = el("div","cf-col");
+  a.innerHTML = colA.map(card).join(""); b.innerHTML = colB.map(card).join(""); g.appendChild(a); g.appendChild(b); f.appendChild(g);
+  // the focused card's detail: the one Enter on screen
+  f.appendChild(el("div","cf-det",ic("Safety Audit","ic-c","pi-c")+
+    "<div class=tx><span class=t1>Safety Audit -- Comprehensive safety review</span><span class=t2>"+chip("ops","2 hr OPS")+chip("","$40,000")+"<span>"+p.opLeft+" operating hours left</span></span></div>"+
+    "<span class=go><span class=key>Enter</span>ADD TO PLAN</span>"));
+}
+function handScreen(){
+  var p = book(NOV, NOV_QUEUE.slice(0,3));
+  room(p); doomMeter(p); repMeter(p); shortcutRack("ACTIONS"); commit(p, true);
+  add(el("div","dim")); add(el("div","grain"));
+  dateline(p);
+  cardFile(p);
+}
+
+/* ---------- STATE 4: WATCH, an event that asks for a choice ---------- */
+function watchScreen(){
+  var p = book(NOV, NOV_QUEUE);
+  var w = {}; for (var k in p) w[k] = p[k]; w.rep = 34; w.day = 14;   // 32 - 6 - 1 + 1.5 + 1.5 + 3 + 3 (actions.gd fixed results at Commit)
+  room(w); officeCat(w); doomMeter(w); repMeter(w);
+  // the terminal plays the month back: position, the feed so far, who is working
+  var t = terminalShell("NOVEMBER", "workday 10 of 22");
+  var bar = ""; for (var i=1;i<=22;i++) bar += "<i class='"+(i<10?"f":i===10?"now":"")+"'></i>";
+  t.appendChild(el("div","mbar",bar));
+  t.appendChild(el("div","t-q",
+    "<div><span class=n>01</span>11 plays run at Commit</div>"+
+    "<div><span class=n>01</span>Safety Researcher hired</div>"+
+    "<div><span class=n>01</span>Networking (+3 reputation)</div>"+
+    "<div><span class=n>14</span>Talent Opportunity [!]</div>"+
+    "<div class='row'><span><span class=n></span><span class=op>at work: 1 safety researcher</span></span></div>"+
+    "<div class='row dim2'><span><span class=n></span>Feed and results</span><span class=key>F</span></div>"));
+  terminalFoot(t);
+  shortcutRack(null, [["FEED","F"],["STAFF","E"],["LEDGER","L"],["GUIDE","F1"],["ACTIONS","A",1],["PLAN","P",1],["UPGRADES","U",1]]);
+  commit(p, true, {clock:"TUE 14 NOV", day:10, days:22, paused:true});
+  add(el("div","grain"));
+  dateline(w);
+  // the event: core_events.json talent_recruitment, its own words and costs
+  var ev = add(el("div","abs paper ev"));
+  ev.appendChild(el("div","ev-k","<span>ACROSS YOUR DESK</span><span>TUE 14 NOV 2017</span>"));
+  ev.appendChild(el("div","ev-t","Talent Opportunity"));
+  ev.appendChild(el("div","ev-p","A brilliant researcher wants to join your lab at reduced cost!"));
+  var o = el("div","ev-o");
+  [["1","Fast-Track Hiring","+1 safety researcher","$25,000 + 1 held hr",1],["2","Standard Hiring","+1 safety researcher","$25,000 + 1 held hr",0],["3","Decline Offer","no change","free",0]].forEach(function(x){
+    o.appendChild(el("div",x[4]?"on":"","<i>"+x[0]+"</i><div class=nm>"+x[1]+"<em"+(x[2]==="no change"?" class=none":"")+">"+x[2]+"</em></div><span>"+x[3]+(x[4]?"<span class=key>Enter</span>":"")+"</span>"));
+  });
+  ev.appendChild(o);
+  ev.appendChild(el("div","ev-f","<span>in hand "+money(p.moneyAfter)+"</span><span>held for events "+p.held+" hr</span>"));
+}
+
+/* ---------- STATE 5: the month review, before December's plan ---------- */
+function reviewScreen(){
+  var p = book(DEC, []);
+  home(p, {menuOpen:true});
+  add(el("div","dim"));
+  dateline(p);   // a new month: the dateline types in afresh above the review
+  var r = add(el("div","abs paper rv"));
+  r.appendChild(el("div","rv-k","<span>FROM THE TELEPRINTER</span><span>FRI 1 DEC 2017</span>"));
+  r.appendChild(el("div","rv-head","<span class=rv-t>Month Review -- December 2017</span><span class=rv-lede>December 2017 begins.</span>"));
+  r.appendChild(el("div","rv-at","Attention: 20 fresh decisions this month (last month's unspent reserve evaporated -- no banking)."));
+  var res = [
+    ["g","1 NOV -- AT COMMIT"],
+    ["01","Hire: Safety Researcher","<span class=ok>Safety Researcher hired.</span>"],
+    ["02","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
+    ["03","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
+    ["04","Post Online","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+    ["05","Safety Audit","Safety audit (+scrutiny, +3 reputation)"],
+    ["06","Work Your Connections","Reached out through your network -- a pre-vetted lead may surface shortly."],
+    ["07","Go to Meetups","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+    ["08","Networking","Networking (+3 reputation)"],
+    ["09","Tour Offices","Three landlords will quote you terms."],
+    ["10","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
+    ["11","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"],
+    ["g","14 NOV"],
+    ["","<span class=evn>Talent Opportunity</span>","<span class=ok>Fast-tracked hiring process! (+1 safety researcher)</span>"],
+    ["","Held for events","7 hr held: 1 went to Talent Opportunity, 6 evaporated."]
+  ];
+  var cols = el("div","rv-cols");
+  var left = el("div"); left.appendChild(el("h5",null,"NOVEMBER 2017 -- WHAT HAPPENED"));
+  left.appendChild(el("div","rv-res",res.map(function(x,i){ var c = i===res.length-1 ? " last" : "";
+    if (x[0]==="g") return "<span class=g>"+x[1]+"</span>";
+    return "<span class='d"+c+"'>"+x[0]+"</span><span class='n"+c+"'>"+x[1]+"</span><span class='"+c+"'>"+x[2]+"</span>"; }).join("")));
+  var right = el("div","rv-right"); right.appendChild(el("h5",null,"LAST MONTH'S MOVEMENT"));
+  right.appendChild(el("div","rv-mv",
+    "<span class=s>FUNDS</span><span>$140,000 -&gt; $12,400 <span class=x>(-$127,600)</span></span>"+
+    "<span class=s>STAFF</span><span>0 -&gt; 2 <span class=x>(+2)</span></span>"+
+    "<span class=s>DOOM</span><span class=bad>HIGH -&gt; SEVERE <span class=x>(crossed up)</span></span>"));
+  // rivals: the game prints this section only when a rival is visible; none in the source run
+  right.appendChild(el("div","rv-go","<span class=note>Queue this month's actions, then press COMMIT THE MONTH to play the month out.</span>"+
+    "<span class=rv-btn>Begin planning December 2017<span class=key>Enter</span></span>"));
+  cols.appendChild(left); cols.appendChild(right); r.appendChild(cols);
+}
+
+/* ---------- STATE 6: late game, CATASTROPHIC (art band 3) ---------- */
+/* Darker still, as a layer over the room (never a repaint of the panels): soot closes in
+   from the edges and the violet of the sky bleeds into the shadows. TERMINAL (band 4) would
+   take the same layer further; there is still room below this. */
+function lateLayer(){
+  add(el("div","room-glow",null,"background:radial-gradient(ellipse 1150px 720px at 50% 46%,transparent 35%,rgba(8,3,12,.62) 100%)"));
+  add(el("div","room-glow",null,"background:linear-gradient(180deg,rgba(40,12,52,.22),rgba(10,4,14,0) 40%,rgba(10,4,14,.35));mix-blend-mode:multiply"));
+}
+function lateScreen(){
+  home(book(APR, []));
+}
+
 /* ------------------------------------------------------------------
    layout self-check (?check=1): overflow, text outside its box,
    elements outside the stage, overlaps, font sizes under 16px, and a
@@ -473,13 +869,15 @@ function selfCheck(){
     if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+t);
     var r = e.getBoundingClientRect();
     if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+t);
-    var box = e.closest(".pnl,.cmt,.kb,.q-row,.ac,.att,.foot,.dl");
+    var box = e.closest(".pnl,.paper,.cmt,.kb,.q-row,.ac,.att,.foot,.dl,.card,.cf-det,.cf-res>div,.clk,.paused,.speed,.ev-o>div,.rv-btn");
     if (box && box!==e){ var b=box.getBoundingClientRect();
       if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+t); }
     if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+t);
     // effective opacity (ancestors' opacity multiplies)
     var op = 1; for (var a=e; a && a!==S; a=a.parentElement) op *= parseFloat(getComputedStyle(a).opacity);
-    txt.push("TXT "+[(r.left-st.left)/sc,(r.top-st.top)/sc,r.width/sc,r.height/sc].map(function(v){return v.toFixed(0);}).join(" ")+" "+cs.color.replace(/ /g,"")+" "+op.toFixed(2)+" "+t);
+    var cx = (r.left+r.right)/2, cy = (r.top+r.bottom)/2, top = document.elementFromPoint(cx, cy);
+    var seen = top && (top===e || e.contains(top) || top.contains(e));
+    if (seen) txt.push("TXT "+[(r.left-st.left)/sc,(r.top-st.top)/sc,r.width/sc,r.height/sc].map(function(v){return v.toFixed(0);}).join(" ")+" "+cs.color.replace(/ /g,"")+" "+op.toFixed(2)+" "+t);
   });
   function root(e){ while (e.parentNode && e.parentNode!==S) e = e.parentNode; return e; }
   var R = leaves.map(function(e){ return e.getBoundingClientRect(); });
@@ -494,11 +892,16 @@ function selfCheck(){
 }
 
 /* ------------------------------------------------------------------
-   state dispatch (?state=1..6). PASS 1 builds state 3; the others follow.
+   state dispatch (?state=1..6)
    ------------------------------------------------------------------ */
 var NOV_PLAN = book(NOV, NOV_QUEUE);
 var VIEWS = {
-  "3": function(){ planScreen(NOV_PLAN); }
+  "1": firstScreen,
+  "2": handScreen,
+  "3": function(){ planScreen(NOV_PLAN); },
+  "4": watchScreen,
+  "5": reviewScreen,
+  "6": lateScreen
 };
 (VIEWS[STATE] || VIEWS["3"])();
 if (Q.get("check")) document.fonts.ready.then(function(){ setTimeout(selfCheck, 200); });
