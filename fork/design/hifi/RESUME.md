@@ -23,3 +23,12 @@ Council members are started when the showcase exists.
 3. Showcase index.html.
 4. Council round, settle, one fix round, re-check (Opus + Sol, then Neon).
 5. report.md, commit, push.
+
+## Update 2026-11-22
+
+- Pass 1 checkpoint 21149470; pass 2 build 75ab4547 (all 24 states, showcase index.html).
+- run-state.md REVISION 2 (Office Maintenance out, fixed play results) applied by all four.
+- Council round 1 started (brief council/round1-ask.md):
+  - opus: delegate-task:a6ebb49e-1bef-4908-8faa-bac63ee44a1d (Claude Opus 5.5, high)
+  - sol: delegate-task:c890abfe-9d7d-4d19-9803-546e65f3f694 (gpt-6.2-sol, high)
+  - neon: delegate-task:a50972c9-3484-4b42-bf2f-d7c0a673b953 (gemini-4-neon, high)

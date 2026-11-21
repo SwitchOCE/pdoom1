@@ -18,7 +18,7 @@
   --aub:#2A1630; --aub-line:#5b3a63; --aub-edge:#7a4f84;
   --warm:#2B221A; --line:#5A4632; --line-cool:#3c5160;
   --amber:#F6A800; --amber-soft:#E8A33D; --text:#EEE8DC; --muted:#BDB2A0; --dim:#958b7b;
-  --plan:#E2B866; --plan-fill:#D9A54A; --op:#7FCABD; --op-fill:#5FB3A6; --held:#B39AC0;
+  --plan:#E2B866; --plan-fill:#D9A54A; --op:#7FCABD; --op-fill:#5FB3A6; --held:#C9D2D8;
   --red:#E8574A; --orange:#E9752E;
   --mono:'IBM Plex Mono',Consolas,monospace; --sans:'IBM Plex Sans','Segoe UI',sans-serif;
   /* type scale: 16 label, 18 body, 20 emphasis, 22 mode, 28 band, 36 gauge */
@@ -129,8 +129,8 @@ body{color:var(--text);font-family:var(--sans);font-size:18px}
 .ptable{padding:0 12px}
 .prow{display:grid;grid-template-columns:48px minmax(0,1fr) 132px 96px 108px;column-gap:10px;align-items:center;padding:0 8px;border-bottom:1px solid rgba(255,255,255,.06)}
 .prow.head{height:38px;font-family:var(--mono);font-size:16px;color:var(--dim);letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.14)}
-.prow.play{height:54px;position:relative}
-.prow.play::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px}
+.prow.play{height:50px;position:relative}
+.prow.play::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px}
 .prow.play.pl::before{background:var(--plan-fill)}
 .prow.play.op::before{background:var(--op-fill)}
 .prow .no{font-family:var(--mono);font-size:16px;color:var(--dim);padding-left:6px}
@@ -140,8 +140,6 @@ body{color:var(--text);font-family:var(--sans);font-size:18px}
 .nmc .nm{font-size:18px;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nmc .src{font-size:16px;line-height:20px;color:var(--dim);white-space:nowrap}
 .x2{font-family:var(--mono);font-size:16px;color:var(--amber-soft);margin-left:8px}
-.exp{width:28px;height:28px;flex:none;}
-.exp.on{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;color:var(--amber-soft);border:1px solid rgba(246,168,0,.45);border-radius:3px}
 .hr{font-family:var(--mono);font-size:16px;line-height:20px;display:flex;flex-direction:column}
 .hr.pl{color:var(--plan)}.hr.op{color:var(--op)}
 .hr .sp{color:var(--plan);display:flex;align-items:center;gap:6px}
@@ -311,11 +309,12 @@ var GAME = {
 };
 var S = GAME[STATE];
 
-/* State 3: the month's plan. pool pl = planning, op = operating. Adjacent repeats share one
-   group row; [+] opens one row per play (council rule 4). */
+/* State 3: the month's plan. pool pl = planning, op = operating. Every play has its own row
+   and its own controls, repeats included (council round 1, G3). */
 var PLAN = [
   {no:'1',   n:'Hire: Safety Researcher', src:'Hire Staff', k:'hire_safety', pool:'pl', hr:1, mo:'$60,000'},
-  {no:'2-3', n:'Read the Literature', x:2, src:'Scouting',  k:'read',        pool:'pl', hr:2, mo:'--'},
+  {no:'2',   n:'Read the Literature',    src:'Scouting',   k:'read',        pool:'pl', hr:1, mo:'--'},
+  {no:'3',   n:'Read the Literature',    src:'Scouting',   k:'read',        pool:'pl', hr:1, mo:'--'},
   {no:'4',   n:'Post Online',            src:'Scouting',   k:'post',        pool:'pl', hr:1, mo:'--'},
   {no:'5',   n:'Safety Audit',           src:'Actions',    k:'audit',       pool:'op', hr:2, mo:'$40,000'},
   {no:'6',   n:'Work Your Connections',  src:'Actions',    k:'connections', pool:'op', hr:2, mo:'6 rep'},
@@ -490,7 +489,7 @@ if (S.view==='home') {
       '<div class="legend"><span class="pip spill"></span>1 operating hour drawn from planning</div></div>'+
     '<div class="sec"><div class="kv">'+
       '<span>Held for events at Commit</span><span class="v held">7 hr</span>'+
-      '<span class="k2">Reserve (needs operating hours)</span><span class="v" style="color:var(--muted)">none</span>'+
+      '<span class="k2">Reserved, up to 7 hr</span><span class="v" style="color:var(--muted)">none yet</span>'+
     '</div></div>'+
     '<div class="sec"><div class="rule">Operating work can use planning hours. Planning work can never use operating hours.</div></div>'+
     '<div class="sec"><div class="btn ghost on">Close plan '+key('Q','amb')+'</div></div>');
@@ -545,14 +544,14 @@ if (S.view==='actions') {
     ['publish','Publish Safety Paper','1 plan hr, 20 research -- <span class="why">32 short</span>','blk'],
     '-',
     ['buycompute','Purchase Compute','$50,000, no hours','add'],
-    ['audit','Safety Audit','2 op hr, $40,000','add',0,'new','sel'],
+    ['audit','Safety Audit','2 op hr, $40,000','add',0,0,'sel'],
     ['operations','Operations','3 choices','door'],
     ['office','Office','4 choices','door'],
     '-',
     ['scouting','Scouting','3 choices','door',2],
     ['travel','Travel &amp; Conferences','4 choices -- Submit Paper <span class="why">27 research short</span>','door'],
     ['publicity','Publicity','5 choices','door'],
-    ['strategic','Strategic','4 choices','door',0,'new']
+    ['strategic','Strategic','4 choices','door']
   ];
   var h='';
   A.forEach(function(a){
@@ -567,7 +566,7 @@ if (S.view==='actions') {
   var sel = m.querySelector('.arow.sel');
   var sy = m.offsetTop + sel.offsetTop + sel.offsetHeight/2;
   var det = add('<div class="abs panel p-steel detail">'+
-    '<div class="body"><div class="t">'+ic('audit',40)+'Safety Audit<span class="chip new">NEW</span></div>'+
+    '<div class="body"><div class="t">'+ic('audit',40)+'Safety Audit</div>'+
     '<div class="c">2 operating hours, $40,000</div>'+
     '<p>Comprehensive safety review</p>'+
     '<div class="fit">Fits: 8 operating hours left, $80,000 left after the plan so far.</div>'+
@@ -579,18 +578,14 @@ if (S.view==='actions') {
 
 /* ================================================================ state 3: the Plan drawer */
 if (S.view==='plan') {
-  var OPEN = Q.get('expand')==='read';
   function ctl(first,last){return '<span class="ctl"><span class="'+(first?'dis':'')+'">&#94;</span><span class="'+(last?'dis':'')+'">v</span><span class="x">x</span></span>';}
   function hrs(p,h){var s='<span class="hr '+p.pool+'"><span>'+h+' '+(p.pool==='pl'?'plan':'op')+'</span>';
     if(p.spill)s+='<span class="sp"><span class="pip spill"></span>1 from plan</span>';return s+'</span>';}
   var rows='';
   PLAN.forEach(function(p,i){
-    var exp = p.x ? '<span class="exp on">'+(OPEN?'-':'+')+'</span>' : '<span class="exp"></span>';
     rows+='<div class="prow play '+p.pool+'"><span class="no">'+p.no+'</span>'+
-      '<span class="nmc">'+exp+ic(p.k,32)+'<span class="tx"><span class="nm">'+p.n+(p.x?'<span class="x2">x'+p.x+'</span>':'')+'</span><span class="src">'+p.src+'</span></span></span>'+
+      '<span class="nmc">'+ic(p.k,32)+'<span class="tx"><span class="nm">'+p.n+'</span><span class="src">'+p.src+'</span></span></span>'+
       hrs(p,p.hr)+'<span class="mo">'+p.mo+'</span>'+ctl(i===0,i===PLAN.length-1)+'</div>';
-    if (p.x && OPEN) { for (var k=0;k<p.x;k++) rows+='<div class="prow sub"><span class="no">'+(parseInt(p.no,10)+k)+'</span>'+
-      '<span class="nmc"><span class="exp"></span>'+ic(p.k,32)+'<span class="tx"><span class="nm">'+p.n+'</span></span></span>'+hrs({pool:p.pool},1)+'<span class="mo">'+p.mo+'</span>'+ctl(false,false)+'</div>'; }
   });
   add('<div class="abs panel p-warm pmenu">'+
     '<div class="ph"><span class="t">THE MONTH AHEAD</span><span class="r">runs top to bottom<span class="xbtn">x</span>'+key('Esc')+'</span></div>'+
@@ -601,7 +596,7 @@ if (S.view==='plan') {
       '<div class="prow after"><span></span><span class="lab">After these costs</span><span class="mo" style="grid-column:3 / 6">$37,400, 26 rep</span></div>'+
     '</div>'+
     '<div class="sec"><div class="rq"><span class="sh">RESEARCH QUALITY</span><span class="opt">Rushed</span><span class="opt on">Standard</span><span class="opt">Thorough</span></div></div>'+
-    '<div class="pfoot"><div class="btn plain">'+ic('undo',24)+'Undo '+key('Z')+'</div><div class="btn plain">'+ic('clear',24)+'Clear '+key('C')+'</div><div class="btn plain off">'+ic('attention',24)+'Reserve hours '+key('R')+'</div></div>'+
+    '<div class="pfoot"><div class="btn plain">'+ic('undo',24)+'Undo '+key('Z')+'</div><div class="btn plain">'+ic('clear',24)+'Clear '+key('C')+'</div><div class="btn plain">'+ic('attention',24)+'Reserve hours '+key('R')+'</div></div>'+
   '</div>');
   var pm=document.querySelector('.pmenu'), pb=pm.querySelector('.pbody');
   if (pb.scrollHeight > pb.clientHeight+1) {
@@ -618,21 +613,27 @@ if (S.view==='plan') {
    game's own result messages (actions.gd, hiring_pipeline.gd), cut where they carry a
    random name or number. */
 if (S.mode==='watch') {
-  var FL = STATE===4 ? [
-    ['','+ 7 more lines from Wed 1 Nov','more'],
-    ['Wed 1 Nov','Safety audit (+scrutiny, +3 reputation)'],
-    ['Wed 1 Nov','Networking (+3 reputation)'],
-    ['Wed 1 Nov','Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool.'],
-    ['Wed 1 Nov','Office supplies restocked (+50 stationery, now at 100)'],
-    ['Tue 14 Nov','Talent Opportunity: needs a reply.','now']
-  ] : [
-    ['','+ 8 more lines from November','more'],
-    ['Wed 1 Nov','Safety audit (+scrutiny, +3 reputation)'],
-    ['Wed 1 Nov','Networking (+3 reputation)'],
-    ['Wed 1 Nov','Worked the room (+1.5 reputation). No leads you have room for.'],
-    ['Tue 14 Nov','Fast-tracked hiring process! (+1 safety researcher)'],
-    ['Fri 1 Dec','Month Review -- December 2017','now']
+  /* One shared list of the Commit lines, in queue order (plays 1-11). null = folded into the
+     "+ N more" line: the hire names a random researcher, Tour Offices prints random lease
+     quotes, and the rest are folded for space. Both states show the same lines. */
+  var COMMIT = [
+    null,                                                        /* 1 hire */
+    null, null,                                                  /* 2-3 read */
+    null,                                                        /* 4 post */
+    'Safety audit (+scrutiny, +3 reputation)',                   /* 5 */
+    null,                                                        /* 6 connections */
+    null,                                                        /* 7 meetups */
+    'Networking (+3 reputation)',                                /* 8 */
+    null,                                                        /* 9 tour offices */
+    'Worked the room (+1.5 reputation). No leads you have room for.', /* 10 meetups */
+    'Office supplies restocked (+50 stationery, now at 100)'     /* 11 */
   ];
+  var shown = COMMIT.filter(function(t){return t;});
+  var FL = [['','+ '+(COMMIT.length-shown.length)+' more lines from Wed 1 Nov','more']]
+    .concat(shown.map(function(t){return ['Wed 1 Nov',t];}))
+    .concat(STATE===4 ? [['Tue 14 Nov','Talent Opportunity: needs a reply.','now']]
+                      : [['Tue 14 Nov','Fast-tracked hiring process! (+1 safety researcher)'],
+                         ['Fri 1 Dec','Month Review -- December 2017','now']]);
   var fh=''; FL.forEach(function(l){fh+='<div class="fl'+(l[2]?' '+l[2]:'')+'"><span class="d">'+l[0]+'</span><span>'+l[1]+'</span></div>';});
   var fd = add('<div class="abs panel p-steel feed"><div class="ph"><span class="t">FEED</span><span class="r">November 2017</span></div><div style="padding:6px 0 10px">'+fh+'</div></div>');
   fd.style.bottom = '76px';
@@ -646,7 +647,7 @@ if (S.view==='event') {
     '<div class="body"><div class="ttl">Talent Opportunity</div><div class="dt">Tue 14 Nov 2017</div>'+
       '<p>A brilliant researcher wants to join your lab at reduced cost!</p>'+
       '<div class="eopt sel">'+key('1','amb')+'<span><div class="on1">Fast-Track Hiring</div><div class="ef">+1 safety researcher</div></span><span class="c">$25,000 + 1 held hr</span></div>'+
-      '<div class="eopt">'+key('2','amb')+'<span><div class="on1">Standard Hiring</div><div class="ef">+1 safety researcher</div></span><span class="c">$25,000</span></div>'+
+      '<div class="eopt">'+key('2','amb')+'<span><div class="on1">Standard Hiring</div><div class="ef">+1 safety researcher</div></span><span class="c">$25,000 + 1 held hr</span></div>'+
       '<div class="eopt">'+key('3','amb')+'<span><div class="on1">Decline Offer</div><div class="ef">no change</div></span><span class="c free">free</span></div>'+
       '<div class="cash"><span>Money <b>$37,400</b></span><span>Held for events <b style="color:var(--held)">7 hr</b></span></div>'+
     '</div></div>');
@@ -699,7 +700,7 @@ function runCheck(){
     var cs=getComputedStyle(e); if(cs.display==='inline') return;
     if(e.scrollWidth>e.clientWidth+1 && e.clientWidth>0) bad.push('wide:'+e.className+':'+e.textContent.trim().slice(0,24));
   });
-  var pbx=document.querySelector('.pbody'); if(pbx && !Q.get('expand') && pbx.scrollHeight>pbx.clientHeight+1) bad.push('scroll:plan list');
+  var pbx=document.querySelector('.pbody'); if(pbx && pbx.scrollHeight>pbx.clientHeight+1) bad.push('scroll:plan list');
   document.querySelectorAll('img').forEach(function(im){ if(!im.complete||im.naturalWidth===0) bad.push('img:'+im.getAttribute('src')); });
   var ps=[].slice.call(document.querySelectorAll('.panel,.rail,.commit'));
   ps.forEach(function(a,i){ps.slice(i+1).forEach(function(b){var A=a.getBoundingClientRect(),B=b.getBoundingClientRect();

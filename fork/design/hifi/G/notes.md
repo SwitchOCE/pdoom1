@@ -9,8 +9,7 @@ main.tscn nodes).
 
 Files:
 - `concept.html?state=N` draws states 1 to 6. Add `&check=1` to run the layout
-  check; the result goes to `body[data-check]`. Add `&expand=read` in state 3
-  to open the Read the Literature group.
+  check; the result goes to `body[data-check]`.
 - `render.sh N ...` makes sN.png (1920x1080), sN-720.png (1280x720) and
   sN.webp (quality 88), and prints the check. Scratch goes in
   /tmp/claude-1000/gscratch.
@@ -62,8 +61,8 @@ with nothing queued:
   - Travel & Conferences: "Submit Paper 27 research short".
   - Onboard New Hires: "no hires waiting".
   - Advertise a Role: COMING SOON, as the game labels it.
-- Safety Audit and Strategic carry a NEW chip. That replaces today's
-  "STRATEGIC MOVES UNLOCKED" popup.
+- No NEW chips: Safety Audit's and Strategic's unlock gates count workdays,
+  so nothing unlocks in November (council round 1).
 - Safety Audit is selected. Its detail card shows: 2 operating hours, $40,000,
   the data's description "Comprehensive safety review", and whether it fits
   (8 operating hours left, $80,000 left after the plan so far). It offers
@@ -74,10 +73,9 @@ with nothing queued:
 **State 3 -- the month's plan (Wed 1 Nov 2017).**
 - After Safety Audit and seven more plays, the player opens the Plan drawer
   (Q, "THE MONTH AHEAD").
-- It lists the 11 plays in run order. The two adjacent Read the Literature
-  plays share one row ("2-3", x2) with a `+` that opens one row per play,
-  each with its own up/down/remove. The two Go to Meetups plays (rows 7 and
-  10) are not adjacent, so each has its own row and its own controls.
+- It lists the 11 plays in run order, one row per play, all visible without
+  scrolling. Repeats (Read the Literature 2 and 3, Go to Meetups 7 and 10)
+  each have their own row and their own up/down/remove.
 - Each row shows the play, where it lives, its hours in its pool (amber
   "plan", teal "op", with a stripe of the same colour), its cost, and order
   controls.
@@ -86,13 +84,15 @@ with nothing queued:
 - Total: 11 plays, 4 plan + 9 op, $102,600 + 6 rep. "After these costs":
   $37,400, 26 rep. The label is "costs", not "Commit", because results land
   at Commit as well (see Fixtures). The game has no such preview today.
-- Below: Research Quality, then Undo, Clear and Reserve hours. Reserve hours
-  is disabled because no operating hours are left.
+- Below: Research Quality, then Undo, Clear and Reserve hours [R]. Reserve
+  hours is live: under the ADR the hold is untyped, so up to the 7 held hours
+  can be reserved even with no operating hours left.
 - Attention card:
   - Planning 7 of 12 filled, one hatched cell (the spilled hour), 4 empty.
   - Operating 0 of 8.
   - A legend line for the hatch.
-  - "Held for events at Commit: 7 hr" and Reserve none.
+  - "Held for events at Commit: 7 hr" and "Reserved, up to 7 hr: none
+    yet".
   - The rule in one sentence.
 - The drawer owns Esc.
 
@@ -106,10 +106,12 @@ with nothing queued:
 - Rail: Staff shows 1, the Safety Researcher hired at Commit. Actions and
   Upgrades are dimmed in WATCH.
 - The feed (bottom left) holds the month so far, in the game's own result
-  messages, on Wed 1 Nov: "Safety audit (+scrutiny, +3 reputation)",
-  "Networking (+3 reputation)", the first Meetups ("Worked the room (+1.5
-  reputation). Someone unvetted is now in your candidate pool.") and "Office
-  supplies restocked (+50 stationery, now at 100)", plus "+ 7 more lines".
+  messages, on Wed 1 Nov, in queue order: "+ 7 more lines from Wed 1 Nov",
+  then "Safety audit (+scrutiny, +3 reputation)" (play 5), "Networking (+3
+  reputation)" (8), the second Meetups "Worked the room (+1.5 reputation).
+  No leads you have room for." (10) and "Office supplies restocked (+50
+  stationery, now at 100)" (11). State 5 shows the same four lines,
+  word for word, from the same list.
   On Tue 14 Nov comes "Talent Opportunity: needs a reply."
 - The event card in the centre:
   - Picture: Pip's unused records-room art, cropped to an open personnel
@@ -118,9 +120,9 @@ with nothing queued:
     brilliant researcher wants to join your lab at reduced cost!"
   - Three choices on keys 1, 2 and 3, each with its effect and the data's
     cost: Fast-Track Hiring ($25,000 + 1 held hr, selected), Standard Hiring
-    ($25,000), Decline Offer (free).
+    ($25,000 + 1 held hr), Decline Offer (free).
   - Money ($37,400) and held hours (7) under the choices.
-- Lower-right card: Held 7 of 7 (untyped, violet), "Spent at Commit 13 hr",
+- Lower-right card: Held 7 of 7 (untyped, a neutral silver), "Spent at Commit 13 hr",
   "This reply would cost 1 hr", and STAFF AT WORK: 1 Safety Researcher.
 - Commit reads MONTH IN PLAY (idle).
 - No progress bar for single plays: the game resolves them all at Commit.
@@ -145,9 +147,8 @@ with nothing queued:
 - Top bar: Money $12,400 with a LOW tag (the game's critical-funds threshold
   is at most $20,000); Research -6; Reputation 34.
 - P(Doom) card: 56.7%, SEVERE, band 4 of 7.
-- The feed keeps November's record: the second Meetups ("Worked the room
-  (+1.5 reputation). No leads you have room for."), "Fast-tracked hiring
-  process! (+1 safety researcher)" on Tue 14 Nov and "Month Review --
+- The feed keeps November's record: the same four Wed 1 Nov lines as state
+  4, "Fast-tracked hiring process! (+1 safety researcher)" on Tue 14 Nov and "Month Review --
   December 2017" on Fri 1 Dec.
 - Lower-right card: held hours 0 left; 1 hr used on Talent Opportunity, 6
   evaporated. STAFF AT WORK: 2 Safety Researchers.
@@ -217,11 +218,13 @@ Other fixtures and choices:
   per spend and does not label a row; marking the row is a display choice.
 - **Held for events at Commit: 7 hr** is the unspent remainder. After the
   event, 1 hr is used and 6 evaporate.
-- **Reserve hours disabled** in state 3, as main_ui.gd:1277-1280 does ("the
-  crisp reserve is operating capacity by definition").
-- **Standard Hiring** shows the data's cost only ($25,000, no Attention). The
-  data gives Fast-Track 1 Attention and Standard none. Round 1's "every
-  handled option costs 1 held hour" is not applied (open question).
+- **Reserve hours live** in state 3, per the ADR's untyped hold (council
+  round 1). Today's main_ui.gd:1277-1280 disables it when no operating hours
+  are left ("the crisp reserve is operating capacity by definition"); see
+  Bugs.
+- **Standard Hiring costs $25,000 + 1 held hr** (run-state REVISION 3):
+  event_dialog.gd folds the window's Attention price into any handled option
+  that does not declare its own. Decline is the free option.
 - **Doom held at 40.2% in state 4.** That is run-state's fixture: the level
   stays at the month-start value until the review. RISING carries over as a
   trend label, not a delta.
@@ -232,10 +235,11 @@ Other fixtures and choices:
   keeps standing instructions off screen. The rivals section is left out; no
   rival names or numbers are invented.
 - **Feed lines** are the game's result messages as listed in run-state
-  REVISION 2. "Talent Opportunity: needs a reply." is a fixture line. "+ 7
-  more lines" / "+ 8 more lines" count the other Commit results (11 plays;
-  the hire, Read x2, Post Online, Work Your Connections, Tour Offices and
-  one Meetups are folded).
+  REVISION 2, drawn from one list of the 11 Commit lines in queue order;
+  states 4 and 5 show the same four. "+ 7 more lines from Wed 1 Nov" counts
+  the folded ones: the hire (random researcher name), Read x2, Post Online,
+  Work Your Connections, the first Meetups and Tour Offices (random lease
+  quotes). "Talent Opportunity: needs a reply." is a fixture line.
 - **Workday 10 of 22** is run-state's playback position.
 - **Band strip, "Band N of 7" and the doom colours** come from ThemeManager:
   DOOM_STATUS_BANDS, DOOM_STOPS and get_doom_stroke_color, ported to the page.
@@ -351,6 +355,9 @@ Every row icon sits on the same tile, so Pip's tile-less icons
   reputation live in hiring_pipeline.gd and Balance hiring.connections, and
   the hours bill operating (MonthPlan.spend_attention default).
 - **The spill:** the UI pre-check and the core gate disagree (see Fixtures).
+- **Reserve:** main_ui.gd:1277-1280 treats the reserve as operating capacity
+  and disables it at 0 operating hours; the ADR's hold is untyped. G draws
+  the ADR (Reserve live).
 - **Doom text contrast.** get_doom_stroke_color's floor (luminance 0.22) leaves
   CATASTROPHIC text about 1.8:1 on the dark panels. The page lifts text
   labels to 4.5:1; the ring keeps the game colour.
@@ -372,12 +379,10 @@ Every row icon sits on the same tile, so Pip's tile-less icons
 
 - Should PLAN show an "after costs" preview at all? The game has none today
   (fixture in state 3).
-- Does every handled event option cost 1 held hour (round 1), or only what
-  the data says (Fast-Track 1, Standard 0)? G shows the data.
 - Mark the spilled hour on the play that caused it, or only in the Attention
   card? G does both, with the card as the source of truth.
-- Should "Reserve hours" stay operating-only (today's code) under the ADR's
-  untyped hold? Drawn as today's code.
+- Reserve hours: the ADR's untyped hold (drawn) or today's operating-only
+  code? Pip's call.
 - Pip's Staff icon (silhouettes) and Hire icon (head and shoulders): still
   open from round 3.
 - New shortcut keys on the rail (A, U, E, F1, Q) are proposals; only L exists
@@ -385,10 +390,37 @@ Every row icon sits on the same tile, so Pip's tile-less icons
 - Event pictures: the game uses none today. Is a picture per event wanted,
   and may it show people?
 
+## Council round 1 fixes
+
+From fork/design/hifi/council/r1-agreed.md ("All four" and "G"), plus run-state
+REVISION 3:
+- All four, state 4: Standard Hiring shows "$25,000 + 1 held hr". Fast-Track
+  stays selected; state 5 is unchanged. The open question on event costs is
+  closed.
+- G1, state 2: the NEW chips on Safety Audit (row and detail card) and
+  Strategic are gone.
+- G2, state 3: Reserve hours [R] is enabled; the Attention card reads
+  "Reserved, up to 7 hr: none yet" in place of "Reserve (needs operating
+  hours): none". The main_ui vs ADR mismatch stays in Bugs.
+- G3, state 3: Read the Literature is two rows (2 and 3); the group row, its
+  `+` expander, the empty expander slot and `&expand=read` are removed. Play
+  rows went from 54px to 50px so all 11 fit with Order Office Supplies above
+  the fold; the check confirms no scroll.
+- G4, states 3-5: `--held` is now a neutral silver (#C9D2D8), not lilac.
+  Purple appears only in state 6's doom layer (and the aubergine rail chrome,
+  left as non-blocking).
+- G5, states 4-5: the Wed 1 Nov lines come from one shared list in queue
+  order (plays 5, 8, 10, 11), and both states show the same four lines word
+  for word under "+ 7 more lines from Wed 1 Nov". State 4 used to show the
+  first Meetups line out of queue order; state 5 used to say "+ 8 more lines
+  from November".
+- Not changed: state 2's home card still groups "2-3 Read the Literature x2"
+  (a summary, not the edit list; outside the agreed items).
+
 ## Visual pass
 
 Every state was checked at 1920x1080 and 1280x720, by eye and with
-`?check=1`, plus state 3 with `&expand=read`. The check flags:
+`?check=1`. The check flags:
 - text under 16px;
 - clipped, ellipsised or overflowing text;
 - one-line labels that wrap;
@@ -399,7 +431,7 @@ Every state was checked at 1920x1080 and 1280x720, by eye and with
 - images that fail to load (the check waits until every image has loaded
   or failed).
 
-Final result: CLEAN on all seven views.
+Final result: CLEAN on all six states at both sizes (after council round 1).
 
 Fixed along the way:
 - Fonts loaded after the first layout, so bottom-anchored cards measured too

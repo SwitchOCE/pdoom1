@@ -38,8 +38,9 @@ planning 9/12 left, operating 8/8 left. All 17 top-level actions are slips
 (add) or folders (open), with Pip's icons. Research blocks are stamped with
 the shortfall: Safety Research and Capability Research SHORT 22 RESEARCH,
 Publish Safety Paper SHORT 32 RESEARCH, and the Travel folder SUBMIT PAPER:
-SHORT 27. Safety Audit and Strategic carry a NEW clip (unlocked this month);
-Hire Staff shows "1 in plan", Scouting "2 in plan". Safety Audit is focused
+SHORT 27. Nothing is marked NEW: Safety Audit's and Strategic's unlock gates
+count workdays (and Strategic needs reputation 30), so nothing shows a
+November unlock (run-state REVISION 3). Hire Staff shows "1 in plan", Scouting "2 in plan". Safety Audit is focused
 (lit), and the empty 18th place in the grid holds its detail card: 2 op hr .
 $40,000, "Comprehensive safety review", "add to plan [Enter]". That place is
 the same for whichever slip has focus.
@@ -81,8 +82,12 @@ the feed so far (01 "11 plays run at Commit", 01 "Safety Researcher hired",
 who is at work (1 safety researcher), and "Feed and results [F]". No play
 has its own progress bar: the game runs them all at Commit. Across the desk
 lies the event slip, Talent Opportunity, in the data's own words with its
-three options and costs: Fast-Track Hiring $25,000 + 1 held hr (focused,
-Enter), Standard Hiring $25,000, Decline Offer free; its foot shows in hand
+three options, each with its effect and cost: Fast-Track Hiring "+1 safety
+researcher", $25,000 + 1 held hr (focused, Enter); Standard Hiring "+1
+safety researcher", $25,000 + 1 held hr; Decline Offer "no change", free.
+Standard Hiring's held hour is the window's Attention price, which
+event_dialog.gd folds into any handled option without its own (run-state
+REVISION 3). Its foot shows in hand
 $37,400 and held for events 7 hr. Reputation reads 34: 32 - 6 (Work Your
 Connections) - 1 (Post Online) + 1.5 + 1.5 (two Meetups) + 3 (Networking)
 + 3 (Safety Audit), the fixed results actions.gd applies at Commit. Research
@@ -100,7 +105,9 @@ $12,400 (-$127,600); Staff 0 -> 2 (+2); Doom HIGH -> SEVERE (crossed up) --
 a band move, no number), the closing line, and "Begin planning December
 2017 [Enter]". The rivals section is left out: the game prints it only when
 a rival is visible, and the source run shows none. To its left, "November
-2017 -- what happened": one line per play and the event, in the game's own
+2017 -- what happened", in two dated blocks: "1 Nov -- at Commit" (the 11
+plays, numbered 01-11 in queue order) and "14 Nov" (Talent Opportunity and
+the held hours). Each line uses the game's own
 result messages (actions.gd, hiring_pipeline.gd, core_events.json; Tour
 Offices uses the data's description because its message lists random
 quotes), and the hours:
@@ -165,7 +172,7 @@ Values not from run-state.md's sourced lines or the data:
 
 - State 1 card foot: "ACTIONS > Scouting" (the route to the glowing button in
   this concept). Card heading "ADVISOR". The body is the game's text.
-- State 2: stamp "SUBMIT PAPER: SHORT 27", clip "NEW", detail card heading
+- State 2: stamp "SUBMIT PAPER: SHORT 27", detail card heading
   "FOCUSED", "add to plan".
 - State 4: "ACROSS YOUR DESK", "PAUSED FOR YOU", "THE MONTH", "held for
   events 7 hr" on the slip.
@@ -229,10 +236,12 @@ collar") rather than a CSS glow.
   hours and 6 reputation come from hiring_pipeline.gd `use_connections`, and
   it bills OPERATING because `spend_attention` defaults to operating.
 - UI pre-check vs core on the spill (see Fixtures).
-- Talent Opportunity, Standard Hiring: the data gives `costs: {money: 25000}`
-  and no Attention, while Fast-Track costs 1 Attention for the same effect
-  (+1 safety researcher). Drawn as the data says; round-1 council notes said
-  every handled option costs 1 held hour. Question for Pip.
+- Talent Opportunity, Standard Hiring: core_events.json gives only
+  `costs: {money: 25000}`, but the game charges the window's 1 Attention too
+  (event_dialog.gd folds it into handled options without their own). So the
+  data reads cheaper than the game is. Drawn as the game shows it.
+- Run-state's first version said Safety Audit and Strategic unlock in
+  November; their gates count workdays (turn_min 5 / 10), not months.
 - Advertise a Role: no costs in core.json, but Balance `hiring.advertise`
   has cost_money 8000 and cost_attention 3; today's game shows it as SOON.
   Drawn as COMING SOON.
@@ -253,7 +262,6 @@ collar") rather than a CSS glow.
 - Should PLAN show an "after Commit" preview (money and reputation once the
   queue runs)? It is a view of existing numbers, but the game does not show
   it today.
-- Standard Hiring: should it cost a held hour like Fast-Track?
 - Where does the office cat live in this concept? Drawn as a photo on the
   desk because the doom layer needs a cat to glow around; the game shows a
   random contributor's cat photo today.
@@ -300,3 +308,25 @@ self-check on each.
 - Icons: each sits beside its label, same size and position within its
   group; the dimmed WATCH plates keep their icons.
 - Not judged (stills): motion, hover, feel, the glow's flicker.
+
+## Council round 1 fixes
+
+From fork/design/hifi/council/r1-agreed.md ("All four" and "A. The Desk"
+items only).
+- All four, 1 (state 4): Standard Hiring now shows $25,000 + 1 held hr, as
+  the game charges it (run-state REVISION 3). Fast-Track stays the choice;
+  state 5 is unchanged. The "Standard Hiring" open question and bug entry
+  are rewritten to match.
+- A1 (state 2): removed the NEW clips from Safety Audit and Strategic.
+- A2 (state 4): each option shows its effect under its name: "+1 safety
+  researcher" on both hiring options, "no change" on Decline Offer. The
+  option rows grew from 52 to 62px; the slip still clears the dial.
+- A3 (state 5): the results list is split into dated blocks, "1 NOV -- AT
+  COMMIT" over the 11 numbered plays and "14 NOV" over Talent Opportunity
+  (no number) and the held hours. To fit the two headings, the sheet moved
+  up 10px (still clear of the calendar), rows lost 1px of padding each,
+  and the "held hours" line sits in the 14 Nov block rather than a third
+  block.
+- Re-rendered states 2, 4 and 5 at 1920x1080 and 1280x720 plus their WebPs.
+  Layout self-check on all three: no overflow, no text outside its box,
+  nothing off the stage, no overlaps; font sizes 16, 18, 22, 28, 40 px only.

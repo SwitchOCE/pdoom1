@@ -37,7 +37,8 @@ Pip's dawn office, almost empty.
   do not know anything yet. Go and find out -- scouting (the glowing
   button)." In this concept Scouting is a folder in the card box, so the
   card box glows amber and an amber pen arrow runs from the note to it. The
-  note closes with "Got it [Esc]". No other hint is on screen, and it goes
+  note closes with a plain "Got it" button (no key cap, so Commit keeps
+  the only Enter on screen). No other hint is on screen, and it goes
   once the player has opened the card box.
 
 **State 2 -- choosing an action (Wed 1 Nov 2017).** The player has opened
@@ -109,7 +110,7 @@ view under a light dim.
     "Safety audit (+scrutiny, +3 reputation)", both "Worked the room ..."
     variants, "Networking (+3 reputation)", "Three landlords will quote you
     terms", "Office supplies restocked (+50 stationery, now at 100)"), Work
-    Your Connections "done", "Held for events: 7 hr", and in red "14 Nov MEMO:
+    Your Connections "Reached out through your network -- a pre-vetted lead may surface shortly." (hiring_pipeline.gd), "Held for events: 7 hr", and in red "14 Nov MEMO:
     Talent Opportunity".
   - There are no per-play progress bars (the game has none).
 - **The event:** a memo clipped to the middle of the room: "Talent
@@ -118,7 +119,7 @@ view under a light dim.
 - **The choices,** each with its key, the data's effect and its cost:
   - [1] Fast-Track Hiring: +1 safety researcher; $25,000 + 1 held hr. This
     one is ticked in red pen.
-  - [2] Standard Hiring: +1 safety researcher; $25,000.
+  - [2] Standard Hiring: +1 safety researcher; $25,000 + 1 held hr.
   - [3] Decline Offer: no change; free.
 - **Footer:** "In hand: $37,400, 7 held hr" and "File answer [Enter]". The
   memo has no Esc: an unanswered event swallows Esc on purpose (#452).
@@ -144,8 +145,7 @@ follows the game's Month Review (game_manager.gd _finish_month_playback).
     decisions this month (last month's unspent reserve evaporated -- no
     banking)."
   - **What happened in November:** one line per play with the game's own
-    result message (the same words as the teleprinter), "done" for Work
-    Your Connections, and the memo line with the game's message
+    result message (the same words as the teleprinter), and the memo line with the game's message
     "Fast-tracked hiring process! (+1 safety researcher)".
   - **No rivals section.** The game prints it only when a rival is
     visible, and this run has no rival data (REVISION 2 allows leaving it
@@ -193,8 +193,9 @@ queued.
 - **State 4:** P(Doom) held at 40.2% until the month review (run-state.md).
   The "RISING" word is shown only in states 2 and 3, where run-state.md
   states it.
-- **State 4, Standard Hiring** shows no Attention cost, as in the data.
-  Round 1 said every handled option costs 1 held hour. Open question.
+- **State 4, Standard Hiring** costs $25,000 + 1 held hr (run-state
+  REVISION 3: event_dialog.gd folds the window's Attention price into
+  handled options without their own; Decline stays free).
 - **State 4, "no change" under Decline Offer:** my words for `effects: {}`.
 - **States 3-5 follow run-state REVISION 2:** queued cost $102,600 + 6
   rep; WATCH money $37,400, reputation 34, research -6; review funds
@@ -206,8 +207,7 @@ queued.
 - **State 5, payroll** for the two hires during November is not modelled,
   nor research the new staff produce during playback. Money closes at
   $12,400 = $140,000 - $102,600 - $25,000. The real figure may be lower.
-- **State 5,** Work Your Connections shows "done": its message was not
-  given. Today's
+- **State 5,** today's
   closing line ("Queue this month's actions, then press COMMIT THE MONTH
   ...") is left out: it repeats every month, and the stamp already says
   what is next. It belongs to the tutorial.
@@ -368,8 +368,8 @@ review strings and movement rows in game_manager.gd. I used its
    on the hour boxes?
 2. Is the printed rule line (Para. 2) a standing part of the form, or
    tutorial text to drop once learned?
-3. Does Standard Hiring cost 1 held hour like Fast-Track? The data says no;
-   Round 1 said every handled option does.
+3. (Settled by REVISION 3: Standard Hiring costs 1 held hour, as the game
+   shows it.)
 4. At 81.4% the game's stroke colour (#882271) is too dark for a dark CRT
    screen. Is lifting it for legibility acceptable, or should the counter's
    screen be lighter?
@@ -430,3 +430,30 @@ place and size in all six states. The numbers agree across states:
 - research: 0 -> -12 -> -6 -> -6 -> 4
 - held hours: 7 in states 3, 4 and 5
 - staff: none -> 1 on payroll -> 2
+
+## Council round 1 fixes
+
+From fork/design/hifi/council/r1-agreed.md ("All four" and "C").
+
+- **All four 1, Standard Hiring (s4):** its cost now reads "$25,000 + 1
+  held hr", like Fast-Track. Decline stays free. Fast-Track stays ticked,
+  and state 5 is unchanged. Open question 3 and the state 4 fixture
+  note are updated.
+- **C1, counter above the dimmer (s2, s3, s5; s4 checked):** the P(Doom)
+  counter (number, direction word and band strip) now sits above every
+  dim layer (z 6 over the dim's z 5). It reads at full brightness in
+  states 2, 3, 4 and 5. It does not overlap any menu, which all start at
+  y 232.
+- **C2, Advisor note (s1):** closes with a plain "Got it" button, with no
+  Esc key cap.
+- **C3, empty card positions (s2):** the dotted empty frames in Funds,
+  Outreach and The lab are gone; those positions are plain drawer.
+- **C4, Work Your Connections message (s4, s5):** the teleprinter and the
+  review print the game's message, "Reached out through your network -- a
+  pre-vetted lead may surface shortly." (hiring_pipeline.gd:157), in place
+  of "done".
+
+All six states were re-rendered at 1920x1080 and 1280x720, with new WebPs.
+The self-check passes on all six. States 2-5 were looked at by eye after
+the change: the longer message still fits the teleprinter and the review
+sheet.

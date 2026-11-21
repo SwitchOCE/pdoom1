@@ -290,15 +290,18 @@ body{font-family:"Share Tech Mono",monospace;color:#E9F2F2}
 .ev-t{font:700 var(--t4)/1.1 "Courier Prime",monospace;margin:14px 0 10px}
 .ev-p{font:400 var(--t2)/1.4 "Courier Prime",monospace;color:#3a3024}
 .ev-o{margin-top:18px;display:flex;flex-direction:column;gap:10px}
-.ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:52px;border:2px solid #5a4a38;border-radius:3px;padding:0 14px;font:700 var(--t2)/1 "Courier Prime",monospace;background:rgba(255,255,255,.25)}
+.ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:62px;border:2px solid #5a4a38;border-radius:3px;padding:0 14px;font:700 var(--t2)/1 "Courier Prime",monospace;background:rgba(255,255,255,.25)}
 .ev-o>div.on{border-color:#2a1a04;background:#f8e6b0;box-shadow:0 0 0 3px var(--amber)}
 .ev-o i{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;font-style:normal;background:#3e3220;color:#e9d6a6;text-align:center;padding:4px 0;border-radius:2px;width:28px}
 .ev-o span{font:400 var(--t1)/1 "Courier Prime",monospace;color:#3a3024;display:flex;align-items:center;gap:12px}
 .ev-o span .key{color:#2a1a04}
+.ev-o .nm{display:flex;flex-direction:column;gap:6px}
+.ev-o .nm em{font:400 var(--t1)/1 "Courier Prime",monospace;font-style:normal;color:#24564e}
+.ev-o .nm em.none{color:#7a6a52}
 .ev-f{margin-top:14px;font:400 var(--t1)/1 "Courier Prime",monospace;color:#5a4a38;display:flex;justify-content:space-between}
 
 /* ===== month review: the printed report on the desk ===== */
-.rv{left:56px;top:200px;width:1184px;height:840px;background:linear-gradient(180deg,#f3ead5,#e7dcc1);color:var(--ink);border-radius:2px;
+.rv{left:56px;top:190px;width:1184px;height:850px;background:linear-gradient(180deg,#f3ead5,#e7dcc1);color:var(--ink);border-radius:2px;
   box-shadow:0 24px 50px rgba(0,0,0,.7);padding:30px 44px 28px;display:flex;flex-direction:column}
 .rv:before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(60,48,32,.18) 22px 30px);border-bottom:1px dashed rgba(60,48,32,.35)}
 .rv-k{display:flex;justify-content:space-between;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#7d3028;margin-top:4px}
@@ -306,15 +309,16 @@ body{font-family:"Share Tech Mono",monospace;color:#E9F2F2}
 .rv-t{font:700 var(--t4)/1.1 "Courier Prime",monospace}
 .rv-lede{font:400 var(--t2)/1.4 "Courier Prime",monospace;color:#2f261b}
 .rv-at{font:400 var(--t1)/1.4 "Courier Prime",monospace;color:#2f261b}
-.rv-cols{flex:1;display:grid;grid-template-columns:1fr 330px;gap:32px;margin-top:20px;min-height:0}
+.rv-cols{flex:1;display:grid;grid-template-columns:1fr 330px;gap:32px;margin-top:16px;min-height:0}
 .rv h5{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#5a4a38;padding-bottom:8px;border-bottom:2px solid #3e3220}
 .rv-res{column-gap:8px !important;display:grid;grid-template-columns:34px 240px 1fr;column-gap:10px;font:400 var(--t1)/1.3 "Courier Prime",monospace;color:#2f261b}
-.rv-res>span{padding:5px 0;border-bottom:1px dotted rgba(90,74,56,.45)}
+.rv-res>span{padding:4px 0;border-bottom:1px dotted rgba(90,74,56,.45)}
 .rv-res .d{color:#7a6a52}
 .rv-res .n{font-weight:700}
 .rv-res .ok{color:#24564e;font-weight:700}
 .rv-res .evn{color:#7d3028;font-weight:700}
 .rv-res .last{border-bottom:none}
+.rv-res .g{grid-column:1 / -1;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;color:#7d3028;padding:8px 0 3px;border-bottom:1px solid rgba(90,74,56,.6)}
 .rv-right{display:flex;flex-direction:column}
 .rv-mv{display:grid;grid-template-columns:78px 1fr;font:400 var(--t2)/1.3 "Courier Prime",monospace}
 .rv-mv>span{padding:9px 0;border-bottom:1px dotted rgba(90,74,56,.45)}
@@ -653,14 +657,14 @@ function hand(p){
     ["Safety Research","RESEARCH","slip","1 plan hr<br>10 research","blocked",short(10),[]],
     ["Capability Research","RESEARCH","slip","1 plan hr<br>10 research","blocked",short(10),[]],
     ["Publish Safety Paper","RESEARCH","slip","1 plan hr<br>20 research","blocked",short(20),[]],
-    ["Safety Audit","RESEARCH","slip","<span class=op>2 op hr</span><br>$40,000","lit","",[["NEW","new"]]],
+    ["Safety Audit","RESEARCH","slip","<span class=op>2 op hr</span><br>$40,000","lit","",[]],
     ["Travel &amp; Conferences","OUTREACH","door","4 choices","","SUBMIT PAPER: "+short(15).replace(" RESEARCH",""),[]],
     ["Scouting","OUTREACH","door","3 choices","","",from("Scouting")?[[from("Scouting")+" in plan",""]]:[]],
     ["Publicity","OUTREACH","door","5 choices","","",[]],
     ["Purchase Compute","LAB","slip","$50,000<br>no hours","","",[]],
     ["Operations","LAB","door","3 choices","","",[]],
     ["Office","LAB","door","4 choices","","",[]],
-    ["Strategic","STRATEGIC","door","4 choices","","",[["NEW","new"]]]
+    ["Strategic","STRATEGIC","door","4 choices","","",[]]
   ];
 }
 function slip(s){
@@ -740,8 +744,8 @@ function watchScreen(){
   ev.appendChild(el("div","ev-t","Talent Opportunity"));
   ev.appendChild(el("div","ev-p","A brilliant researcher wants to join your lab at reduced cost!"));
   var o = el("div","ev-o");
-  [["1","Fast-Track Hiring","$25,000 + 1 held hr",1],["2","Standard Hiring","$25,000",0],["3","Decline Offer","free",0]].forEach(function(x){
-    o.appendChild(el("div",x[3]?"on":"","<i>"+x[0]+"</i>"+x[1]+"<span>"+x[2]+(x[3]?"<span class=key>Enter</span>":"")+"</span>"));
+  [["1","Fast-Track Hiring","+1 safety researcher","$25,000 + 1 held hr",1],["2","Standard Hiring","+1 safety researcher","$25,000 + 1 held hr",0],["3","Decline Offer","no change","free",0]].forEach(function(x){
+    o.appendChild(el("div",x[4]?"on":"","<i>"+x[0]+"</i><div class=nm>"+x[1]+"<em"+(x[2]==="no change"?" class=none":"")+">"+x[2]+"</em></div><span>"+x[3]+(x[4]?"<span class=key>Enter</span>":"")+"</span>"));
   });
   ev.appendChild(o);
   ev.appendChild(el("div","ev-f","<span>in hand "+money(p.moneyAfter)+"</span><span>held for events "+p.held+" hr</span>"));
@@ -757,6 +761,7 @@ function reviewScreen(){
   r.appendChild(el("div","rv-head","<span class=rv-t>Month Review -- December 2017</span><span class=rv-lede>December 2017 begins.</span>"));
   r.appendChild(el("div","rv-at","Attention: 20 fresh decisions this month (last month's unspent reserve evaporated -- no banking)."));
   var res = [
+    ["g","1 NOV -- AT COMMIT"],
     ["01","Hire: Safety Researcher","<span class=ok>Safety Researcher hired.</span>"],
     ["02","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
     ["03","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
@@ -768,12 +773,14 @@ function reviewScreen(){
     ["09","Tour Offices","Three landlords will quote you terms."],
     ["10","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
     ["11","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"],
-    ["14","<span class=evn>Talent Opportunity</span>","<span class=ok>Fast-tracked hiring process! (+1 safety researcher)</span>"],
+    ["g","14 NOV"],
+    ["","<span class=evn>Talent Opportunity</span>","<span class=ok>Fast-tracked hiring process! (+1 safety researcher)</span>"],
     ["","Held for events","7 hr held: 1 went to Talent Opportunity, 6 evaporated."]
   ];
   var cols = el("div","rv-cols");
   var left = el("div"); left.appendChild(el("h5",null,"NOVEMBER 2017 -- WHAT HAPPENED"));
   left.appendChild(el("div","rv-res",res.map(function(x,i){ var c = i===res.length-1 ? " last" : "";
+    if (x[0]==="g") return "<span class=g>"+x[1]+"</span>";
     return "<span class='d"+c+"'>"+x[0]+"</span><span class='n"+c+"'>"+x[1]+"</span><span class='"+c+"'>"+x[2]+"</span>"; }).join("")));
   var right = el("div","rv-right"); right.appendChild(el("h5",null,"LAST MONTH'S MOVEMENT"));
   right.appendChild(el("div","rv-mv",

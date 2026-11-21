@@ -53,8 +53,11 @@ figcaption span { color: var(--muted); }
 #lb.on { display: flex; }
 #lb .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; font: 14px "IBM Plex Mono", monospace; }
 #lb .bar span { color: var(--muted); }
-#lb .stage { flex: 1; display: grid; place-items: center; min-height: 0; padding: 0 12px 12px; }
-#lb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+#lb .stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 0 12px 12px; }
+#lb img { max-width: 100%; max-height: calc(100vh - 64px); width: auto; height: auto; object-fit: contain; }
+button.thumb { all: unset; display: block; width: 100%; cursor: zoom-in; }
+button.thumb:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+button.tab:focus-visible, #lbx:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 900px) {
   header, nav, main { padding-left: 16px; padding-right: 16px; }
   .grid.cmp, .grid.one { grid-template-columns: minmax(0, 1fr); }
@@ -82,14 +85,14 @@ figcaption span { color: var(--muted); }
 const CONCEPTS = [
   { id: "A", name: "A. The Desk", line: "First-person founder's desk: a CRT holds the plan, a shortcut rack opens each menu, brass P(Doom) dial." },
   { id: "C", name: "C. The Paperwork Desk", line: "A register of forms: Form A-20 is the month, a card file of actions, stamps, an in-tray memo, a printed ledger." },
-  { id: "E", name: "E. Rooms and Stations", line: "A fixed instrument frame over the office, with stations (Desk, Lab Floor, Procurement, Records) and a This Month card." },
+  { id: "E", name: "E. Rooms and Stations", line: "A fixed instrument frame over the office, with stations (Actions, Plan, Lab Floor, Procurement, Records) and a This Month card." },
   { id: "G", name: "G. The Existing UI, Modernised", line: "Today's layout kept (resource bar, PLAN banner, doom ring, queue) with menus on a left rail." }
 ];
 const STATES = [
   { n: 1, name: "First screen", line: "Month 1, Jul 2017: the first screen a new player sees, nothing queued. $245,000, P(Doom) 20.0%." },
   { n: 2, name: "Choosing an action", line: "Nov 2017: three plays queued; the action menu is open and the player is about to add Safety Audit. Research is -12, so research plays are blocked." },
-  { n: 3, name: "The month's plan", line: "Nov 2017: eleven plays queued. 12 planning + 8 operating hours; one operating hour spills into planning (ADR-0011), never the reverse; 7 hours held for events." },
-  { n: 4, name: "WATCH: an event", line: "Tue 14 Nov 2017: the month plays back; Talent Opportunity asks for a choice (Fast-Track $25,000 + 1 hr, Standard $25,000, Decline)." },
+  { n: 3, name: "The month's plan", line: "Nov 2017: eleven plays queued. 12 planning + 8 operating hours; one operating hour spills into planning (ADR-0011), never the reverse; 7 hours held for events. Today's UI pre-check refuses this spill; the mock-ups follow the ADR and the game core." },
+  { n: 4, name: "WATCH: an event", line: "Tue 14 Nov 2017: the month plays back; Talent Opportunity asks for a choice (Fast-Track or Standard Hiring, $25,000 + 1 held hour each; Decline is free)." },
   { n: 5, name: "End of month", line: "The month review before December's PLAN: funds and staff moved, doom moved HIGH -> SEVERE (a band, never a number)." },
   { n: 6, name: "Late game", line: "Apr 2018 (projected): P(Doom) 81.4%, CATASTROPHIC. Doom is a layer, not a repaint: the office darkens, the controls stay put." }
 ];
@@ -104,19 +107,23 @@ if (qs.get("concept")) pickConcept = qs.get("concept");
 function img(c, s, cap) {
   const f = document.createElement("figure");
   const i = new Image();
-  i.decoding = "async";
   i.alt = `${CONCEPTS.find(x => x.id === c).name}, state ${s}: ${STATES[s - 1].name}`;
   i.src = src(c, s);
   i.onerror = () => { const m = document.createElement("div"); m.className = "missing"; m.textContent = "not rendered yet"; i.replaceWith(m); };
-  i.onclick = () => openLb(c, s);
-  f.appendChild(i);
+  const b = document.createElement("button");
+  b.className = "thumb"; b.type = "button";
+  b.setAttribute("aria-label", `Open full size: ${i.alt}`);
+  b.onclick = () => { lastThumb = b; openLb(c, s); };
+  b.appendChild(i);
+  f.appendChild(b);
   if (cap) { const fc = document.createElement("figcaption"); fc.innerHTML = cap; f.appendChild(fc); }
   return f;
 }
 function tab(label, on, fn) {
   const b = document.createElement("button");
   b.className = "tab"; b.textContent = label; b.setAttribute("aria-pressed", on ? "true" : "false");
-  b.onclick = fn; return b;
+  b.onclick = () => { fn(); const nb = [...document.querySelectorAll("nav button.tab")].find(x => x.textContent === label); if (nb) nb.focus(); };
+  return b;
 }
 function render() {
   try { localStorage.setItem("pd-view", view); } catch (e) {}
@@ -138,7 +145,7 @@ function render() {
     p.innerHTML = '<span class="lab">Concept</span>';
     CONCEPTS.forEach(c => p.appendChild(tab(c.name, c.id === pickConcept, () => { pickConcept = c.id; render(); })));
     const c = CONCEPTS.find(x => x.id === pickConcept);
-    m.insertAdjacentHTML("beforeend", `<div class="state-head"><h2>${c.name}</h2><p>${c.line} Interactive version: <a style="color:var(--accent)" href="${c.id}/concept.html?state=1">${c.id}/concept.html</a>; notes: <a style="color:var(--accent)" href="${c.id}/notes.md">${c.id}/notes.md</a>.</p></div>`);
+    m.insertAdjacentHTML("beforeend", `<div class="state-head"><h2>${c.name}</h2><p>${c.line} In the repo: fork/design/hifi/${c.id}/ (concept.html, an HTML mock-up with one state per URL, and notes.md: fixtures, icons, people, bugs and data gaps).</p></div>`);
     const g = document.createElement("div"); g.className = "grid one";
     STATES.forEach(s => g.appendChild(img(c.id, s.n, `<b>${s.n}. ${s.name}</b> <span>-- ${s.line}</span>`)));
     m.appendChild(g);
@@ -155,9 +162,9 @@ function render() {
     m.insertAdjacentHTML("beforeend", `<div class="state-head" style="margin-top:20px"><h2>The six states</h2></div>` +
       STATES.map(s => `<p style="margin:4px 0;max-width:980px"><b style="font-family:'IBM Plex Mono',monospace">${s.n}. ${s.name}</b> <span style="color:var(--muted)">-- ${s.line}</span></p>`).join(""));
   }
-  m.insertAdjacentHTML("beforeend", `<div class="notes">Click any screen for full size. Each screen is a 1920x1080 mock-up (also checked at 1280x720). Every concept's notes list its fixtures, icons (Pip's, plus new ones that need art), places where people appear, and bugs or data gaps found on the way. Run report: <a href="report.md">report.md</a>; shared run state: <a href="run-state.md">run-state.md</a>.</div>`);
+  m.insertAdjacentHTML("beforeend", `<div class="notes">Click any screen for full size. Each screen is a 1920x1080 mock-up. Like the game (stretch mode canvas_items), the stage scales uniformly, so at 1280x720 everything is drawn at 2/3 size. Every concept's notes list its fixtures, icons (Pip's, plus new ones that need art), places where people appear, and bugs or data gaps found on the way. The run report (fork/design/hifi/report.md) and the shared run state (run-state.md) are in the repo beside this page.</div>`);
 }
-let lbC = "A", lbS = 1;
+let lbC = "A", lbS = 1, lastThumb = null;
 function openLb(c, s) {
   lbC = c; lbS = s;
   const cc = CONCEPTS.find(x => x.id === c);
@@ -165,8 +172,9 @@ function openLb(c, s) {
   document.getElementById("lbi").alt = `${cc.name}, state ${s}`;
   document.getElementById("lbt").textContent = `${cc.name} -- ${s}. ${STATES[s - 1].name}`;
   document.getElementById("lb").classList.add("on");
+  document.getElementById("lbx").focus();
 }
-function closeLb() { document.getElementById("lb").classList.remove("on"); }
+function closeLb() { document.getElementById("lb").classList.remove("on"); if (lastThumb && document.body.contains(lastThumb)) lastThumb.focus(); }
 document.getElementById("lbx").onclick = closeLb;
 document.getElementById("lb").addEventListener("click", e => { if (e.target.id === "lb" || e.target.classList.contains("stage")) closeLb(); });
 document.addEventListener("keydown", e => {

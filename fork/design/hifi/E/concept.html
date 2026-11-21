@@ -470,7 +470,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     h += '</div></div><div class="crt-chin"><span class="crt-brand">LABTERM 90</span><span class="crt-vent"></span><span class="crt-knob"></span><span class="crt-knob"></span><span class="crt-led"></span></div></div>';
 
     // the printout: the books after Commit
-    h += '<div class="tape"><div class="tape-p"><div class="tape-h">AFTER COMMIT</div>'+
+    h += '<div class="tape"><div class="tape-p"><div class="tape-h">AFTER COSTS</div>'+
       '<div class="tape-r" style="margin-top:8px">'+ic("money",24)+'<span class="k">Money</span><span class="v">'+money(S.money)+'</span></div>'+
       '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+money(cashOut)+'</span></div>'+
       '<div class="tape-r tot sub"><span class="k">after costs</span><span class="v">'+money(S.money-cashOut)+'</span></div>'+
@@ -479,7 +479,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+repOut+'</span></div>'+
       '<div class="tape-r tot sub"><span class="k">after costs</span><span class="v">'+(S.rep-repOut)+'</span></div>'+
       '<div class="tape-gap"></div>'+
-      '<div class="tape-r warn">'+ic("research",24)+'<span class="k">Research</span><span class="v">'+S.research+'</span></div>'+
+      '<div class="tape-r warn">'+ic("research",24)+'<span class="k">Research (now)</span><span class="v">'+S.research+'</span></div>'+
       '<div class="tape-foot warn">Below zero: research plays are blocked.</div>'+
       '</div></div>';
     return h;
@@ -545,7 +545,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       C("safety_research","Safety Research",{l2:pc("plan","1h PLAN")+pc("res","10 research"), why:short(10), off:true}),
       C("capability_research","Capability Research",{l2:pc("plan","1h PLAN")+pc("res","10 research"), why:short(10), off:true}),
       C("publish_paper","Publish Safety Paper",{l2:pc("plan","1h PLAN")+pc("res","20 research"), why:short(20), off:true}),
-      C("audit_safety","Safety Audit",{l2:pc("ops","2h OPS")+pc("res","$40,000"), isNew:true, focus:true})
+      C("audit_safety","Safety Audit",{l2:pc("ops","2h OPS")+pc("res","$40,000"), focus:true})
     ];
     var colB = [
       C("travel","Travel & Conferences",{door:"4 choices", extra:'<span class="why">&times; Submit Paper: '+(15-have)+' research short</span>'}),
@@ -555,13 +555,14 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       C("publicity","Publicity",{door:"5 choices"}),
       C("financing","Financing",{door:"7 choices"}),
       C("scouting","Scouting",{door:"3 choices", stamp:"2 queued"}),
-      C("strategic","Strategic",{door:"4 choices", isNew:true})
+      C("strategic","Strategic",{door:"4 choices"})
     ];
     function card(a){
       var off = !!a.off, blocker = typeof a.off === "string" ? '<span class="why">&times; '+a.off+'</span>' : (a.why || "");
       var right = blocker || (a.stamp ? '<span class="stamp">'+a.stamp+'</span>' : '') || (a.isNew ? '<span class="new">NEW</span>' : '');
       var l2 = a.door ? '<span class="dim-txt">door &middot; '+a.door+(a.each?' &middot;':'')+'</span>'+(a.each||'')+(a.extra||'') : a.l2;
-      var tab = a.focus ? '<div class="tab enter">Enter</div>' : (a.door ? '<div class="tab go">&gt;</div>' : '<div class="tab add">+</div>');
+      // the focused card shows its ring only; the detail bar below carries the one Enter
+      var tab = a.focus ? '<div class="tab add">+</div>' : (a.door ? '<div class="tab go">&gt;</div>' : '<div class="tab add">+</div>');
       return '<div class="ac'+(a.door?' door':'')+(off?' off':'')+(a.focus?' focus':'')+'">'+ic(a.id,40)+
         '<div class="l1"><span class="nm">'+a.nm+'</span>'+right+'</div><div class="l2">'+l2+'</div>'+tab+'</div>';
     }
@@ -575,7 +576,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
         '<div class="rs rs-hrs">'+ic("hours",36)+'<div><div class="k">HOURS LEFT</div><div class="v">'+pc("plan",planLeft+" PLAN")+pc("ops",opsLeft+" OPS")+'</div></div></div>'+
       '</div><div class="rk-grid"><div class="rk-col">'+colA.map(card).join("")+'</div><div class="rk-col">'+colB.map(card).join("")+'</div></div>'+
       '<div class="rk-det">'+ic("audit_safety",48)+'<div class="tx"><div class="t1">Safety Audit -- Comprehensive safety review</div>'+
-        '<div class="t2">'+pc("ops","2h OPS")+pc("res","$40,000")+'<span>8 operating hours left &middot; new this month</span></div></div>'+
+        '<div class="t2">'+pc("ops","2h OPS")+pc("res","$40,000")+'<span>8 operating hours left</span></div></div>'+
         '<span class="go">[Enter] Add to plan</span></div></div>';
   }
 
@@ -588,7 +589,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       '<div class="ev-opt focus"><span class="k">1</span><span class="o">'+ic("hire_safety_researcher",24)+'Fast-Track Hiring</span>'+
         '<span class="cs">'+pc("res","$25,000")+pc("res","1h held")+'<span class="fx">+1 safety researcher</span></span><span class="ent">Enter</span></div>'+
       '<div class="ev-opt"><span class="k">2</span><span class="o">'+ic("hire_safety_researcher",24)+'Standard Hiring</span>'+
-        '<span class="cs">'+pc("res","$25,000")+'<span class="fx">+1 safety researcher</span></span></div>'+
+        '<span class="cs">'+pc("res","$25,000")+pc("res","1h held")+'<span class="fx">+1 safety researcher</span></span></div>'+
       '<div class="ev-opt"><span class="k">3</span><span class="o">'+ic("decline",24)+'Decline Offer</span>'+
         '<span class="cs">'+pc("ghost","free")+'</span></div>'+
       '</div></div>';
@@ -696,8 +697,8 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       h += '<div class="pb"><div class="pb-st">EVENT<br>PAUSED</div><span class="pb-b on">||</span><span class="pb-b">1x</span><span class="pb-b">2x</span><span class="pb-b">4x</span></div>';
     else if (state === 5)   // Month Review: the same slot hands back to PLAN
       h += '<div class="cm">'+ic("commit",36)+'<div style="text-align:center"><div class="cm-txt" style="line-height:30px">BEGIN PLANNING</div><div class="cm-sub" style="font:700 16px/20px \'IBM Plex Mono\',monospace;letter-spacing:2px">DECEMBER 2017</div></div><span class="cm-key">Enter</span></div>';
-    else                    // a focused card owns Enter in state 2, so Commit drops its key there
-      h += '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span>'+(state === 2 ? '' : '<span class="cm-key">Enter</span>')+'</div>';
+    else                    // a focused card owns Enter in state 2 and the open Plan CRT owns the keys in state 3, so Commit drops its key there
+      h += '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span>'+(state === 2 || state === 3 ? '' : '<span class="cm-key">Enter</span>')+'</div>';
     return h;
   }
 

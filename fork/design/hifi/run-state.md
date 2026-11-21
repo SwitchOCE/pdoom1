@@ -264,3 +264,17 @@ Two errors in the first version, found by designer E and the orchestrator:
   you may leave it out (say so in notes).
 - Doom band to art band (designers' reading, an open question for Pip):
   ELEVATED 0-1, HIGH 1, SEVERE and EXTREME 2, CATASTROPHIC 3, TERMINAL 4.
+
+## REVISION 3 (2026-11-22, council round 1) -- event costs
+
+- **Standard Hiring costs $25,000 + 1 held hour** as the game shows it:
+  godot/scripts/ui/event_dialog.gd folds the window's Attention price into
+  any handled option that does not declare its own; Decline Offer is the
+  window's free option. (Found by council member Sol; checked by the
+  orchestrator.) Both hiring options give +1 safety researcher.
+- The "New this month: Safety Audit and Strategic are unlocked" line above
+  is not supported by the code: their gates (turn_min 5 / 10) count
+  workdays, and Strategic also needs reputation 30. See the agreed council
+  list for how the mock-ups treat it.
+- (Council, agreed) Do not mark Safety Audit or Strategic as NEW in
+  November.

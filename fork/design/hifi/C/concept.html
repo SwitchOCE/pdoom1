@@ -50,6 +50,7 @@ img{display:block}
 
 /* ---------- wall instruments ---------- */
 .wall{position:absolute;z-index:2}
+.wall.doom{z-index:6} /* council r1: the counter stays above every dimmer */
 .cal{left:48px;top:32px;width:156px;height:180px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.45);text-align:center}
 .cal::before{content:"";position:absolute;left:72px;top:-6px;width:12px;height:12px;border-radius:50%;background:#9b9b9b;box-shadow:0 2px 2px rgba(0,0,0,.5)}
 .cal-yr{height:36px;background:var(--red);color:#f6ece0;font:600 var(--t-head)/36px Oswald;letter-spacing:4px}
@@ -195,7 +196,7 @@ img{display:block}
 .onf{position:absolute;right:6px;top:-6px;z-index:2;font:700 var(--t-label)/20px "Courier Prime";color:#2f2f2f;padding:0 8px;background:#f6f1e4;border:1.5px solid #5c5c5c;border-radius:10px;white-space:nowrap;box-shadow:0 1px 0 rgba(0,0,0,.3)}
 .ac-slot.focus::after{content:"";position:absolute;inset:-6px;border:3px solid var(--amber);border-radius:4px;box-shadow:0 0 12px rgba(246,168,0,.7);pointer-events:none;z-index:3}
 .addk{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--ink)}
-.ac-empty{border:2px dashed rgba(236,220,191,.18);border-radius:3px}
+.ac-empty{}
 
 /* the schedule: the clipboard, lifted off the desk (state 3) */
 .board{position:absolute;left:48px;top:232px;width:1512px;height:824px;z-index:6;border-radius:8px;
@@ -490,7 +491,7 @@ function state1(){
   // where the Scouting folder lives in this concept.
   var note='<div class="note"><div class="lbl">Advisor</div>'+
     '<p>You do not know anything yet. Go and find out -- scouting (the glowing button).</p>'+
-    '<div class="ft"><button>Got it <span class="key">Esc</span></button></div></div>'+
+    '<div class="ft"><button>Got it</button></div></div>'+
     '<svg class="penarrow" style="left:150px;top:690px" width="120" height="150" viewBox="0 0 120 150">'+
       '<path d="M40 6 C 70 40, 30 80, 62 128" fill="none" stroke="#F6A800" stroke-width="4" stroke-linecap="round"/>'+
       '<path d="M48 120 L63 136 L72 114" fill="none" stroke="#F6A800" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -612,7 +613,7 @@ function state4(){
       '<div class="cv"><b>C.V.</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'+
     '<div class="ask lbl"><span>Tick one</span><span>Cost</span></div>'+
     '<button class="ch on"><span class="n">[1]</span><span class="tick"></span><span><span class="nm">Fast-Track Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000 + 1 held hr</span></button>'+
-    '<button class="ch"><span class="n">[2]</span><span class="tick"></span><span><span class="nm">Standard Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000</span></button>'+
+    '<button class="ch"><span class="n">[2]</span><span class="tick"></span><span><span class="nm">Standard Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000 + 1 held hr</span></button>'+
     '<button class="ch"><span class="n">[3]</span><span class="tick"></span><span><span class="nm">Decline Offer</span><span class="ef">no change</span></span><span class="c">free</span></button>'+
     '<div class="memo-f"><span class="have">In hand: <b>$37,400</b>, <b>7</b> held hr</span><button class="file">File answer <span class="key">Enter</span></button></div></div>';
   var feed=[
@@ -621,7 +622,7 @@ function state4(){
     ['01 Nov','Read for a day (+3.0 research). Nobody noticed. (x2)'],
     ['01 Nov','Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies.'],
     ['01 Nov','Safety audit (+scrutiny, +3 reputation)'],
-    ['01 Nov','Work Your Connections: done'],
+    ['01 Nov','Reached out through your network -- a pre-vetted lead may surface shortly.'],
     ['01 Nov','Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool.'],
     ['01 Nov','Networking (+3 reputation)'],
     ['01 Nov','Tour Offices: Three landlords will quote you terms'],
@@ -641,7 +642,7 @@ function state5(){
     ['01 Nov','Read the Literature x2','Read for a day (+3.0 research). Nobody noticed.'],
     ['01 Nov','Post Online','Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies.'],
     ['01 Nov','Safety Audit','Safety audit (+scrutiny, +3 reputation)'],
-    ['01 Nov','Work Your Connections','done'],
+    ['01 Nov','Work Your Connections','Reached out through your network -- a pre-vetted lead may surface shortly.'],
     ['01 Nov','Go to Meetups','Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool.'],
     ['01 Nov','Networking','Networking (+3 reputation)'],
     ['01 Nov','Tour Offices','Three landlords will quote you terms'],

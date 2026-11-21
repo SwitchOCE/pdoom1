@@ -35,12 +35,13 @@ in two columns.
   research short", Publish Safety Paper "x 32 research short", Travel's line
   "x Submit Paper: 27 research short", Onboard "nobody hired yet", and
   Advertise a Role "coming soon" (the game's [SOON]).
-- Hire Staff carries a "1 queued" stamp and Scouting "2 queued". Safety
-  Audit and Strategic carry NEW.
-- Safety Audit has focus: an amber ring, an Enter tab, and a detail strip
-  along the bottom ("Safety Audit -- Comprehensive safety review", 2h OPS,
-  $40,000, "8 operating hours left . new this month", "[Enter] Add to
-  plan").
+- Hire Staff carries a "1 queued" stamp and Scouting "2 queued". Nothing
+  is marked NEW: Safety Audit and Strategic gate on workdays, and nothing
+  in the game announces them in November (REVISION 3).
+- Safety Audit has focus: an amber ring and a detail strip along the
+  bottom ("Safety Audit -- Comprehensive safety review", 2h OPS, $40,000,
+  "8 operating hours left", "[Enter] Add to plan"). That strip carries the
+  only Enter on screen.
 - Because the card owns Enter, Commit drops its Enter key. The card file's
   Back carries Esc.
 
@@ -60,9 +61,10 @@ LABTERM CRT comes forward.
 - Row 10 is a second Go to Meetups (REVISION 2); the two Meetups plays sit
   apart in the queue and each keeps its own ^ v x.
 - Footer: "11 plays . queued cost $102,600 + 6 rep".
-- A printout beside Commit, "After Commit", shows money $140,000 - $102,600
+- A printout beside Commit, "AFTER COSTS", shows money $140,000 - $102,600
   = $37,400 "after costs", reputation 32 - 6 = 26 "after costs", and
-  research -12 with "Below zero: research plays are blocked."
+  "Research (now)" -12 with "Below zero: research plays are blocked."
+  Commit's Enter is hidden while the Plan CRT is open; the CRT owns Esc.
 
 **4 -- WATCH, an event asks for a choice (Tue 14 Nov 2017).** The player
 committed on 1 Nov, and every play ran at Commit.
@@ -78,7 +80,7 @@ committed on 1 Nov, and every play ran at Commit.
   and "Cash $37,400 . Held for events 7h". The three options are keyed 1 / 2
   / 3:
   - Fast-Track Hiring: $25,000, 1h held, +1 safety researcher.
-  - Standard Hiring: $25,000, +1 safety researcher.
+  - Standard Hiring: $25,000, 1h held, +1 safety researcher.
   - Decline Offer: free.
 - Fast-Track has focus and the only Enter on screen. Nothing on screen shows
   per-play progress, because the game does not have it.
@@ -153,9 +155,9 @@ state, they show in the Actions card file.
   restocked (+50 stationery, now at 100)" (stationery caps at 100).
 - **State 4 workday strip:** 22 workdays in November 2017, with day 10 =
   Tue 14 Nov (run-state).
-- **State 4 "1h held"** on Fast-Track only. This is the data's
-  `attention: 1`. Standard Hiring has no Attention cost in the data, so
-  none is shown (open question below).
+- **State 4 "1h held"** on both hiring options. Fast-Track declares
+  `attention: 1`; Standard Hiring declares none, and event_dialog.gd folds
+  the window's Attention price into it (REVISION 3). Decline stays free.
 - **State 5 Attention line:** the game prints "Attention: 20 fresh decisions
   this month (last month's unspent reserve evaporated -- no banking)." E
   says hours, to match every other screen, and adds the 7 / 1 / 6
@@ -295,17 +297,31 @@ as in Round 3.
 
 ## Open questions for Alex or Pip
 
-1. Should every handled event option cost 1 held hour (round-1 council
-   note), or only what the data says? State 4 follows the data: Fast-Track
-   1h, Standard none.
-2. Keep or drop the per-row spill marker in the Plan CRT?
-3. Do Pip's Staff and Hire icons, and figures in event art, count as "the
+1. Keep or drop the per-row spill marker in the Plan CRT?
+2. Do Pip's Staff and Hire icons, and figures in event art, count as "the
    person"? If yes: draw figure-free Lab Floor and Hire Staff icons. The
    memo picture is already cropped.
-4. Should the Month Review list the month's plays (state 5 does, per
+3. Should the Month Review list the month's plays (state 5 does, per
    run-state) or leave them to Records?
-5. Is the art-band mapping above right? In particular, does SEVERE count as
+4. Is the art-band mapping above right? In particular, does SEVERE count as
    band 2?
+
+## Council round 1 fixes (council/r1-agreed.md)
+
+- All four, item 1 (s4): Standard Hiring shows $25,000 + 1h held +
+  "+1 safety researcher", the same as Fast-Track (run-state REVISION 3).
+  Decline stays free. The open question about it is closed. State 5 is
+  unchanged.
+- E1 (s2): no NEW tag on Strategic and no "new this month" on Safety Audit.
+  The focused Safety Audit card keeps its amber ring but shows a plain +
+  tab, so Enter appears once, in the detail strip ("[Enter] Add to plan").
+- E2 (s3): Commit's Enter is hidden while the Plan CRT is open; the CRT
+  owns Esc.
+- E3 (s3): the printout is titled "AFTER COSTS", and its research row reads
+  "Research (now)" -12.
+- Re-rendered s2, s3 and s4 at 1920x1080 and 1280x720 plus their WebPs;
+  the layout check reports CHECK 0 at both sizes. s1, s5 and s6 are
+  untouched.
 
 ## Visual pass
 
