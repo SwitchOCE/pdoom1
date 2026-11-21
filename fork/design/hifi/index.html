@@ -49,7 +49,7 @@ figcaption span { color: var(--muted); }
 .missing { aspect-ratio: 16 / 9; display: grid; place-items: center; color: var(--muted); font: 13px "IBM Plex Mono", monospace; }
 .notes { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); max-width: 980px; font-size: 14px; }
 .notes a { color: var(--accent); }
-#lb { position: fixed; inset: 0; background: rgba(0,0,0,.94); display: none; z-index: 20; flex-direction: column; }
+#lb { position: fixed; inset: 0; background: #0b0c0d; display: none; z-index: 20; flex-direction: column; }
 #lb.on { display: flex; }
 #lb .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; font: 14px "IBM Plex Mono", monospace; }
 #lb .bar span { color: var(--muted); }
@@ -180,7 +180,8 @@ document.getElementById("lb").addEventListener("click", e => { if (e.target.id =
 document.addEventListener("keydown", e => {
   if (!document.getElementById("lb").classList.contains("on")) return;
   const ci = CONCEPTS.findIndex(x => x.id === lbC);
-  if (e.key === "Escape") closeLb();
+  if (e.key === "Tab") { e.preventDefault(); document.getElementById("lbx").focus(); }
+  else if (e.key === "Escape") closeLb();
   else if (e.key === "ArrowRight") openLb(lbC, lbS % 6 + 1);
   else if (e.key === "ArrowLeft") openLb(lbC, (lbS + 4) % 6 + 1);
   else if (e.key === "ArrowDown") { e.preventDefault(); openLb(CONCEPTS[(ci + 1) % 4].id, lbS); }
