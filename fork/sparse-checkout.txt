@@ -1,0 +1,68 @@
+# Sparse-checkout patterns for the lean working copy (git non-cone mode).
+# Apply (Git Bash, not PowerShell): git sparse-checkout set --no-cone --stdin < fork/sparse-checkout.txt
+# Undo:    git sparse-checkout disable (puts Pip's CLAUDE.md and permissions file back)
+# Hides paths from disk only. Git history, branches and upstream stay untouched.
+# Later lines win. Re-add a path by appending it and re-running "set".
+
+# Root files: keep, except Pip's agent file and release/process docs.
+/*
+!/CLAUDE.md
+!/CHANGELOG.md
+!/CONTRIBUTING.md
+!/RELEASING.md
+!/QA_CHECKLIST.md
+!/asset_gallery.html
+!/.pre-commit-config.yaml
+
+# All top-level folders hidden, then re-add what the loop needs.
+!/*/
+/godot/
+/.claude/CLAUDE.md
+/fork/
+/shared/
+
+# godot/: hide phase-summary notes and non-design prose.
+!/godot/*.md
+/godot/UI_STYLE_GUIDE.md
+!/godot/docs/*
+/godot/docs/design/
+
+# Tooling: the minimal loop plus the three checks that keep a change upstreamable.
+/tools/check_class_cache.py
+/tools/build_release.py
+/tools/write_build_stamp.py
+/tools/sync_version.py
+/tools/check_ladder_bump.py
+/tools/check_scene_nav.py
+/scripts/run_godot_tests.py
+/scripts/check_no_emoji.py
+/scripts/generate_credits.py
+
+# Docs that decide the game, plus the UI and onboarding references for this fork's scope.
+/docs/ARCHITECTURE.md
+/docs/GLOSSARY.md
+/docs/NUMBER_FORMATS.md
+/docs/CONTROLS.md
+/docs/PLAYERGUIDE.md
+/docs/MAIN_UI_SEAM_MAP.md
+/docs/art/PALETTE_AND_DOOM_INTENSITY.md
+/docs/balance/DOOM_STREAMS_v1.md
+/docs/balance/L1_CALIBRATION_2026-07-14.md
+/docs/design/NAVIGATION_AUDIT.md
+/docs/design/PAUSE_SEMANTICS.md
+/docs/design/UI_ARCHITECTURE_2026-08-06.md
+/docs/game-design/DESIGN_PHILOSOPHY.md
+/docs/game-design/WORKSHOP_2_BACKLOG.md
+/docs/game-design/DQ_INDEX.md
+/docs/game-design/WORLD_AND_LORE.md
+/docs/game-design/RESEARCHER_QUIRKS.md
+/docs/game-design/DESPERATION_LEVER_PRICING.md
+/docs/game-design/UI_ESCAPE_CONTRACT.md
+/docs/game-design/WS3_ENDGAME_RULINGS_2026-07-29.md
+/docs/game-design/DQ-21-INTERMEDIARY-SEMANTICS-STRAWMAN.md
+/docs/game-design/ONBOARDING_STORY_DESIGN.md
+/docs/game-design/COLD_OPEN_SEQUENCE.md
+/docs/game-design/decisions/ADR-00*.md
+!/docs/game-design/decisions/ADR-0019-*.md
+!/docs/game-design/decisions/ADR-0020-*.md
+/docs/rulings/DECISIONS_2026-10-26_return.md
