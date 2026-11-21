@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rooms and Stations, Grim</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=block" rel="stylesheet">
+<style>
+/* =====================================================================
+   E. ROOMS AND STATIONS, GRIM -- the darker E (fork/design/hifi3/).
+   Layout: concept E (fork/design/hifi/E/): the empty office, the station
+   dock on the left, P(Doom) top centre, reputation top right, the month
+   card on the right, Commit bottom right. Look: design H
+   (fork/design/hifi3/H/): G's palette, panels and meters; paper the only
+   light thing. One 1920x1080 stage, scaled uniformly to the window.
+   ?state=1..6 picks the moment; ?still=1 shows the dateline without its
+   type-on (renders); ?check=1 runs the layout check.
+   ===================================================================== */
+:root{
+  /* type scale: the only five sizes on the page (H's) */
+  --t1:16px; --t2:18px; --t3:22px; --t4:28px; --t5:40px;
+  --void:#090807; --panel:rgba(16,14,12,.95); --panel-2:#1a1612; --well:#0d0b0a;
+  --frame:rgba(196,176,138,.16); --frame-hi:rgba(196,176,138,.28); --tick:#6a573a;
+  --bone:#d6cebd; --muted:#aaa08e; --dim:#968d7c;
+  --plan:#c9a465; --plan-fill:#a8854b; --op:#93b3a9; --op-fill:#6c8f86;
+  --amber:#d9a03a; --amber-line:rgba(217,160,58,.62); --warn:#d58a52; --blood:#9b3328;
+  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#1a140d; --ink-soft:#221b13; --ink-red:#3d0e08; --ink-green:#0b2621;
+  --mono:"IBM Plex Mono",Consolas,monospace; --sans:"IBM Plex Sans","Segoe UI",sans-serif;
+  --cond:"Barlow Condensed",sans-serif; --type:"Courier Prime","Courier New",monospace;
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .55 0'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>");
+  --smut:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.05'/></filter><rect width='600' height='600' filter='url(%23s)'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#050404}
+body{font-family:var(--sans);color:var(--bone)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:var(--void);transform-origin:0 0}
+.abs{position:absolute}
+
+/* ===== the room: Pip's mezzanine office, empty, dim; the doom layer grades it ===== */
+.room-bg{position:absolute;inset:0;background:url(assets/office_mezzanine.webp) center/cover no-repeat}
+.room-grade,.room-glow{position:absolute;inset:0;pointer-events:none}
+.room-shade{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,6,8,.62) 0%,rgba(8,6,8,.16) 24%,rgba(8,6,6,.10) 56%,rgba(6,4,3,.62) 92%)}
+.grain{position:absolute;inset:0;pointer-events:none;background:var(--grain) 0 0/256px;opacity:.20;mix-blend-mode:overlay}
+.dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 40% 55%,rgba(6,5,5,.66),rgba(6,5,5,.52) 70%)}
+/* band 3: the window sky turns, the monitors go violet (E's doom layer, toned down for the darker room) */
+.dl-sky{position:absolute;left:296px;top:146px;width:920px;height:246px;pointer-events:none;clip-path:polygon(0 2%,100% 14%,100% 100%,0 100%);
+  background:linear-gradient(180deg,#4a1450 0%,#8a2440 50%,#b8402e 80%,#5a1a40 100%);mix-blend-mode:color;opacity:.7;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%)}
+.dl-sky2{position:absolute;left:296px;top:146px;width:920px;height:246px;pointer-events:none;clip-path:polygon(0 2%,100% 14%,100% 100%,0 100%);
+  background:radial-gradient(ellipse 460px 140px at 52% 78%,rgba(190,60,70,.22),rgba(122,59,143,.08) 60%,rgba(0,0,0,0) 100%);mix-blend-mode:screen}
+.dl-mon{position:absolute;pointer-events:none;border-radius:2px;background:#8a4ab0;mix-blend-mode:color;opacity:.6;filter:blur(1.5px)}
+.dl-glow{position:absolute;pointer-events:none;border-radius:50%;background:radial-gradient(closest-side,rgba(150,80,200,.30),rgba(122,59,143,.10) 50%,rgba(122,59,143,0));mix-blend-mode:screen}
+.dl-smoke{position:absolute;pointer-events:none;border-radius:50%;background:radial-gradient(closest-side,rgba(130,100,128,.18),rgba(130,100,128,0));filter:blur(8px)}
+
+/* ===== panels: G's dark panel, flat and dirty; hairline frame, worn corners (H) ===== */
+.pnl{isolation:isolate;background:var(--panel);border:1px solid var(--frame);border-radius:2px;box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 0 26px rgba(0,0,0,.42),inset 0 -14px 22px -10px rgba(0,0,0,.4)}
+.pnl:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;opacity:.16;mix-blend-mode:screen}
+.pnl:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:url(assets/tex_painted_metal_panel.webp) 0 0/512px;opacity:.05;mix-blend-mode:screen}
+.cn{position:absolute;width:12px;height:12px;border:0 solid var(--tick);pointer-events:none}
+.cn.tl{left:-1px;top:-1px;border-width:2px 0 0 2px}.cn.tr{right:-1px;top:-1px;border-width:2px 2px 0 0}
+.cn.bl{left:-1px;bottom:-1px;border-width:0 0 2px 2px}.cn.br{right:-1px;bottom:-1px;border-width:0 2px 2px 0}
+.ph{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-bottom:1px solid var(--frame);
+  font:600 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
+.ph .sp{flex:1}
+.key{display:inline-block;flex:none;letter-spacing:0;font:500 var(--t1)/20px var(--mono);min-width:26px;text-align:center;padding:0 5px;border:1px solid rgba(214,206,189,.34);border-radius:2px;color:var(--muted)}
+
+/* Pip's icons, on dark plates, toned down so they belong (H) */
+.ic{display:block;flex:none;filter:saturate(.42) sepia(.22) brightness(.95) contrast(1.05)}
+.plate-ic{display:flex;align-items:center;justify-content:center;flex:none;background:#0b0a09;border:1px solid rgba(196,176,138,.14)}
+.ic-hd{width:22px;height:22px}.pi-hd{width:28px;height:28px}
+.ic-s{width:20px;height:20px}.pi-s{width:26px;height:26px}
+
+/* ===== the dateline: typed in when the month changes (H's, unchanged) ===== */
+.dl{left:56px;top:24px;height:44px;display:flex;align-items:center;font:700 var(--t4)/1 var(--type);letter-spacing:5px;color:#d9d1bf;white-space:nowrap;
+  text-shadow:0 0 1px rgba(217,209,191,.55),1px 0 0 rgba(217,209,191,.12)}
+.dl span{display:inline-block}
+.dl .caret{display:inline-block;width:14px;height:26px;margin-left:4px;background:#d9d1bf;opacity:0}
+.dl.typing span{opacity:0;animation:strike 90ms steps(1,end) forwards}
+.dl.typing .caret{animation:caret .5s steps(1,end) 3 forwards}
+@keyframes strike{0%{opacity:0}1%{opacity:1;color:#fff4dc;transform:translateY(-1px)}100%{opacity:var(--o,1);transform:translateY(var(--y,0))}}
+@keyframes caret{0%{opacity:.85}50%{opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){ .dl.typing span{animation:none;opacity:var(--o,1)} .dl.typing .caret{animation:none;opacity:0} }
+
+/* ===== P(Doom), top centre (E's place): G's meter as a semicircle, band ladder beside it ===== */
+.doomw{left:690px;top:16px;width:540px;height:184px}
+.doomw svg{position:absolute;left:0;top:0}
+.d-pct{position:absolute;left:0;width:270px;top:100px;text-align:center;font:600 var(--t5)/1 var(--mono);letter-spacing:-1px}
+.d-sc{position:absolute;top:160px;width:40px;margin-left:-20px;text-align:center;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.d-side{position:absolute;left:282px;right:18px;top:54px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.d-band{font:600 var(--t3)/1 var(--mono);letter-spacing:3px;white-space:nowrap}
+.d-trend{font:600 var(--t1)/22px var(--mono);letter-spacing:2px;padding:0 10px;border:1px solid}
+.ladder{align-self:stretch;display:flex;gap:3px;height:14px;align-items:center}
+.ladder i{display:block;height:6px;opacity:.42}
+.ladder i.on{height:14px;opacity:1}
+.d-lab{font:400 var(--t1)/1 var(--mono);color:var(--dim);white-space:nowrap}
+.d-warn{font:600 var(--t1)/1 var(--mono);letter-spacing:.3px;white-space:nowrap}
+
+/* ===== reputation, top right (E's place): the number beside a bone semicircle ===== */
+.repw{left:1612px;top:16px;width:260px;height:184px}
+.repw svg{position:absolute;left:104px;top:52px}
+.r-num{position:absolute;left:22px;top:84px;font:600 var(--t5)/1 var(--mono);color:var(--bone)}
+.r-sc{position:absolute;top:137px;width:40px;margin-left:-20px;text-align:center;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.r-note{position:absolute;left:14px;right:14px;top:161px;font:400 var(--t1)/1 var(--sans);color:var(--dim);text-align:center;white-space:nowrap}
+.r-note b{font-weight:500;color:#d27f6c}
+
+/* ===== the station dock (E): one dark plate per room, with its key ===== */
+.dock{left:48px;top:330px;width:410px;display:flex;flex-direction:column;gap:18px}
+.st{position:relative;height:78px;display:grid;grid-template-columns:40px 50px 1fr;column-gap:14px;align-items:center;padding:0 16px 0 14px;border-left:3px solid #3a3128}
+.st .key{font:500 var(--t2)/30px var(--mono);min-width:38px}
+.st .pi-st{width:50px;height:50px}.st .ic-st{width:38px;height:38px}
+.st .nm{font:700 var(--t3)/1 var(--cond);letter-spacing:2.5px;color:var(--bone)}
+.st .sb{font:400 var(--t1)/1 var(--sans);color:var(--muted);margin-top:8px;white-space:nowrap}
+.st.hint{border-color:var(--amber-line);border-left-color:var(--amber);box-shadow:0 0 0 2px rgba(217,160,58,.5),0 0 24px rgba(217,160,58,.26),0 18px 40px rgba(0,0,0,.6)}
+.st.hint .key{border-color:var(--amber-line);color:var(--amber)}
+.st.hint .nm{color:#e8dcc2}
+/* disabled: a dashed, hatched plate, never faded text (H) */
+.st.off{border-style:dashed;border-left-style:solid;border-left-color:#2a241e;background:repeating-linear-gradient(135deg,rgba(196,176,138,.04) 0 2px,transparent 2px 7px),#100e0c}
+.st.off .nm{color:var(--dim)} .st.off .sb{color:var(--muted)} .st.off .ic{opacity:.45}
+.st .nokey{display:block;width:38px}
+
+/* ===== the month card, right (E): Attention's home; in WATCH, the month so far ===== */
+.mc{left:1500px;top:216px;width:372px}
+.mc-b{padding:14px 16px 16px}
+.mc-at{display:grid;grid-template-columns:96px 1fr auto;column-gap:14px;row-gap:12px;align-items:center}
+.mc-at .l{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--plan)}
+.mc-at .l.op{color:var(--op)}
+.mc-at .v{font:500 var(--t1)/1 var(--mono);color:var(--bone);white-space:nowrap}
+.mc-q{margin-top:14px;padding-top:12px;border-top:1px solid var(--frame);font:400 var(--t1)/1 var(--sans);color:var(--muted)}
+.pips{display:flex;gap:3px;align-items:center}
+.pip{width:10px;height:18px;flex:none;border:1px solid var(--plan-fill);background:var(--plan-fill)}
+.pip.used{background:transparent;border-color:rgba(168,133,75,.38)}
+.pip.spill{border-color:var(--op-fill);background:repeating-linear-gradient(135deg,rgba(108,143,134,.85) 0 2px,transparent 2px 5px)}
+.pip.o{border-color:var(--op-fill);background:var(--op-fill)}
+.pip.o.used{background:transparent;border-color:rgba(108,143,134,.4)}
+.mc-day{display:flex;align-items:baseline;justify-content:space-between;white-space:nowrap}
+.mc-day b{font:500 var(--t3)/1 var(--mono);color:var(--bone)}
+.mc-day span{font:400 var(--t1)/1 var(--mono);color:var(--muted)}
+.mbar{display:flex;gap:3px;align-items:center;height:22px;margin:12px 0 6px}
+.mbar i{flex:1;height:10px;background:rgba(214,206,189,.09)}
+.mbar i.f{background:var(--plan-fill)}
+.mbar i.now{height:22px;background:var(--bone)}
+.mc-row{display:flex;align-items:center;gap:10px;margin-top:10px;font:400 var(--t1)/1 var(--sans);color:var(--bone);white-space:nowrap}
+.mc-row .k{flex:1;color:var(--muted)}
+.mc-sec{margin-top:16px;padding-bottom:8px;border-bottom:1px solid var(--frame);font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted)}
+.feed{display:flex;flex-direction:column}
+.feed>div{display:grid;grid-template-columns:72px 1fr;padding:8px 0;border-bottom:1px solid rgba(196,176,138,.07);font:400 var(--t1)/1.35 var(--sans);color:var(--bone)}
+.feed .d{font:400 var(--t1)/1.35 var(--mono);color:var(--dim)}
+.feed .more{display:block;color:var(--muted);border-bottom:none}
+
+/* ===== held for events, beside a quiet Commit (H) ===== */
+.held{left:1540px;top:856px;width:332px;height:112px}
+.held .row{display:flex;align-items:baseline;justify-content:space-between;padding:14px 16px 4px}
+.held .lbl{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted)}
+.held .val{font:600 var(--t4)/1 var(--mono);color:var(--bone)}
+.held .sub{padding:6px 16px 12px;font:400 var(--t1)/1.3 var(--sans);color:var(--dim)}
+.cmt{left:1540px;top:980px;width:332px;height:60px;display:flex;align-items:center;justify-content:center;gap:12px;
+  background:linear-gradient(#1d1813,#15110d);border:1px solid var(--amber-line);border-radius:2px;
+  font:700 var(--t3)/1 var(--cond);letter-spacing:2.5px;color:var(--amber);white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.05)}
+.cmt .key{border-color:var(--amber-line);color:var(--amber)}
+.cmt .two{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cmt .two small{font:600 var(--t1)/1 var(--mono);letter-spacing:2px;color:var(--amber)}
+/* WATCH: the Commit slot is playback (E) */
+.pb{left:1540px;top:980px;width:332px;height:60px;display:flex;align-items:center;gap:6px;padding:0 8px 0 12px}
+.pb .st2{flex:1;display:flex;align-items:center;gap:8px;font:700 var(--t2)/1 var(--cond);letter-spacing:2px;color:#e3a99b;white-space:nowrap}
+.pb .st2 i{width:9px;height:9px;border-radius:50%;background:#c4483a;box-shadow:0 0 6px rgba(196,72,58,.6)}
+.pb span.b{width:48px;height:40px;text-align:center;font:400 var(--t1)/38px var(--mono);color:var(--muted);border:1px solid var(--frame-hi)}
+.pb span.b.on{background:#2a2119;color:#e6d9bd;box-shadow:inset 0 -2px 0 var(--plan-fill)}
+
+/* ===== paper: the only light thing, aged, dimmed, dirty (H) ===== */
+.paper{isolation:isolate;--fold:50%;background:linear-gradient(180deg,transparent calc(var(--fold) - 2px),rgba(255,250,232,.18) calc(var(--fold) - 2px),rgba(255,250,232,.18) var(--fold),rgba(70,50,24,.22) var(--fold),rgba(70,50,24,0) calc(var(--fold) + 7px)),radial-gradient(circle at 100% 0,rgba(60,40,18,.30),rgba(60,40,18,0) 70px),radial-gradient(circle at 0 100%,rgba(60,40,18,.26),rgba(60,40,18,0) 80px),linear-gradient(172deg,#c3b79c,#b8ab8f 62%,#afa286);color:var(--ink);border-radius:1px;
+  box-shadow:0 22px 44px rgba(0,0,0,.72),inset 0 0 46px rgba(70,48,22,.3),inset 0 0 5px rgba(60,40,20,.45)}
+.paper:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;mix-blend-mode:multiply;opacity:.16}
+.paper .key{color:#d2c6aa;background:#2b231a;border-color:#2b231a;font-weight:700}
+.paper .plate-ic{background:#221b14;border-color:#221b14}
+
+/* tutorial: the advisor's note (cold open hand-off), pointing at the station that holds Scouting */
+.adv{left:500px;top:300px;width:420px;padding:18px 22px 18px;transform:rotate(-.6deg);--fold:-20px}
+.adv .hd{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:2px solid var(--ink-red)}
+.adv .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-red)}
+.adv .x{width:28px;height:26px;border:1px solid rgba(35,28,20,.55);text-align:center;font:700 var(--t1)/24px var(--type);color:var(--ink)}
+.adv p{font:700 var(--t2)/1.4 var(--type);margin-top:12px;color:var(--ink)}
+.adv .s{font:700 var(--t1)/1.4 var(--type);margin-top:10px;color:var(--ink-soft)}
+.adv-arrow{position:absolute;left:-40px;top:66px;width:36px;height:2px;background:var(--amber)}
+.adv-arrow:after{content:"";position:absolute;left:-4px;top:-6px;border:7px solid transparent;border-right:10px solid var(--amber);border-left:0}
+
+/* ===== ACTIONS (state 2): E's card file, dark (as H took it) ===== */
+.cf{left:48px;top:216px;width:1196px;height:824px;padding:16px 28px 0;display:flex;flex-direction:column}
+.cf-head{display:flex;align-items:center;justify-content:space-between;height:50px;border-bottom:1px solid var(--frame-hi)}
+.cf-title{display:flex;align-items:center;gap:14px;font:700 var(--t4)/1 var(--cond);letter-spacing:6px;color:var(--bone)}
+.pi-t{width:40px;height:40px}.ic-t{width:30px;height:30px}
+.esc{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);border:1px solid var(--frame-hi);padding:8px 12px;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.cf-res{display:grid;grid-template-columns:200px 150px 250px 130px 1fr;margin-top:12px;border:1px solid var(--frame);background:rgba(0,0,0,.22);height:62px}
+.cf-res>div{display:flex;align-items:center;gap:12px;padding:0 14px}
+.cf-res>div+div{border-left:1px solid var(--frame)}
+.cf-res .k{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted);white-space:nowrap}
+.cf-res .v{font:500 var(--t3)/1 var(--mono);color:var(--bone);margin-top:6px;white-space:nowrap}
+.cf-res .neg .k,.cf-res .neg .v{color:var(--warn)}
+.pi-r{width:36px;height:36px}.ic-r{width:28px;height:28px}
+.m-hrs{display:grid;grid-template-columns:auto auto auto;align-items:center;column-gap:10px;row-gap:5px}
+.m-hrs em{font:600 var(--t1)/1 var(--cond);font-style:normal;letter-spacing:2px;color:var(--plan)}
+.m-hrs em.op{color:var(--op)}
+.m-hrs .pip{width:9px;height:13px}
+.m-hrs .n{font:500 var(--t1)/1 var(--mono);color:var(--bone)}
+.cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+.cf-col{display:flex;flex-direction:column;gap:6px}
+.card{position:relative;height:56px;display:grid;grid-template-columns:44px 1fr 44px;column-gap:12px;align-items:center;padding:0 8px;
+  background:#16130f;border:1px solid rgba(196,176,138,.13)}
+.card.door{background:#1a1612;border-left:3px solid #4d3f2a;padding-left:6px}
+.card .pi-c{width:42px;height:42px}.card .ic-c{width:32px;height:32px}
+.card .tx{min-width:0;display:flex;flex-direction:column;gap:6px}
+.card .l1{display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap}
+.card .nm{font:500 var(--t2)/1 var(--sans);color:var(--bone)}
+.card .l2{display:flex;align-items:center;gap:8px;font:400 var(--t1)/1 var(--sans);color:var(--muted);white-space:nowrap}
+.card .why{font:500 var(--t1)/1 var(--sans);color:var(--warn)}
+.card .stamp{font:500 var(--t1)/20px var(--mono);color:var(--bone);border:1px solid var(--frame-hi);padding:0 7px}
+.card .tab{height:40px;display:flex;align-items:center;justify-content:center;font:500 var(--t3)/1 var(--mono);color:var(--muted);border:1px solid var(--frame-hi);background:rgba(0,0,0,.25)}
+.card.off{background:repeating-linear-gradient(135deg,rgba(196,176,138,.035) 0 2px,transparent 2px 7px),#100e0c;border-style:dashed}
+.card.off .nm{color:var(--muted)}
+.card.off .ic{opacity:.45}
+.card.off .tab{border-style:dashed;color:var(--dim)}
+.card.focus{border-color:var(--amber-line);box-shadow:0 0 0 1px var(--amber-line),0 0 18px rgba(217,160,58,.14);background:#1f1913}
+.card.focus .tab{border-color:var(--amber-line);color:var(--amber)}
+.chip{display:inline-block;font:500 var(--t1)/20px var(--mono);padding:0 7px;border:1px solid var(--frame-hi);color:var(--bone);white-space:nowrap}
+.chip.plan{border-color:rgba(201,164,101,.55);color:var(--plan)}
+.chip.ops{border-color:rgba(147,179,169,.5);color:var(--op)}
+.chip.ghost{border-style:dashed;color:var(--muted)}
+.card.off .chip{color:var(--muted);border-color:rgba(196,176,138,.18)}
+.cf-det{margin-top:12px;height:76px;display:flex;align-items:center;gap:16px;padding:0 16px;border:1px solid var(--amber-line);background:#1b1612}
+.cf-det .pi-c{width:50px;height:50px}.cf-det .ic-c{width:40px;height:40px}
+.cf-det .tx{flex:1;display:flex;flex-direction:column;gap:9px}
+.cf-det .t1{font:500 var(--t2)/1 var(--sans);color:var(--bone)}
+.cf-det .t2{display:flex;align-items:center;gap:8px;font:400 var(--t1)/1 var(--sans);color:var(--muted)}
+.cf-det .go{display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;border:1px solid var(--amber-line);font:700 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--amber);white-space:nowrap}
+.cf-det .go .key{border-color:var(--amber-line);color:var(--amber)}
+
+/* ===== PLAN (state 3): THE MONTH AHEAD, flat (the CRT and its brand plate are gone) ===== */
+.sheet{left:384px;top:216px;width:1080px;height:824px;padding:16px 32px 0;display:flex;flex-direction:column}
+.p-head{display:flex;justify-content:space-between;align-items:center;height:54px;border-bottom:1px solid var(--frame-hi)}
+.p-title{display:flex;align-items:center;gap:14px;font:700 var(--t4)/1 var(--cond);letter-spacing:5px;color:var(--bone);white-space:nowrap}
+.p-top{display:grid;grid-template-columns:1fr 330px;column-gap:24px;padding:14px 0 12px;border-bottom:1px solid var(--frame)}
+.att{display:grid;grid-template-columns:128px auto 1fr;grid-template-rows:30px 30px 26px;row-gap:10px;align-items:center}
+.att .l{font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--plan)}
+.att .l.op{color:var(--op)}
+.att .v{font:500 var(--t2)/1 var(--mono);color:var(--bone);padding-left:22px;white-space:nowrap}
+.att .v.zero{color:var(--warn)}
+.att .pips{gap:5px;position:relative}
+.att .pip{width:16px;height:22px}
+.att .sys{grid-column:1 / -1;display:flex;align-items:center;gap:10px;font:400 var(--t1)/1 var(--sans);color:var(--muted);white-space:nowrap}
+.sw{display:inline-block;width:16px;height:18px;border:1px solid var(--op-fill);background:repeating-linear-gradient(135deg,rgba(108,143,134,.85) 0 2px,transparent 2px 5px)}
+/* the spill arrow: from the last operating hour up into the hatched planning hour (E) */
+.spill-ar{position:absolute;top:-10px;width:2px;height:10px;background:var(--op)}
+.spill-ar:before{content:"";position:absolute;left:-4px;top:-3px;border:5px solid transparent;border-bottom:6px solid var(--op);border-top:0}
+.hbox{border:1px solid var(--frame-hi);background:rgba(0,0,0,.22);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.hbox .r1{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted);white-space:nowrap}
+.hbox .r2{display:flex;align-items:center;justify-content:space-between}
+.hbox .big{font:600 var(--t4)/1 var(--mono);color:var(--bone)}
+.res{display:flex;align-items:center;gap:10px;font:500 var(--t1)/1 var(--mono);color:var(--bone)}
+.res .lb{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted)}
+.res-b{display:inline-block;position:relative;width:30px;height:28px;border:1px solid var(--frame-hi)}
+.res-b:before,.res-b.plus:after{content:"";position:absolute;left:8px;right:8px;top:11px;height:3px;background:var(--bone)}
+.res-b.plus:after{left:12px;right:auto;width:3px;top:5px;height:15px}
+.hbox .r3{font:400 var(--t1)/1 var(--sans);color:var(--dim);white-space:nowrap}
+.q-h,.q-row{display:grid;grid-template-columns:70px 1fr 136px 112px 112px 110px;align-items:center}
+.q-h{height:40px;padding-top:8px;font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--dim);border-bottom:1px solid var(--frame-hi)}
+.q-h .r,.q-row .r{text-align:right;padding-right:16px}
+.q-row{height:40px;font:400 var(--t2)/1 var(--sans);color:var(--bone);border-bottom:1px solid rgba(196,176,138,.08);position:relative}
+.q-row .n{font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.q-row .qn{display:flex;align-items:center;gap:10px;white-space:nowrap;min-width:0}
+.q-row.sub .n{padding-left:12px}
+.q-row.sub .qn{padding-left:22px}
+.q-row .wh{font:400 var(--t1)/1 var(--sans);color:var(--muted)}
+.q-row .wh.top{color:var(--dim)}
+.q-row .hr{display:flex;align-items:center;gap:8px}
+.q-row .c{font:400 var(--t2)/1 var(--mono)}
+.q-row .dash{color:var(--dim)}
+.q-row .mult{font:500 var(--t1)/1 var(--mono);color:var(--muted)}
+.q-row .tg{font:500 var(--t1)/20px var(--mono);color:var(--muted);border:1px solid var(--frame-hi);padding:0 5px}
+.q-row.grp{background:rgba(196,176,138,.03)}
+.q-ctl{display:flex;justify-content:flex-end;gap:6px}
+.q-ctl b{font:500 var(--t1)/24px var(--mono);width:30px;height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--bone)}
+.q-ctl b.na{border:1px dashed rgba(196,176,138,.16);color:var(--muted);background:repeating-linear-gradient(135deg,rgba(196,176,138,.05) 0 2px,transparent 2px 6px)}
+.q-row.spillrow{background:linear-gradient(90deg,rgba(108,143,134,.08),rgba(108,143,134,0) 70%)}
+.q-tools{display:flex;justify-content:space-between;align-items:center;height:70px}
+.q-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--frame-hi);padding:6px 12px;font:400 var(--t2)/1 var(--sans);color:var(--bone);margin-right:12px}
+.q-tot{font:500 var(--t2)/1 var(--mono);color:var(--bone)}
+.q-tot span{font:400 var(--t1)/1 var(--sans);color:var(--muted);margin-right:8px}
+/* the printout beside the plan: what Commit will cost (paper) */
+.tape{left:1514px;top:440px;width:336px;padding:20px 22px 22px;transform:rotate(.7deg);--fold:52%}
+.tape-h{font:700 var(--t3)/1 var(--cond);letter-spacing:4px;color:var(--ink-red);padding-bottom:8px;border-bottom:2px solid var(--ink-red)}
+.tape-r{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font:700 var(--t2)/1.2 var(--type);color:var(--ink);white-space:nowrap}
+.tape-r.sub{font-size:var(--t1);color:var(--ink-soft);padding:3px 0 3px 18px}
+.tape-r.tot{border-top:1px dashed rgba(35,28,20,.55);margin-top:3px;padding-top:7px}
+.tape-r.tot b{font-size:var(--t2)}
+.tape-gap{height:12px}
+.tape-r.warn{color:var(--ink-red)}
+.tape-f{font:700 var(--t1)/1.35 var(--type);color:var(--ink-red);margin-top:4px}
+
+/* ===== WATCH (state 4): the memo across the desk (paper) ===== */
+.ev{left:612px;top:216px;width:636px;padding:22px 26px 22px;transform:rotate(-.5deg);--fold:41%}
+.ev-k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-red);padding-bottom:8px;border-bottom:2px solid var(--ink-red)}
+.ev-img{margin-top:14px;height:176px;background:url(assets/event_talent_desk.webp) center/cover;filter:sepia(.4) saturate(.45) brightness(.62) contrast(1.05);box-shadow:inset 0 0 0 2px rgba(35,28,20,.55),inset 0 0 30px rgba(20,12,6,.6)}
+.ev-t{font:700 var(--t4)/1.1 var(--type);margin:14px 0 8px;color:var(--ink)}
+.ev-p{font:400 var(--t2)/1.4 var(--type);color:var(--ink)}
+.ev-cash{display:flex;justify-content:space-between;margin-top:12px;padding:7px 12px;border:1px solid rgba(35,28,20,.5);font:700 var(--t1)/1 var(--type);color:var(--ink)}
+.ev-o{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.ev-o>div{position:relative;display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:64px;border:1px solid rgba(35,28,20,.45);padding:0 14px;color:var(--ink);background:rgba(255,248,230,.06)}
+.ev-o>div.on{border:2px solid var(--ink);background:rgba(255,246,222,.16);padding:0 13px;box-shadow:inset 4px 0 0 var(--amber)}
+.ev-o i{font:700 var(--t1)/1 var(--cond);font-style:normal;background:#2b231a;color:#c9bc9f;text-align:center;padding:5px 0;width:28px}
+.ev-o .nm{display:flex;flex-direction:column;gap:7px;font:700 var(--t2)/1 var(--type)}
+.ev-o .nm span{display:flex;align-items:center;gap:10px}
+.ev-o .nm em{font:700 var(--t1)/1 var(--type);font-style:normal;color:var(--ink-green)}
+.ev-o .nm em.none{color:var(--ink)}
+.ev-o .cs{display:flex;align-items:center;gap:10px;font:700 var(--t1)/1 var(--type);color:var(--ink);white-space:nowrap}
+
+/* ===== the Month Review (state 5): a typed report on paper ===== */
+.rv{left:330px;top:216px;width:1120px;height:824px;padding:24px 36px 18px;display:flex;flex-direction:column;--fold:47%}
+.rv-h{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:10px;border-bottom:2px solid var(--ink-red)}
+.rv-t{font:700 var(--t4)/1 var(--type);color:var(--ink)}
+.rv-s{font:700 var(--t1)/1 var(--type);color:var(--ink-red)}
+.rv-cols{flex:1;display:grid;grid-template-columns:400px 1fr;gap:30px;margin-top:14px;min-height:0}
+.rv-cols>div+div{border-left:1px dashed rgba(35,28,20,.45);padding-left:28px}
+.rv h5{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-red);padding-bottom:7px}
+.mv{display:grid;grid-template-columns:70px 1fr;row-gap:10px;font:400 var(--t1)/1.3 var(--type);color:var(--ink);margin-bottom:24px}
+.mv .k{font-weight:700}
+.mv .v b{font-weight:700}
+.mv .x{font-weight:700;color:var(--ink-soft);margin-left:6px}
+.mv .bad{font-weight:700;color:var(--ink-red)}
+.rv-p{font:400 var(--t1)/1.4 var(--type);color:var(--ink)}
+.rv-p.b{font-weight:700;color:var(--ink-soft);margin-top:12px}
+.pbx{display:flex;gap:4px;margin-top:10px}
+.pbx i{width:16px;height:20px;background:#6b4a1c;border:1px solid #4a3212}
+.pbx.ops i{background:#2c4a44;border-color:#1b302b}
+.pl{display:flex;flex-direction:column}
+.pl-r{display:grid;grid-template-columns:30px 214px 1fr;column-gap:10px;align-items:start;padding:3px 0;border-bottom:1px dotted rgba(35,28,20,.42);font:400 var(--t1)/1.3 var(--type);color:var(--ink)}
+.pl-r .n{font-weight:700}
+.pl-r.evr .n,.pl-r.evr .r{color:var(--ink-red);font-weight:700}
+.pl-r .plate-ic{margin-top:-1px}
+
+/* the mock-up control: not part of the game screen (H) */
+.mock-snd{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:50;font:600 16px/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;text-transform:uppercase;
+  color:#d6cebd;background:rgba(9,8,7,.86);border:1px dashed rgba(214,206,189,.55);padding:7px 14px;cursor:pointer}
+.mock-snd:hover,.mock-snd:focus-visible{border-style:solid;border-color:#d9a03a;color:#e8dcc2;outline:none}
+
+#check{position:fixed;left:0;top:0;z-index:99;background:#000;color:#0f0;font:12px monospace;white-space:pre;max-height:100vh;overflow:auto}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+"use strict";
+var Q = new URLSearchParams(location.search);
+var STATE = String(Q.get("state") || "1");
+var STILL = !!Q.get("still") || !!Q.get("check");
+
+var S = document.getElementById("stage");
+function fit(){
+  var s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  var x = (window.innerWidth - 1920*s)/2, y = (window.innerHeight - 1080*s)/2;
+  S.style.transform = "translate("+x+"px,"+y+"px) scale("+s+")";
+  S.dataset.scale = s;
+}
+fit(); window.addEventListener("resize", fit);
+
+/* ------------------------------------------------------------------
+   THE RUN (fork/design/hifi/run-state.md, revisions 2 and 3), as in E's hifi version.
+   ------------------------------------------------------------------ */
+// [id, name, where it lives ("" = top level), pool, hours, money, reputation]
+var NOV_QUEUE = [
+  ["hire_safety_researcher","Hire: Safety Researcher","Hire Staff","plan",1,60000,0],
+  ["scout_read","Read the Literature","Scouting","plan",1,0,0],
+  ["scout_read","Read the Literature","Scouting","plan",1,0,0],
+  ["scout_shitpost","Post Online","Scouting","plan",1,0,0],
+  ["audit_safety","Safety Audit","","op",2,40000,0],
+  ["use_connections","Work Your Connections","","op",2,0,6],
+  ["scout_meetups","Go to Meetups","Scouting","op",1,300,0],
+  ["network","Networking","Publicity","op",1,0,0],
+  ["tour_offices","Tour Offices","Office","op",1,0,0],
+  ["scout_meetups","Go to Meetups","Scouting","op",1,300,0],
+  ["order_supplies","Order Office Supplies","Operations","op",1,2000,0]
+];
+var JUL = { month:"JULY", year:"2017", day:4, money:245000, compute:100, research:0, papers:0, rep:50, doom:20.0, rising:false, artBand:0, planTotal:12, opTotal:8, reserve:0 };
+var NOV = { month:"NOVEMBER", year:"2017", day:1, money:140000, compute:65, research:-12, papers:0, rep:32, doom:40.2, rising:true, artBand:1, planTotal:12, opTotal:8, reserve:0 };
+var DEC = { month:"DECEMBER", year:"2017", day:1, money:12400, compute:65, research:-6, papers:0, rep:34, doom:56.7, rising:true, artBand:2, planTotal:12, opTotal:8, reserve:0 };
+var APR = { month:"APRIL", year:"2018", day:2, money:12300, compute:65, research:4, papers:0, rep:21, doom:81.4, rising:true, artBand:3, planTotal:12, opTotal:8, reserve:0 };
+
+/* Book the queue the way the game does (month_plan.gd _debit_hours): each play bills its own
+   pool; operating work past the operating hours spills into planning hours; never the reverse. */
+function book(d, queue){
+  var opLeft = d.opTotal, plan = 0, spill = 0, money = 0, rep = 0;
+  var rows = queue.map(function(r){
+    var row = {id:r[0], name:r[1], from:r[2], pool:r[3], hrs:r[4], money:r[5], rep:r[6], spill:0};
+    if (r[3] === "op"){ var fromOp = Math.min(r[4], opLeft); opLeft -= fromOp; row.spill = r[4]-fromOp; spill += row.spill; }
+    else plan += r[4];
+    money += r[5]; rep += r[6];
+    return row;
+  });
+  var p = {}; for (var k in d) p[k] = d[k];
+  p.rows = rows; p.planWork = plan; p.spill = spill;
+  p.planLeft = d.planTotal - plan - spill; p.opLeft = opLeft;
+  p.qMoney = money; p.qRep = rep;
+  p.held = p.planLeft + p.opLeft + d.reserve;   // untyped: the unspent remainder plus any reserve
+  p.moneyAfter = d.money - money; p.repAfter = d.rep - rep;
+  return p;
+}
+
+/* ------------------------------------------------------------------
+   Icons: Pip's (godot/assets/icons/, his icon_mapping.json where it has one);
+   "new_" = new, needs art. Same set as E's hifi version.
+   ------------------------------------------------------------------ */
+var I = "assets/icons/";
+var ICON = {
+  doom:"doom.png", reputation:"reputation.png", money:"money.png", research:"research.png", compute:"compute.png", papers:"paper.png",
+  st_actions:"ui_guide_actions_64.png", st_plan:"ui_config_date_64.png", st_floor:"ui_staff_management_64.png",
+  st_proc:"button_upgrade_normal_64.png", st_records:"ui_save_archive_64.png",
+  hire_safety_researcher:"employee_role_safety_specialist_64.png", scout_read:"ui_guide_book_64.png", scout_shitpost:"new_post_online.svg",
+  audit_safety:"employee_role_auditor_64.png", use_connections:"action_publicity_network_64.png", scout_meetups:"new_meetup_badge.svg",
+  network:"network_64.png", tour_offices:"ui_home_hq_64.png", order_supplies:"new_supplies.svg",
+  fundraise:"ui_guide_resources_64.png", hire_staff:"button_hire_normal_64.png", advertise:"new_advertise.svg",
+  onboard_next:"employee_status_training_64.png", safety_research:"action_research_robustness_64.png",
+  capability_research:"action_research_ml_fundamentals_64.png", publish_paper:"paper.png", travel:"new_travel.svg",
+  buy_compute:"action_facility_upgrade_compute_64.png", operations:"ui_system_settings_64.png", office:"action_facility_expand_office_64.png",
+  publicity:"new_publicity.svg", financing:"action_funding_loan_64.png", scouting:"employee_status_investigating_64.png",
+  strategic:"ui_guide_strategy_64.png"
+};
+function ic(key, icCls, plateCls){
+  return ICON[key] ? '<span class="plate-ic '+plateCls+'"><img class="ic '+icCls+'" src="'+I+ICON[key]+'" alt=""></span>' : "";
+}
+
+function el(tag, cls, html, style){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; if(style) e.setAttribute("style",style); return e; }
+function add(e, parent){ (parent||S).appendChild(e); return e; }
+function money(n){ return (n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-US"); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function corners(box){ ["tl","tr","bl","br"].forEach(function(c){ box.appendChild(el("i","cn "+c)); }); return box; }
+function panel(cls, html, style){ return corners(add(el("div","abs pnl "+cls, html, style))); }
+function chip(k,t){ return "<span class='chip "+k+"'>"+t+"</span>"; }
+function pips(free,total,op){ var s=""; for(var i=0;i<total;i++) s+='<i class="pip'+(op?' o':'')+(i>=free?' used':'')+'"></i>'; return s; }
+
+/* ------------------------------------------------------------------
+   Doom colours (godot/autoload/theme_manager.gd DOOM_STOPS, get_doom_stroke_color,
+   DOOM_STATUS_BANDS). The meter keeps its band colours (H, G).
+   ------------------------------------------------------------------ */
+var STOPS=[[0,[.30,.80,.35]],[15,[.30,.80,.35]],[30,[.88,.78,.18]],[45,[.92,.50,.13]],[60,[.82,.20,.17]],[74,[.48,.07,.14]],[87,[.40,.06,.48]],[100,[.28,.03,.46]]];
+function doomRGB(p){for(var i=0;i<STOPS.length-1;i++){var a=STOPS[i],b=STOPS[i+1];if(p<=b[0]){var t=(p-a[0])/((b[0]-a[0])||1);return [0,1,2].map(function(j){return a[1][j]+(b[1][j]-a[1][j])*t;});}}return STOPS[STOPS.length-1][1];}
+function doomStroke(p){var c=doomRGB(p),lum=.2126*c[0]+.7152*c[1]+.0722*c[2];if(lum<.22){var t=(.22-lum)/.22*.8,B=[.90,.40,.85];c=c.map(function(v,j){return v+(B[j]-v)*t;});}return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+var BANDS=[[15,'NOMINAL'],[37,'ELEVATED'],[52,'HIGH'],[67,'SEVERE'],[80,'EXTREME'],[92,'CATASTROPHIC'],[101,'TERMINAL']];
+function lin(v){return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);}
+function doomText(p){var m=doomStroke(p).match(/\d+/g).map(function(v){return v/255;});var t=0,c=m;
+  while(t<1){c=m.map(function(v){return v+(1-v)*t;});var L=.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);if((L+.05)/(.006+.05)>=5)break;t+=.05;}
+  return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+function bandIndex(p){for(var i=0;i<BANDS.length;i++)if(p<BANDS[i][0])return i;return 6;}
+
+/* ------------------------------------------------------------------
+   The room and its doom layer ("doom is a layer, not a repaint"). Art band by
+   doom band: NOMINAL/ELEVATED 0, HIGH 1, SEVERE/EXTREME 2, CATASTROPHIC 3.
+   Month 1 is the lightest step; band 3 darkens again; TERMINAL keeps headroom.
+   ------------------------------------------------------------------ */
+var DOOM_LAYER = {
+  0:{ filter:"brightness(.62) saturate(.55) contrast(1.06)", grade:"rgba(60,40,18,.16)",
+      glow:"radial-gradient(ellipse 520px 260px at 1240px 560px,rgba(217,160,58,.10),transparent 70%)" },
+  1:{ filter:"brightness(.55) saturate(.45) contrast(1.08)", grade:"rgba(40,34,30,.24)",
+      glow:"radial-gradient(ellipse 540px 270px at 1240px 560px,rgba(213,138,82,.12),transparent 70%)" },
+  2:{ filter:"brightness(.46) saturate(.35) contrast(1.1)", grade:"rgba(30,34,44,.34)",
+      glow:"radial-gradient(ellipse 560px 280px at 1240px 560px,rgba(170,60,48,.16),transparent 70%)" },
+  3:{ filter:"brightness(.40) saturate(.3) contrast(1.14)", grade:"rgba(80,14,24,.45)",
+      glow:"radial-gradient(ellipse 600px 300px at 1240px 560px,rgba(110,52,130,.22),rgba(110,52,130,.06) 45%,transparent 72%)" }
+};
+function room(d){
+  var L = DOOM_LAYER[d.artBand];
+  add(el("div","room-bg",null,"filter:"+L.filter));
+  if (d.artBand>=3) lateSky();
+  add(el("div","room-grade",null,"background:"+L.grade+";mix-blend-mode:multiply"));
+  add(el("div","room-glow",null,"background:"+L.glow+";mix-blend-mode:screen"));
+  add(el("div","room-shade"));
+  if (d.artBand>=3) lateLayer();
+}
+/* band 3 (E's): the window sky turns violet and red; the monitors glow violet; smoke on the floor */
+function lateSky(){
+  add(el("div","dl-sky")); add(el("div","dl-sky2"));
+  [[472,452,66,46],[1068,437,52,40],[1222,414,34,34],[1228,546,90,60],[1489,538,80,60]].forEach(function(m){
+    add(el("div","dl-mon",null,"left:"+m[0]+"px;top:"+m[1]+"px;width:"+m[2]+"px;height:"+m[3]+"px"));
+    var g = m[2]*4.2; add(el("div","dl-glow",null,"left:"+(m[0]+m[2]/2-g/2)+"px;top:"+(m[1]+m[3]/2-g/2)+"px;width:"+g+"px;height:"+g+"px"));
+  });
+  [[900,760,520,140],[1380,840,460,120],[620,880,380,110]].forEach(function(s){
+    add(el("div","dl-smoke",null,"left:"+s[0]+"px;top:"+s[1]+"px;width:"+s[2]+"px;height:"+s[3]+"px")); });
+}
+/* soot closes in from the edges; violet bleeds into the shadows (H) */
+function lateLayer(){
+  add(el("div","room-glow",null,"background:radial-gradient(ellipse 1150px 720px at 50% 46%,transparent 35%,rgba(8,3,12,.62) 100%)"));
+  add(el("div","room-glow",null,"background:linear-gradient(180deg,rgba(40,12,52,.22),rgba(10,4,14,0) 40%,rgba(10,4,14,.35));mix-blend-mode:multiply"));
+}
+
+/* ------------------------------------------------------------------
+   The dateline (H's, unchanged): date only; types in on a month's entry
+   (states 1, 5, 6); set inside a month (2, 3, 4). ?still=1 and reduced
+   motion show it whole. It replaces E's tear-off calendar.
+   ------------------------------------------------------------------ */
+var DATELINE = null;
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var RIB_OP = [1,.86,.97,.9,1,.82,.95,1,.88], RIB_DY = [0,1,0,0,-1,0,1,0,0];
+function datelineTimes(text){ var t = [], at = 260; Array.prototype.forEach.call(text, function(ch,i){ if (i) at += 95 + (ch===" "?60:0); t.push(at); }); return t; }
+function datelineSet(dl){
+  dl.classList.remove("typing");
+  Array.prototype.forEach.call(dl.querySelectorAll("span"), function(s,i){ s.style.animationDelay=""; s.style.opacity = RIB_OP[i%RIB_OP.length]; s.style.transform = "translateY("+RIB_DY[i%RIB_DY.length]+"px)"; });
+}
+function datelineType(dl, times){
+  if (REDUCED){ datelineSet(dl); return; }
+  dl.classList.remove("typing"); void dl.offsetWidth;
+  var spans = dl.querySelectorAll("span");
+  Array.prototype.forEach.call(spans, function(s,i){ s.style.opacity=""; s.style.transform=""; s.style.animationDelay = times[i]+"ms"; });
+  dl.querySelector(".caret").style.animationDelay = (times[times.length-1]+120)+"ms";
+  dl.classList.add("typing");
+}
+function dateline(d, entry){
+  var text = d.month+" "+d.day+", "+d.year;
+  var dl = add(el("div","abs dl"));
+  Array.prototype.forEach.call(text, function(ch,i){
+    var s = el("span", null, ch===" " ? "&nbsp;" : ch);
+    s.style.setProperty("--o", RIB_OP[i%RIB_OP.length]); s.style.setProperty("--y", RIB_DY[i%RIB_DY.length]+"px");
+    dl.appendChild(s);
+  });
+  dl.appendChild(el("i","caret"));
+  DATELINE = {el:dl, text:text};
+  if (STILL || !entry) datelineSet(dl); else datelineType(dl, datelineTimes(text));
+}
+
+/* SOUND_START */
+/* ==================================================================
+   TYPEWRITER SOUND BLOCK -- self-contained; copy it whole to reuse
+   (no dependency on the rest of this page).
+   The spy-film title-card strike, synthesised with the Web Audio API
+   (no samples). Public:
+     playDateline(text, {onChar, onDone}) -> char times in ms from now,
+       or null without Web Audio. Call it from a click (browsers block
+       sound before one). onChar(i, ch) fires as character i strikes
+       (spaces included, silent); onDone() after the carriage return.
+       Use the returned times as CSS animation delays, or onChar, or both.
+     TypeSound.play(text) -> the same times, sound only
+     TypeSound.render(text, sampleRate, seed) -> Promise<AudioBuffer>
+       (OfflineAudioContext; seeded, so a render repeats exactly)
+     TypeSound.toWav(audioBuffer) -> Uint8Array, 16-bit PCM mono
+   ================================================================== */
+var TypeSound = (function(){
+  function rng(seed){ var x = (seed>>>0) || 0x2f6b1d; return function(){ x ^= x<<13; x >>>= 0; x ^= x>>>17; x ^= x<<5; x >>>= 0; return x/4294967296; }; }
+  function noiseBuf(ctx, sec, r){ var n = Math.ceil(ctx.sampleRate*sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++) d[i] = r()*2-1; return b; }
+  // a small hard room: 0.5 s of noise falling off as (1-t)^4
+  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
+  function env(ctx, g, t, a, peak, decay){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t+a); g.gain.exponentialRampToValueAtTime(0.0001, t+a+decay); }
+  function noise(ctx, bus, buf, r, t, type, freq, q, a, peak, decay){
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
+    src.connect(f); f.connect(g); g.connect(bus);
+    src.start(t, r()*(buf.duration-.3)); src.stop(t+a+decay+.02);
+  }
+  function tone(ctx, bus, t, f0, f1, glide, a, peak, decay, wave){
+    var o = ctx.createOscillator(); o.type = wave || "sine";
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t+glide);
+    var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+a+decay+.02);
+  }
+  // one key: type-bar slap + click + platen thump + key rattle; v = how hard, p = pitch spread
+  function strike(ctx, bus, buf, r, t){
+    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12;
+    noise(ctx, bus, buf, r, t, "bandpass", 2600*p, 1.2, .001, .9*v, .045);    // the slap of the type bar on the platen
+    noise(ctx, bus, buf, r, t, "highpass", 5200*p, .7, .0005, .45*v, .006);   // the click on contact
+    tone(ctx, bus, t, 170*p, 62*p, .05, .002, .85*v, .09);                     // the thump through the desk
+    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .16*v, .11);   // the key's own rattle
+  }
+  // the carriage return: a short slide, then a low stop
+  function thunk(ctx, bus, buf, r, t){
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 2;
+    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(1300, t+.22);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.12, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
+    src.connect(f); f.connect(g); g.connect(bus); src.start(t, r()); src.stop(t+.26);
+    tone(ctx, bus, t+.24, 95, 42, .12, .003, 1.0, .32);
+    noise(ctx, bus, buf, r, t+.24, "bandpass", 300, 1, .002, .4, .08);
+  }
+  // timing: 95 ms a key, +-22 ms, spaces silent and 60 ms longer, a beat after punctuation
+  function schedule(ctx, out, text, r, start, withThunk){
+    var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .002; comp.release.value = .12;
+    var master = ctx.createGain(); master.gain.value = .8;
+    var bus = ctx.createGain(); bus.gain.value = 1;
+    var verb = ctx.createConvolver(); verb.buffer = room(ctx, r);
+    var wet = ctx.createGain(); wet.gain.value = .18;
+    bus.connect(comp); bus.connect(verb); verb.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
+    var buf = noiseBuf(ctx, 1.5, r), times = [], at = 0, prev = "";
+    Array.prototype.forEach.call(text, function(ch, i){
+      if (i) at += .095 + (r()-.5)*.044 + (ch===" " ? .06 : 0) + (prev==="," ? .04 : 0);
+      times.push(Math.round((start+at)*1000));
+      if (ch !== " ") strike(ctx, bus, buf, r, start+at);
+      prev = ch;
+    });
+    var end = start + at;
+    if (withThunk !== false){ thunk(ctx, bus, buf, r, end+.32); end += .32 + .24 + .35; }
+    return {times:times, end:end + .5};
+  }
+  var live = null;
+  function play(text){
+    var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    live = live || new C(); if (live.state === "suspended") live.resume();
+    var lead = .06, sch = schedule(live, live.destination, text, Math.random, live.currentTime + lead, true);
+    var base = Math.round((live.currentTime + lead)*1000);
+    return sch.times.map(function(ms){ return ms - base + lead*1000; });
+  }
+  function render(text, sampleRate, seed){
+    sampleRate = sampleRate || 22050;
+    var r = rng(seed || 1917), probe = new OfflineAudioContext(1, 1, sampleRate);
+    var dur = schedule(probe, probe.destination, text, rng(seed || 1917), .05, true).end;
+    var ctx = new OfflineAudioContext(1, Math.ceil(dur*sampleRate), sampleRate);
+    schedule(ctx, ctx.destination, text, r, .05, true);
+    return ctx.startRendering();
+  }
+  function toWav(ab){
+    var d = ab.getChannelData(0), n = d.length, peak = 0, i;
+    for (i=0;i<n;i++) peak = Math.max(peak, Math.abs(d[i]));
+    var k = peak > .891 ? .891/peak : 1;                 // never above -1 dBFS
+    var out = new Uint8Array(44 + n*2), v = new DataView(out.buffer);
+    function str(o, x){ for (var j=0;j<x.length;j++) out[o+j] = x.charCodeAt(j); }
+    str(0,"RIFF"); v.setUint32(4, 36+n*2, true); str(8,"WAVE"); str(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+    v.setUint32(24, ab.sampleRate, true); v.setUint32(28, ab.sampleRate*2, true); v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,"data"); v.setUint32(40, n*2, true);
+    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i]*k)); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
+    return out;
+  }
+  return {play:play, render:render, toWav:toWav};
+})();
+function playDateline(text, opts){
+  opts = opts || {};
+  var times = TypeSound.play(text);
+  if (!times) return null;
+  if (opts.onChar) Array.prototype.forEach.call(text, function(ch, i){ setTimeout(function(){ opts.onChar(i, ch); }, times[i]); });
+  if (opts.onDone) setTimeout(opts.onDone, times[times.length-1] + 900);
+  return times;
+}
+/* ================== END TYPEWRITER SOUND BLOCK ================== */
+/* SOUND_END */
+
+/* the mock-up control: replays the dateline type-on with sound (a click, so the browser allows audio) */
+function soundControl(){
+  if (STILL) return;
+  var b = el("button","mock-snd","Mock-up: type the date with sound");
+  b.type = "button";
+  b.addEventListener("click", function(){
+    if (!DATELINE) return;
+    var times = playDateline(DATELINE.text);
+    if (times) datelineType(DATELINE.el, times);
+  });
+  document.body.appendChild(b);
+}
+
+/* ------------------------------------------------------------------
+   The frame: P(Doom) top centre, reputation top right (E's places, G's meters)
+   ------------------------------------------------------------------ */
+/* P(Doom): a semicircle in G's meter style; level and band only, never a delta (ADR-0015). */
+function doomMeter(d){
+  var w = panel("doomw", "<div class=ph>"+ic("doom","ic-hd","pi-hd")+"<span>P(DOOM)</span></div>");
+  var cx=135, cy=150, R=92, sw=16;
+  function pt(v,r){ var a=(180 + 180*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var ring = doomStroke(d.doom), col = doomText(d.doom), bi = bandIndex(d.doom);
+  var s = '<svg width="270" height="184" viewBox="0 0 270 184" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,d.doom,R)+'" stroke="'+ring+'" stroke-width="'+sw+'" fill="none"/>';
+  BANDS.forEach(function(b){ var v=Math.min(b[0],100); if (v<100){ var a=pt(v,R+10), z=pt(v,R+16); s += '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+z[0].toFixed(1)+'" y2="'+z[1].toFixed(1)+'" stroke="rgba(214,206,189,.32)" stroke-width="1.5"/>'; } });
+  s += '</svg>';
+  w.insertAdjacentHTML("beforeend", s);
+  w.appendChild(el("div","d-pct",d.doom.toFixed(1)+"%","color:"+col));
+  w.appendChild(el("div","d-sc","0","left:"+(cx-R)+"px"));
+  w.appendChild(el("div","d-sc","100","left:"+(cx+R)+"px"));
+  var side = el("div","d-side");
+  side.appendChild(el("div","d-band",BANDS[bi][1],"color:"+col));
+  if (d.rising) side.appendChild(el("div","d-trend","RISING","color:"+col+";border-color:"+col));
+  var lad = el("div","ladder"); var l0 = 0;
+  BANDS.forEach(function(b,i){ var hi=Math.min(b[0],100), mid=(l0+hi)/2; lad.appendChild(el("i", i===bi?"on":"", null, "flex:"+(hi-l0)+";background:"+doomStroke(mid))); l0=hi; });
+  side.appendChild(lad);
+  // the game's own warning at band 5+ (main_ui.gd: "Very close to game over!")
+  if (bi>=5) side.appendChild(el("div","d-warn","Very close to game over","color:"+col));
+  else side.appendChild(el("div","d-lab","band "+(bi+1)+" of 7"));
+  w.appendChild(side);
+}
+/* Reputation: the number beside a bone semicircle. The red mark at 0 is the real rule (game_state.gd). */
+function repMeter(d){
+  var w = panel("repw", "<div class=ph>"+ic("reputation","ic-hd","pi-hd")+"<span>REPUTATION</span></div>");
+  var cx=75, cy=78, R=56, sw=12;
+  function pt(v,r){ var a=(180 + 180*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var s = '<svg width="150" height="90" viewBox="0 0 150 90" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,Math.max(0.5,d.rep),R)+'" stroke="#a99d88" stroke-width="'+sw+'" fill="none"/>';
+  var a=pt(0,R-sw/2-2), z=pt(0,R+sw/2+6); s += '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+z[0]+'" y2="'+z[1]+'" stroke="#9b3328" stroke-width="4"/>';
+  s += '</svg>';
+  w.insertAdjacentHTML("beforeend", s);
+  w.appendChild(el("div","r-num",String(Math.round(d.rep))));
+  w.appendChild(el("div","r-sc","0","left:"+(104+cx-R)+"px"));
+  w.appendChild(el("div","r-sc","100","left:"+(104+cx+R)+"px"));
+  w.appendChild(el("div","r-note","<b>0</b> ends the run"));
+}
+/* held for events, above a quiet Commit; Commit never moves. Enter shows only when no layer owns the keys. */
+function held(n, sub){
+  panel("held", "<div class=row><span class=lbl>HELD FOR EVENTS</span><span class=val>"+n+" hr</span></div>"+
+    "<div class=sub>"+(sub||"untyped; what events do not use is gone at month end")+"</div>");
+}
+function commit(withKey){
+  add(el("div","abs cmt","<span>COMMIT THE MONTH</span>"+(withKey?"<span class=key>Enter</span>":"")));
+}
+
+/* the station dock (E): five rooms, each with its key; ACTIONS holds Scouting */
+var STATIONS = [["A","ACTIONS","card file","st_actions"],["P","PLAN","the month ahead","st_plan"],["F","LAB FLOOR","staff, research quality","st_floor"],
+                ["U","PROCUREMENT","upgrades","st_proc"],["L","RECORDS","ledger, feed, guide","st_records"]];
+function dock(o){
+  o = o || {};
+  var d = add(el("div","abs dock"));
+  STATIONS.forEach(function(t,i){
+    var off = o.off && o.off.indexOf(i) >= 0;
+    var s = el("div","pnl st"+(o.hint===i?" hint":"")+(off?" off":""),
+      (o.hush||off ? "<span class=nokey></span>" : "<span class=key>"+t[0]+"</span>")+ic(t[3],"ic-st","pi-st")+
+      "<div><div class=nm>"+t[1]+"</div><div class=sb>"+t[2]+"</div></div>");
+    d.appendChild(s);
+  });
+}
+/* the month card (E): Attention's home on the desk */
+function monthCard(p){
+  var c = panel("mc", "<div class=ph>"+ic("st_plan","ic-hd","pi-hd")+"<span>THIS MONTH</span></div>");
+  c.appendChild(el("div","mc-b",
+    "<div class=mc-at><span class=l>PLANNING</span><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span class=v>"+p.planLeft+" left</span>"+
+    "<span class='l op'>OPERATING</span><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class=v>"+p.opLeft+" left</span></div>"+
+    "<div class=mc-q>Nothing queued yet.</div>"));
+}
+function frame(p){ doomMeter(p); repMeter(p); }
+
+/* ---------- STATE 1: month 1, the first screen after the cold open ---------- */
+function firstScreen(){
+  var p = book(JUL, []);
+  room(p); dock({hint:0}); monthCard(p); frame(p); held(p.held); commit(true);
+  add(el("div","grain"));
+  dateline(p, true);
+  // the advisor hand-off (cold_open_sequence.gd HANDOFF_HINT_TEXT), split: Scouting is a door inside Actions
+  add(el("div","abs paper adv",
+    "<div class=hd><span class=k>ADVISOR</span><span class=x>x</span></div>"+
+    "<p>You do not know anything yet. Go and find out -- Scouting.</p>"+
+    "<div class=s>Scouting is in Actions, the glowing station.</div><i class=adv-arrow></i>"));
+}
+
+/* ---------- STATE 2: ACTIONS, E's card file (dark), adding Safety Audit ---------- */
+function cardFile(p){
+  var have = p.research, q = function(door){ return p.rows.filter(function(r){ return r.from===door; }).length; };
+  function short(need){ return "<span class=why>x "+(need-have)+" research short</span>"; }
+  var colA = [
+    ["fundraise","Fundraising",{door:"4 choices"}],
+    ["hire_staff","Hire Staff",{door:"7 roles", each:chip("plan","1 hr PLAN")+"<span>each</span>", stamp:q("Hire Staff")}],
+    ["advertise","Advertise a Role",{off:"coming soon", l2:chip("ops","3 hr OPS")+chip("","$8,000")}],
+    ["use_connections","Work Your Connections",{l2:chip("ops","2 hr OPS")+chip("","6 rep")}],
+    ["onboard_next","Onboard New Hires",{off:"nobody hired yet", l2:"<span>OPS hours + money, per step</span>"}],
+    ["safety_research","Safety Research",{l2:chip("plan","1 hr PLAN")+chip("","10 research"), why:short(10), off:true}],
+    ["capability_research","Capability Research",{l2:chip("plan","1 hr PLAN")+chip("","10 research"), why:short(10), off:true}],
+    ["publish_paper","Publish Safety Paper",{l2:chip("plan","1 hr PLAN")+chip("","20 research"), why:short(20), off:true}],
+    ["audit_safety","Safety Audit",{l2:chip("ops","2 hr OPS")+chip("","$40,000"), focus:true}]
+  ];
+  var colB = [
+    ["travel","Travel &amp; Conferences",{door:"4 choices", extra:"<span class=why>x Submit Paper: "+(15-have)+" research short</span>"}],
+    ["buy_compute","Purchase Compute",{l2:chip("","$50,000")+chip("ghost","no hours")}],
+    ["operations","Operations",{door:"3 choices"}],
+    ["office","Office",{door:"4 choices"}],
+    ["publicity","Publicity",{door:"5 choices"}],
+    ["financing","Financing",{door:"7 choices"}],
+    ["scouting","Scouting",{door:"3 choices", stamp:q("Scouting")}],
+    ["strategic","Strategic",{door:"4 choices"}]
+  ];
+  function card(c){
+    var id = c[0], nm = c[1], a = c[2], off = !!a.off;
+    var right = typeof a.off==="string" ? "<span class=why>x "+a.off+"</span>" : (a.why || (a.stamp ? "<span class=stamp>"+a.stamp+" queued</span>" : ""));
+    var l2 = a.door ? "<span>door &middot; "+a.door+(a.each?" &middot;":"")+"</span>"+(a.each||"")+(a.extra||"") : a.l2;
+    // the focused card keeps a plain + tab: its one Enter is in the detail strip below
+    return "<div class='card"+(a.door?" door":"")+(off?" off":"")+(a.focus?" focus":"")+"'>"+ic(id,"ic-c","pi-c")+
+      "<div class=tx><div class=l1><span class=nm>"+nm+"</span>"+right+"</div><div class=l2>"+l2+"</div></div>"+
+      "<div class=tab>"+(a.door?"&gt;":"+")+"</div></div>";
+  }
+  var f = panel("cf");
+  f.appendChild(el("div","cf-head","<span class=cf-title>"+ic("st_actions","ic-t","pi-t")+"ACTIONS</span>"+
+    "<span class=esc><span class=key>Esc</span><span>BACK TO DESK</span></span>"));
+  var cell = function(icon,k,v,neg){ return "<div"+(neg?" class=neg":"")+">"+ic(icon,"ic-r","pi-r")+"<div><div class=k>"+k+(neg?" &middot; BELOW ZERO":"")+"</div><div class=v>"+v+"</div></div></div>"; };
+  f.appendChild(el("div","cf-res", cell("money","MONEY",money(p.money))+cell("compute","COMPUTE",p.compute)+cell("research","RESEARCH",p.research,p.research<0)+cell("papers","PAPERS",p.papers)+
+    "<div><div class=m-hrs><span class=k>HOURS LEFT</span><span></span><span></span>"+
+    "<em>PLANNING</em><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span class=n>"+p.planLeft+"/"+p.planTotal+"</span>"+
+    "<em class=op>OPERATING</em><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class=n>"+p.opLeft+"/"+p.opTotal+"</span></div></div>"));
+  var g = el("div","cf-grid"), a = el("div","cf-col"), b = el("div","cf-col");
+  a.innerHTML = colA.map(card).join(""); b.innerHTML = colB.map(card).join(""); g.appendChild(a); g.appendChild(b); f.appendChild(g);
+  f.appendChild(el("div","cf-det",ic("audit_safety","ic-c","pi-c")+
+    "<div class=tx><span class=t1>Safety Audit -- Comprehensive safety review</span><span class=t2>"+chip("ops","2 hr OPS")+chip("","$40,000")+"<span>"+p.opLeft+" operating hours left</span></span></div>"+
+    "<span class=go><span class=key>Enter</span>ADD TO PLAN</span>"));
+}
+function handScreen(){
+  var p = book(NOV, NOV_QUEUE.slice(0,3));
+  room(p); add(el("div","dim"));
+  frame(p); held(p.held); commit(false);    // the card file owns the keys: Commit drops Enter
+  add(el("div","grain"));
+  dateline(p, false);
+  cardFile(p);
+}
+
+/* ---------- STATE 3: PLAN, the month ahead, plus the printout ---------- */
+function planScreen(p){
+  room(p); add(el("div","dim"));
+  frame(p); held(p.held); commit(false);    // the plan owns Esc; Commit hides Enter while it is open
+  add(el("div","grain"));
+  dateline(p, false);
+  var t = panel("sheet");
+  t.appendChild(el("div","p-head","<span class=p-title>"+ic("st_plan","ic-t","pi-t")+"THE MONTH AHEAD &middot; "+p.month+" "+p.year+"</span>"+
+    "<span class=esc><span class=key>P</span><span class=key>Esc</span><span>BACK TO DESK</span></span>"));
+  // Attention: filled = hours left; the hatched box is the planning hour that operating work took
+  var s = "";
+  for (var i=0;i<p.planTotal;i++) s += '<i class="pip'+(i < p.planLeft ? "" : (i < p.planLeft + p.spill ? " spill" : " used"))+'"></i>';
+  var o = "";
+  for (var j=0;j<p.opTotal;j++) o += '<i class="pip o'+(j < p.opLeft ? "" : " used")+'"></i>';
+  var arrowX = p.planLeft*21 + 7;   // under the hatched planning box (16px boxes, 5px gaps)
+  var top = el("div","p-top");
+  top.appendChild(el("div","att",
+    "<span class=l>PLANNING</span><span class=pips>"+s+"</span><span class='v"+(p.planLeft?"":" zero")+"'>"+p.planLeft+" left</span>"+
+    "<span class='l op'>OPERATING</span><span class=pips>"+o+"<i class=spill-ar style='left:"+arrowX+"px'></i></span><span class='v"+(p.opLeft?"":" zero")+"'>"+p.opLeft+" left</span>"+
+    "<span class=sys><i class=sw></i>"+p.spill+" hr of operating work is using a planning hour</span>"));
+  top.appendChild(el("div","hbox",
+    "<span class=r1>HELD FOR EVENTS AT COMMIT</span>"+
+    "<span class=r2><span class=big>"+p.held+" hr</span><span class=res><span class=lb>RESERVE</span><span class=res-b aria-label='less reserve'></span>"+p.reserve+" hr<span class='res-b plus' aria-label='more reserve'></span></span></span>"+
+    "<span class=r3>"+(p.held-p.reserve)+" hr unspent + "+p.reserve+" hr reserve</span>"));
+  t.appendChild(top);
+  t.appendChild(el("div","q-h","<span>#</span><span>PLAY, IN ORDER</span><span>WHERE</span><span>HOURS</span><span class=r>COST</span><span style='text-align:right'>ORDER</span>"));
+  function hrs(r){ return "<span class=hr>"+chip(r.pool==="op"?"ops":"plan", r.hrs+" hr "+(r.pool==="op"?"OPS":"PLAN"))+(r.spill?"<i class=sw></i>":"")+"</span>"; }
+  function cost(r){ return [r.money?money(r.money):"", r.rep?r.rep+" rep":""].filter(Boolean).join(" + ") || "<span class=dash>--</span>"; }
+  function ctl(i, n, noX){ var up = i===0 ? "<b class=na>^</b>" : "<b>^</b>", dn = i+n-1===p.rows.length-1 ? "<b class=na>v</b>" : "<b>v</b>"; return "<span class=q-ctl>"+up+dn+(noX?"":"<b>x</b>")+"</span>"; }
+  for (var k=0;k<p.rows.length;k++){
+    var r = p.rows[k], n = 1;
+    while (k+n < p.rows.length && p.rows[k+n].name === r.name) n++;
+    if (n === 1){
+      t.appendChild(el("div","q-row"+(r.spill?" spillrow":""),"<span class=n>"+pad2(k+1)+"</span><span class=qn>"+ic(r.id,"ic-s","pi-s")+r.name+"</span>"+
+        "<span class='wh"+(r.from?"":" top")+"'>"+(r.from||"top level")+"</span>"+hrs(r)+"<span class='c r'>"+cost(r)+"</span>"+ctl(k,1)));
+      continue;
+    }
+    // a repeated play: one group row (moves the pair) and one row per play, each with its own x
+    t.appendChild(el("div","q-row grp","<span class=n>"+pad2(k+1)+"-"+pad2(k+n)+"</span><span class=qn>"+ic(r.id,"ic-s","pi-s")+r.name+" <span class=mult>x"+n+"</span><span class=tg>[-]</span></span>"+
+      "<span class=wh>"+r.from+"</span><span class=hr>"+chip(r.pool==="op"?"ops":"plan",(r.hrs*n)+" hr "+(r.pool==="op"?"OPS":"PLAN"))+"</span><span class='c r'><span class=dash>--</span></span>"+ctl(k,n,true)));
+    for (var m=0;m<n;m++)
+      t.appendChild(el("div","q-row sub","<span class=n>"+pad2(k+m+1)+"</span><span class=qn>"+ic(r.id,"ic-s","pi-s")+r.name+"</span><span class=wh></span>"+hrs(p.rows[k+m])+
+        "<span class='c r'>"+cost(p.rows[k+m])+"</span>"+ctl(k+m,1)));
+    k += n-1;
+  }
+  t.appendChild(el("div","q-tools","<span><span class=q-btn>Undo <span class=key>Z</span></span><span class=q-btn>Clear <span class=key>C</span></span></span>"+
+    "<span class=q-tot><span>"+p.rows.length+" plays &middot; queued cost</span>"+money(p.qMoney)+(p.qRep?" + "+p.qRep+" rep":"")+"</span>"));
+  // the printout beside the plan: costs only, labelled "after costs" (the game has no such preview: fixture)
+  add(el("div","abs paper tape",
+    "<div class=tape-h>AFTER COSTS</div>"+
+    "<div class=tape-r style='margin-top:8px'><span>Money</span><span>"+money(p.money)+"</span></div>"+
+    "<div class='tape-r sub'><span>plays</span><span>-"+money(p.qMoney)+"</span></div>"+
+    "<div class='tape-r tot'><span>after costs</span><b>"+money(p.moneyAfter)+"</b></div>"+
+    "<div class=tape-gap></div>"+
+    "<div class=tape-r><span>Reputation</span><span>"+p.rep+"</span></div>"+
+    "<div class='tape-r sub'><span>plays</span><span>-"+p.qRep+"</span></div>"+
+    "<div class='tape-r tot'><span>after costs</span><b>"+p.repAfter+"</b></div>"+
+    "<div class=tape-gap></div>"+
+    "<div class='tape-r warn'><span>Research (now)</span><span>"+p.research+"</span></div>"+
+    "<div class=tape-f>Below zero: research plays are blocked.</div>"));
+}
+
+/* ---------- STATE 4: WATCH, Tue 14 Nov; an event asks for a choice ---------- */
+function watchScreen(){
+  var p = book(NOV, NOV_QUEUE);
+  // every play ran at Commit (01 Nov): money = $140,000 - $102,600; rep = 32 - 6 - 1 + 1.5 + 1.5 + 3 + 3; research = -12 + 3 + 3
+  var w = {}; for (var k in p) w[k] = p[k]; w.money = p.moneyAfter; w.rep = 34; w.research = -6; w.day = 14;
+  room(w);
+  dock({off:[0,1], hush:true});   // ACTIONS and PLAN are closed while the month plays; the event owns the keys
+  var c = panel("mc", "<div class=ph>"+ic("st_plan","ic-hd","pi-hd")+"<span>THE MONTH SO FAR</span></div>");
+  var bar = ""; for (var i=1;i<=22;i++) bar += "<i class='"+(i<10?"f":i===10?"now":"")+"'></i>";
+  c.appendChild(el("div","mc-b",
+    "<div class=mc-day><b>TUE 14 NOV</b><span>workday 10 of 22</span></div><div class=mbar>"+bar+"</div>"+
+    "<div class=mc-row>"+ic("hire_safety_researcher","ic-s","pi-s")+"<span class=k>At work</span><span>Safety Researcher</span></div>"+
+    "<div class=mc-sec>FEED</div><div class=feed>"+
+      "<div><span class=d>01 Nov</span><span>Networking (+3 reputation)</span></div>"+
+      "<div><span class=d>01 Nov</span><span>Tour Offices: three landlords will quote you terms.</span></div>"+
+      "<div><span class=d>01 Nov</span><span>Worked the room (+1.5 reputation). No leads you have room for.</span></div>"+
+      "<div><span class=d>01 Nov</span><span>Office supplies restocked (+50 stationery, now at 100)</span></div>"+
+      "<div class=more>+ 7 earlier lines in Records</div></div>"));
+  frame(w); held(p.held);
+  // the Commit slot is playback, stopped by the event
+  panel("pb", "<span class=st2><i></i>EVENT PAUSED</span><span class='b on'>||</span><span class=b>1x</span><span class=b>2x</span><span class=b>4x</span>");
+  add(el("div","grain"));
+  dateline(w, false);   // a day step inside the month: the date is already set
+  // the event: core_events.json talent_recruitment; costs as the event dialog shows them (REVISION 3)
+  var ev = add(el("div","abs paper ev"));
+  ev.appendChild(el("div","ev-k","ACROSS YOUR DESK"));
+  ev.appendChild(el("div","ev-img"));
+  ev.appendChild(el("div","ev-t","Talent Opportunity"));
+  ev.appendChild(el("div","ev-p","A brilliant researcher wants to join your lab at reduced cost!"));
+  ev.appendChild(el("div","ev-cash","<span>Cash "+money(w.money)+"</span><span>Held for events "+p.held+" hr</span>"));
+  var o = el("div","ev-o");
+  [["1","hire_safety_researcher","Fast-Track Hiring","+1 safety researcher","$25,000 + 1 held hr",1],
+   ["2","hire_safety_researcher","Standard Hiring","+1 safety researcher","$25,000 + 1 held hr",0],
+   ["3","decline","Decline Offer","no change","free",0]].forEach(function(x){
+    o.appendChild(el("div",x[5]?"on":"","<i>"+x[0]+"</i><div class=nm><span>"+x[2]+"</span><em"+(x[3]==="no change"?" class=none":"")+">"+x[3]+"</em></div>"+
+      "<span class=cs>"+x[4]+(x[5]?"<span class=key>Enter</span>":"")+"</span>"));
+  });
+  ev.appendChild(o);
+}
+
+/* ---------- STATE 5: the Month Review, before December's plan ---------- */
+function reviewScreen(){
+  var p = book(DEC, []);
+  room(p); add(el("div","dim"));
+  frame(p); held(p.held);
+  // the Commit slot hands back to PLAN: the review's one Enter
+  add(el("div","abs cmt","<span class=two><span>BEGIN PLANNING</span><small>DECEMBER 2017</small></span><span class=key>Enter</span>"));
+  add(el("div","grain"));
+  dateline(p, true);   // a new month: the dateline types in afresh
+  var r = add(el("div","abs paper rv"));
+  r.appendChild(el("div","rv-h","<span class=rv-t>MONTH REVIEW -- DECEMBER 2017</span><span class=rv-s>December 2017 begins.</span>"));
+  var cols = el("div","rv-cols");
+  var boxesP = "", boxesO = "";
+  for (var i=0;i<12;i++) boxesP += "<i></i>";
+  for (var j=0;j<8;j++) boxesO += "<i></i>";
+  cols.appendChild(el("div",null,
+    "<h5>LAST MONTH'S MOVEMENT</h5><div class=mv>"+
+      "<span class=k>Funds</span><span class=v><b>$140,000 -&gt; $12,400</b><span class=x>(-$127,600)</span></span>"+
+      "<span class=k>Staff</span><span class=v><b>0 -&gt; 2</b><span class=x>(+2)</span></span>"+
+      "<span class=k>Doom</span><span class=bad>HIGH -&gt; SEVERE<span class=x>crossed up</span></span></div>"+
+    "<h5>ATTENTION</h5><div class=rv-p>20 fresh hours this month: 12 planning, 8 operating.</div>"+
+    "<div class=pbx>"+boxesP+"</div><div class='pbx ops'>"+boxesO+"</div>"+
+    "<div class='rv-p b'>November held 7 hours for events; 1 went to Talent Opportunity. The other 6 evaporated -- no banking.</div>"));
+  var R = [
+    ["hire_safety_researcher","Hire: Safety Researcher","Safety Researcher hired."],
+    ["scout_read","Read the Literature x2","Read for a day (+3.0 research). Nobody noticed. (twice)"],
+    ["scout_shitpost","Post Online","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+    ["audit_safety","Safety Audit","Safety audit (+scrutiny, +3 reputation)"],
+    ["use_connections","Work Your Connections","Reached out through your network -- a pre-vetted lead may surface shortly."],
+    ["scout_meetups","Go to Meetups","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+    ["network","Networking","Networking (+3 reputation)"],
+    ["tour_offices","Tour Offices","Three landlords will quote you terms."],
+    ["scout_meetups","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
+    ["order_supplies","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"]
+  ];
+  var pl = R.map(function(x){ return "<div class=pl-r>"+ic(x[0],"ic-s","pi-s")+"<span class=n>"+x[1]+"</span><span class=r>"+x[2]+"</span></div>"; }).join("");
+  pl += "<div class='pl-r evr'>"+ic("hire_safety_researcher","ic-s","pi-s")+"<span class=n>Talent Opportunity: Fast-Track Hiring</span><span class=r>Fast-tracked hiring process! (+1 safety researcher)</span></div>";
+  cols.appendChild(el("div",null,"<h5>NOVEMBER'S PLAYS</h5><div class=pl>"+pl+"</div>"));
+  r.appendChild(cols);
+}
+
+/* ---------- STATE 6: late game, CATASTROPHIC (art band 3) ---------- */
+function lateScreen(){
+  var p = book(APR, []);
+  room(p); dock(); monthCard(p); frame(p); held(p.held); commit(true);
+  add(el("div","grain"));
+  dateline(p, true);
+}
+
+/* ------------------------------------------------------------------
+   layout self-check (?check=1), H's: overflow, text outside its box, off
+   stage, overlaps in one layer, sizes under 16px, and a TXT line per
+   visible text box for the contrast measure on the rendered pixels.
+   ------------------------------------------------------------------ */
+function selfCheck(){
+  var leaves = Array.prototype.filter.call(document.querySelectorAll("#stage *"), function(e){
+    return Array.prototype.some.call(e.childNodes, function(n){ return n.nodeType===3 && n.textContent.trim(); });
+  });
+  var out = [], txt = [], st = S.getBoundingClientRect(), sizes = {}, sc = st.width/1920;
+  leaves.forEach(function(e){
+    var cs = getComputedStyle(e), t = "'"+e.textContent.trim().slice(0,30)+"'";
+    sizes[cs.fontSize] = (sizes[cs.fontSize]||0)+1;
+    if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+t);
+    var r = e.getBoundingClientRect();
+    if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+t);
+    var box = e.closest(".pnl,.paper,.cmt,.st,.q-row,.att,.hbox,.card,.cf-det,.cf-res>div,.ev-o>div,.pl-r,.feed>div,.tape-r,.ev-cash,.esc,.q-btn,.chip");
+    if (box && box!==e){ var b=box.getBoundingClientRect();
+      if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+t); }
+    if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+t);
+    var op = 1; for (var a=e; a && a!==S; a=a.parentElement) op *= parseFloat(getComputedStyle(a).opacity);
+    var cx = (r.left+r.right)/2, cy = (r.top+r.bottom)/2, top = document.elementFromPoint(cx, cy);
+    var seen = top && (top===e || e.contains(top) || top.contains(e));
+    if (seen) txt.push("TXT "+[(r.left-st.left)/sc,(r.top-st.top)/sc,r.width/sc,r.height/sc].map(function(v){return v.toFixed(0);}).join(" ")+" "+cs.color.replace(/ /g,"")+" "+op.toFixed(2)+" "+t);
+  });
+  function root(e){ while (e.parentNode && e.parentNode!==S) e = e.parentNode; return e; }
+  var R = leaves.map(function(e){ return e.getBoundingClientRect(); });
+  for (var i=0;i<leaves.length;i++) for (var j=i+1;j<leaves.length;j++){
+    if (leaves[i].contains(leaves[j])||leaves[j].contains(leaves[i])) continue;
+    if (root(leaves[i])!==root(leaves[j])) continue;
+    var a=R[i], b=R[j], w=Math.min(a.right,b.right)-Math.max(a.left,b.left), h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+    if (w>2&&h>2) out.push("OVERLAP '"+leaves[i].textContent.trim().slice(0,24)+"' x '"+leaves[j].textContent.trim().slice(0,24)+"'");
+  }
+  // layers that must not cover each other (the check above only looks inside one layer)
+  var tops = Array.prototype.filter.call(S.children, function(e){ return /\b(pnl|paper|dock|cmt)\b/.test(e.className); });
+  for (var x=0;x<tops.length;x++) for (var y=x+1;y<tops.length;y++){
+    var A=tops[x].getBoundingClientRect(), B=tops[y].getBoundingClientRect();
+    var ww=Math.min(A.right,B.right)-Math.max(A.left,B.left), hh=Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top);
+    if (ww>2&&hh>2) out.push("LAYER-OVERLAP "+tops[x].className+" x "+tops[y].className);
+  }
+  out.push("FONT SIZES (css px at 1920): "+Object.keys(sizes).sort().map(function(k){ return k+" x"+sizes[k]; }).join(", "));
+  var pre = document.createElement("pre"); pre.id="check"; pre.textContent = "CHECK-BEGIN\n"+out.concat(txt).join("\n")+"\nCHECK-END"; document.body.appendChild(pre);
+}
+
+var VIEWS = { "1":firstScreen, "2":handScreen, "3":function(){ planScreen(book(NOV, NOV_QUEUE)); }, "4":watchScreen, "5":reviewScreen, "6":lateScreen };
+(VIEWS[STATE] || VIEWS["1"])();
+soundControl();
+if (Q.get("check")) document.fonts.ready.then(function(){ setTimeout(selfCheck, 200); });
+</script>
+</body>
+</html>

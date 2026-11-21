@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paperwork Desk, Grim</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=block" rel="stylesheet">
+<style>
+/* =====================================================================
+   C. THE PAPERWORK DESK, GRIM -- hifi3 (fork/design/hifi3/designer-brief-CEG.md).
+   Layout: concept C (fork/design/hifi/C/): four instruments along the top,
+   desk objects along the bottom, one menu per object. Look: H
+   (fork/design/hifi3/H/): G's dark panels and meters, paper the only light
+   thing, the typewriter dateline, a quiet Commit. One 1920x1080 stage,
+   scaled uniformly, so 1280x720 is the same layout at 2/3 size.
+   ?state=1..6 . ?still=1 dateline without type-on (renders) . ?check=1 layout check
+   ===================================================================== */
+:root{
+  /* type scale: the only five sizes on the page */
+  --t1:16px; --t2:18px; --t3:22px; --t4:28px; --t5:40px;
+  /* grounds (H) */
+  --void:#090807; --panel:rgba(16,14,12,.95); --well:#0d0b0a;
+  --frame:rgba(196,176,138,.16); --frame-hi:rgba(196,176,138,.28); --tick:#6a573a;
+  /* text: bone, never white */
+  --bone:#d6cebd; --muted:#aaa08e; --dim:#968d7c;
+  /* the two pools of Attention, on dark */
+  --plan:#c9a465; --plan-fill:#a8854b; --op:#93b3a9; --op-fill:#6c8f86;
+  /* accent: only where something needs attention */
+  --amber:#d9a03a; --amber-line:rgba(217,160,58,.62); --warn:#d58a52;
+  /* paper and its inks (H), plus the two pools in ink */
+  --ink:#1a140d; --ink-soft:#221b13; --oxide:#3d0e08; --green:#0b2621;
+  --plan-ink:#4a3106; --op-ink:#0c3833; --pfill:#7a5a28; --ofill:#3f625b;
+  --mono:"IBM Plex Mono",Consolas,monospace; --sans:"IBM Plex Sans","Segoe UI",sans-serif;
+  --cond:"Barlow Condensed",sans-serif; --type:"Courier Prime","Courier New",monospace;
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .55 0'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>");
+  --smut:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.05'/></filter><rect width='600' height='600' filter='url(%23s)'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#050404}
+body{font-family:var(--sans);color:var(--bone)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:var(--void);transform-origin:0 0}
+.abs{position:absolute}
+
+/* ===== the room (H): Pip's office, dim, desaturated; the doom layer grades it ===== */
+.room-bg{position:absolute;inset:0;background:url(assets/office_wide_dawn.webp) center 46%/cover no-repeat}
+.room-grade,.room-glow{position:absolute;inset:0;pointer-events:none}
+.room-shade{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,6,8,.55) 0%,rgba(8,6,8,.12) 26%,rgba(8,6,6,.10) 56%,rgba(6,4,3,.78) 90%)}
+.grain{position:absolute;inset:0;pointer-events:none;background:var(--grain) 0 0/256px;opacity:.20;mix-blend-mode:overlay}
+/* C's desk band starts higher than H's (its objects stand on it) */
+.desk{position:absolute;left:0;right:0;top:846px;bottom:0;background:linear-gradient(180deg,#17110c,#0b0806)}
+.desk:before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(196,176,138,.12)}
+.desk:after{content:"";position:absolute;inset:0;background:url(assets/tex_plywood_stained_512.webp) 0 0/512px;opacity:.07;mix-blend-mode:screen}
+.dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 40% 56%,rgba(6,5,5,.66),rgba(6,5,5,.5) 70%)}
+.dim.light{background:radial-gradient(ellipse at 40% 50%,rgba(6,5,5,.34),rgba(6,5,5,.24) 70%)}
+
+/* ===== panels (H): flat, dark, hairline frame, worn corner ticks, soot ===== */
+.pnl{isolation:isolate;background:var(--panel);border:1px solid var(--frame);border-radius:2px;box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 0 26px rgba(0,0,0,.42),inset 0 -14px 22px -10px rgba(0,0,0,.4)}
+.pnl:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;opacity:.16;mix-blend-mode:screen}
+.pnl:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;border-radius:inherit;
+  background:url(assets/tex_painted_metal_panel.webp) 0 0/512px;opacity:.05;mix-blend-mode:screen}
+.cn{position:absolute;width:12px;height:12px;border:0 solid var(--tick);pointer-events:none}
+.cn.tl{left:-1px;top:-1px;border-width:2px 0 0 2px}.cn.tr{right:-1px;top:-1px;border-width:2px 2px 0 0}
+.cn.bl{left:-1px;bottom:-1px;border-width:0 0 2px 2px}.cn.br{right:-1px;bottom:-1px;border-width:0 2px 2px 0}
+.ph{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border-bottom:1px solid var(--frame);
+  font:600 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
+.key{display:inline-block;flex:none;letter-spacing:0;font:500 var(--t1)/20px var(--mono);min-width:26px;text-align:center;padding:0 5px;border:1px solid rgba(214,206,189,.34);border-radius:2px;color:var(--muted);white-space:nowrap}
+
+/* Pip's icons, on dark plates, toned down so they belong (H) */
+.ic{display:block;flex:none;filter:saturate(.42) sepia(.22) brightness(.95) contrast(1.05)}
+.plate-ic{display:flex;align-items:center;justify-content:center;flex:none;background:#0b0a09;border:1px solid rgba(196,176,138,.14)}
+.pi-s{width:28px;height:28px}.ic-s{width:22px;height:22px}
+.pi-m{width:36px;height:36px}.ic-m{width:28px;height:28px}
+.pi-r{width:40px;height:40px}.ic-r{width:30px;height:30px}
+.pi-l{width:44px;height:44px}.ic-l{width:34px;height:34px}
+
+/* ===== the dateline (H): typed in when the month changes ===== */
+.dl{left:48px;top:24px;height:44px;display:flex;align-items:center;font:700 var(--t4)/1 var(--type);letter-spacing:5px;color:#d9d1bf;white-space:nowrap;
+  text-shadow:0 0 1px rgba(217,209,191,.55),1px 0 0 rgba(217,209,191,.12)}
+.dl span{display:inline-block}
+.dl .caret{display:inline-block;width:14px;height:26px;margin-left:4px;background:#d9d1bf;opacity:0}
+.dl.typing span{opacity:0;animation:strike 90ms steps(1,end) forwards}
+.dl.typing .caret{animation:caret .5s steps(1,end) 3 forwards}
+@keyframes strike{0%{opacity:0}1%{opacity:1;color:#fff4dc;transform:translateY(-1px)}100%{opacity:var(--o,1);transform:translateY(var(--y,0))}}
+@keyframes caret{0%{opacity:.85}50%{opacity:0}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){ .dl.typing span{animation:none;opacity:var(--o,1)} .dl.typing .caret{animation:none;opacity:0} }
+
+/* ===== top row: the accounts, P(Doom), reputation ===== */
+.acc{left:48px;top:100px;width:712px;height:124px;display:grid;grid-template-columns:repeat(4,1fr)}
+.acc .cell{display:flex;align-items:center;gap:12px;padding:0 16px}
+.acc .cell+.cell{border-left:1px solid var(--frame)}
+.acc .k{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted);white-space:nowrap}
+.acc .v{font:500 var(--t3)/1 var(--mono);color:var(--bone);margin-top:8px;white-space:nowrap}
+.acc .neg .k,.acc .neg .v{color:var(--warn)}
+/* P(Doom): G's meter as a 270-degree tachometer, level and band only (ADR-0015) */
+.doomw{left:780px;top:24px;width:460px;height:200px}
+.doomw svg{position:absolute;left:14px;top:42px}
+.d-pct{position:absolute;left:14px;width:184px;top:114px;text-align:center;font:600 var(--t5)/1 var(--mono);letter-spacing:-1px}
+.d-r{position:absolute;left:216px;right:14px;top:54px;bottom:10px}
+.d-band{margin-top:8px;font:600 var(--t3)/1 var(--mono);letter-spacing:3px;white-space:nowrap}
+.d-trend{display:inline-block;margin-top:12px;font:600 var(--t1)/22px var(--mono);letter-spacing:2px;padding:0 10px;border:1px solid}
+.ladder{position:absolute;left:0;right:0;top:86px;display:flex;gap:3px;height:14px;align-items:center}
+.ladder i{display:block;height:6px;opacity:.42}
+.ladder i.on{height:14px;opacity:1}
+.d-lab{position:absolute;left:0;top:114px;font:400 var(--t1)/1 var(--mono);color:var(--dim);white-space:nowrap}
+.d-warn{position:absolute;left:0;top:114px;font:600 var(--t1)/1 var(--mono);white-space:nowrap}
+/* reputation: the same meter as a semicircle; the red mark at 0 is the real rule */
+.repw{left:1640px;top:24px;width:240px;height:200px}
+.repw svg{position:absolute;left:40px;top:48px}
+.r-num{position:absolute;left:0;right:0;top:92px;text-align:center;font:600 var(--t5)/1 var(--mono);color:var(--bone)}
+.r-scale{position:absolute;left:46px;right:44px;top:140px;display:flex;justify-content:space-between;font:400 var(--t1)/1 var(--mono);color:var(--dim)}
+.rp-note{position:absolute;left:10px;right:10px;top:168px;font:400 var(--t1)/1 var(--sans);color:var(--dim);text-align:center}
+.rp-note b{font-weight:500;color:#d27f6c}
+
+/* ===== the desk objects (C's places) ===== */
+/* card box: the action cards; a few aged card tops show above the box */
+.box{left:48px;top:836px;width:280px;height:216px}
+.box .cards{position:absolute;left:24px;right:24px;top:0;height:48px}
+.box .cards i{position:absolute;left:0;right:0;height:40px;background:linear-gradient(#7a705c,#62594a);box-shadow:inset 0 2px 0 rgba(90,26,18,.75),0 -1px 0 rgba(0,0,0,.4)}
+.box .cards i:nth-child(1){top:6px;transform:rotate(-1.5deg)}
+.box .cards i:nth-child(2){top:12px;transform:rotate(1deg);background:linear-gradient(#5e5240,#50463a);box-shadow:none}
+.box .cards i:nth-child(3){top:18px}
+.box .front{left:0;right:0;top:36px;bottom:0;padding:18px 18px;display:flex;flex-direction:column}
+.ttl{display:flex;align-items:center;gap:12px;font:600 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--bone);white-space:nowrap}
+.box .row{margin-top:20px;font:500 var(--t2)/1 var(--sans);color:var(--bone)}
+.box .sub{margin-top:10px;font:400 var(--t1)/1 var(--sans);color:var(--muted)}
+.kbr{position:absolute;right:14px;bottom:14px}
+.box.glow .front{border-color:var(--amber-line);box-shadow:0 0 0 2px rgba(217,160,58,.55),0 0 26px rgba(217,160,58,.28),0 18px 40px rgba(0,0,0,.6),inset 0 0 26px rgba(0,0,0,.42)}
+.box.glow .key{border-color:var(--amber-line);color:var(--amber)}
+.box.locked .front{border-style:dashed;background:repeating-linear-gradient(135deg,rgba(196,176,138,.04) 0 2px,transparent 2px 7px),#100e0c}
+.box.locked .ic{opacity:.45}
+.box.locked .ttl,.box.locked .row{color:var(--muted)}
+.box.locked .sub{color:var(--dim)}
+/* the schedule clipboard: a dark board, the form on it is paper */
+.clipb{left:356px;top:792px;width:356px;height:260px;background:#17130f;border:1px solid var(--frame);border-radius:2px;box-shadow:0 18px 36px rgba(0,0,0,.6),inset 0 -12px 18px -8px rgba(0,0,0,.5)}
+.clp{position:absolute;left:50%;top:-8px;width:104px;height:22px;margin-left:-52px;background:#2a2723;border:1px solid rgba(196,176,138,.24);border-radius:2px}
+.clipb .sh{left:12px;right:12px;top:18px;bottom:12px;padding:18px 16px 10px;--fold:-20px}
+.clipb .hd{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.clipb .hd b{font:700 var(--t2)/1 var(--cond);letter-spacing:2.5px;color:var(--ink)}
+.hrow{margin-top:10px}
+.hrow .l{display:flex;justify-content:space-between;align-items:baseline}
+.hrow .lb{font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink-soft)}
+.hrow .lb.p{color:var(--plan-ink)}.hrow .lb.o{color:var(--op-ink)}
+.hrow em{font:700 var(--t1)/1 var(--type);font-style:normal;color:var(--ink)}
+.sboxes{margin-top:6px;display:flex;gap:3px}
+.sbx{width:21px;height:18px;border:1px solid rgba(26,20,13,.5)}
+.sbx.pl{background:var(--pfill);border-color:var(--plan-ink)}
+.sbx.op{background:var(--ofill);border-color:var(--op-ink)}
+.days{margin-top:8px;display:flex;gap:2px}
+.day{width:11px;height:16px;border:1px solid rgba(26,20,13,.55)}
+.day.done{background:var(--ink-soft)}
+.day.now{background:var(--oxide);border-color:var(--oxide);height:20px;margin-top:-2px}
+.clipb .foot{margin-top:12px;font:700 var(--t1)/1.3 var(--type);color:var(--ink)}
+/* the office cat's photo (Pip's cat, office_cat.gd shows its name): a print, so paper */
+.catf{left:866px;top:858px;width:160px;height:188px;padding:10px 10px 0;isolation:isolate;background:linear-gradient(#a99d84,#93866b);transform:rotate(1.5deg);box-shadow:0 10px 18px rgba(0,0,0,.65),inset 0 0 14px rgba(60,40,20,.35)}
+.catf img{display:block;width:140px;height:140px;object-fit:cover;object-position:50% 30%;filter:sepia(.35) saturate(.5) brightness(.72) contrast(1.05)}
+.catf .nm{font:700 var(--t1)/36px var(--type);color:var(--ink);text-align:center}
+.cat-glow{position:absolute;pointer-events:none;border-radius:50%}
+/* shortcut objects: Staff file, Upgrades, Ledger, Guide (flat dark plates) */
+.sc{width:180px;height:94px;padding:12px 12px 12px 12px;display:flex;flex-direction:column;justify-content:space-between;background:#14110f;border:1px solid rgba(196,176,138,.13);border-left:3px solid #3a3128;
+  box-shadow:0 12px 24px rgba(0,0,0,.55),inset 0 -10px 16px -8px rgba(0,0,0,.45)}
+.sc .t{display:flex;align-items:center;gap:10px;font:600 var(--t2)/1 var(--cond);letter-spacing:2px;color:var(--bone);white-space:nowrap}
+.sc .r{display:flex;justify-content:space-between;align-items:center;font:400 var(--t1)/1 var(--sans);color:var(--muted);white-space:nowrap}
+/* held hours above a quiet Commit (H) */
+.held{left:1584px;top:856px;width:296px;height:112px}
+.held .row{display:flex;align-items:baseline;justify-content:space-between;padding:12px 16px 4px}
+.held .lbl{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted)}
+.held .val{font:600 var(--t4)/1 var(--mono);color:var(--bone)}
+.held .sub{padding:4px 16px 14px;font:400 var(--t1)/1.3 var(--sans);color:var(--dim)}
+.held.w{top:826px;height:142px}
+.held.w .row{padding:10px 16px 0}
+.paused{margin:12px 16px 0;height:36px;border:1px solid rgba(190,70,55,.7);background:rgba(155,51,40,.14);display:flex;align-items:center;justify-content:center;gap:10px;
+  font:700 var(--t2)/1 var(--cond);letter-spacing:1.5px;color:#e3a99b;white-space:nowrap}
+.paused i{width:10px;height:10px;border-radius:50%;background:#c4483a;box-shadow:0 0 6px rgba(196,72,58,.6)}
+.speed{margin:8px 16px 0;display:flex;border:1px solid var(--frame-hi)}
+.speed span{flex:1;text-align:center;font:400 var(--t1)/30px var(--mono);color:var(--muted)}
+.speed span+span{border-left:1px solid var(--frame)}
+.speed span.on{background:#2a2119;color:#e6d9bd;box-shadow:inset 0 -2px 0 var(--plan-fill)}
+.cmt{left:1584px;top:980px;width:296px;height:60px;display:flex;align-items:center;justify-content:center;gap:12px;
+  background:linear-gradient(#1d1813,#15110d);border:1px solid var(--amber-line);border-radius:2px;
+  font:700 var(--t3)/1 var(--cond);letter-spacing:2.5px;color:var(--amber);white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,180,.05)}
+.cmt .key{border-color:var(--amber-line);color:var(--amber)}
+.cmt.off{border:1px dashed rgba(196,176,138,.3);color:var(--dim);background:#110f0d;box-shadow:none}
+.cmt.go{font-size:var(--t2);letter-spacing:2px;line-height:22px;justify-content:space-between;padding:0 14px 0 18px;box-shadow:0 0 0 2px rgba(217,160,58,.4),0 10px 24px rgba(0,0,0,.55)}
+
+/* ===== paper (H): the only light thing, aged, dimmed, dirty ===== */
+.paper{isolation:isolate;--fold:50%;background:linear-gradient(180deg,transparent calc(var(--fold) - 2px),rgba(255,250,232,.18) calc(var(--fold) - 2px),rgba(255,250,232,.18) var(--fold),rgba(70,50,24,.22) var(--fold),rgba(70,50,24,0) calc(var(--fold) + 7px)),radial-gradient(circle at 100% 0,rgba(60,40,18,.30),rgba(60,40,18,0) 70px),radial-gradient(circle at 0 100%,rgba(60,40,18,.26),rgba(60,40,18,0) 80px),linear-gradient(172deg,#c3b79c,#b8ab8f 62%,#afa286);color:var(--ink);border-radius:1px;
+  box-shadow:0 22px 44px rgba(0,0,0,.72),inset 0 0 46px rgba(70,48,22,.3),inset 0 0 5px rgba(60,40,20,.45)}
+.paper:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;mix-blend-mode:multiply;opacity:.16}
+.paper .key{color:#d2c6aa;background:#2b231a;border-color:#2b231a;font-weight:700}
+.paper .plate-ic{background:#1c1712;border-color:#1c1712}
+/* a second, greyer stock for the teleprinter roll, so the memo leads */
+.paper.roll{background:linear-gradient(180deg,rgba(70,50,24,.10),rgba(70,50,24,0) 30px),linear-gradient(172deg,#b3a78d,#a99d83 62%,#a29680);box-shadow:0 18px 36px rgba(0,0,0,.7),inset 0 0 40px rgba(70,48,22,.28)}
+
+/* tutorial: the advisor's note (cold open hand-off), pointing at the glowing card box */
+.adv{left:84px;top:478px;width:440px;padding:20px 22px 18px;transform:rotate(-.6deg);--fold:-20px}
+.adv .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--oxide)}
+.adv p{font:400 var(--t2)/1.4 var(--type);margin-top:12px;color:var(--ink)}
+.adv .ft{display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(35,28,20,.4)}
+.adv .ft span{font:700 var(--t1)/1 var(--type);color:var(--ink);border:1.5px solid var(--ink);padding:8px 14px}
+.adv-ptr{position:absolute;pointer-events:none}
+
+/* ===== ACTION CARDS (state 2): the drawer of cards and folders, dark ===== */
+.mn{left:48px;top:232px;width:1512px;height:824px;padding:16px 22px;background:#100e0c}  /* opaque: the desk does not show through */
+.mn-hd{display:flex;align-items:center;gap:12px;height:52px;border-bottom:1px solid var(--frame-hi);padding-bottom:12px}
+.mn-t{display:flex;align-items:center;gap:12px;font:700 var(--t3)/1 var(--cond);letter-spacing:4px;color:var(--bone);white-space:nowrap;margin-right:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 10px;border:1px solid var(--frame);background:rgba(0,0,0,.22);font:600 var(--t1)/1 var(--cond);letter-spacing:1.5px;color:var(--muted);white-space:nowrap}
+.chip b{font:500 var(--t1)/1 var(--mono);letter-spacing:0;color:var(--bone)}
+.chip.p em{font-style:normal;color:var(--plan)}.chip.o em{font-style:normal;color:var(--op)}
+.chip.neg,.chip.neg b{color:var(--warn)}
+.pips{display:flex;gap:3px}
+.pip{width:8px;height:14px;flex:none;border:1px solid var(--plan-fill);background:var(--plan-fill)}
+.pip.used{background:transparent;border-color:rgba(168,133,75,.38)}
+.pip.o{border-color:var(--op-fill);background:var(--op-fill)}
+.pip.o.used{background:transparent;border-color:rgba(108,143,134,.4)}
+.esc{margin-left:auto;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--frame-hi);font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
+.ac-rows{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.ac-row{display:flex;gap:14px;height:132px}
+.ac-div{width:36px;flex:none;background:#110f0c;border:1px solid var(--frame);display:flex;align-items:center;justify-content:center}
+.ac-div span{writing-mode:vertical-rl;transform:rotate(180deg);font:600 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--muted);white-space:nowrap}
+.ac-slots{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.ac-slot{position:relative;min-width:0}
+/* an index card: one dull oxide rule under the title, faint ruling below */
+.card{position:relative;width:100%;height:132px;padding:12px 14px 10px;display:flex;flex-direction:column;background-color:#16130f;border:1px solid rgba(196,176,138,.13);
+  background-image:linear-gradient(rgba(155,51,40,.5),rgba(155,51,40,.5)),repeating-linear-gradient(180deg,transparent 0 23px,rgba(196,176,138,.045) 23px 24px);background-size:100% 1px,100% 100%;background-position:0 60px,0 62px;background-repeat:no-repeat}
+.card>*{flex-shrink:0}
+/* a folder: a tab on top, a darker brass edge; opens to choices */
+.card.folder{background-color:#1c1813;background-image:linear-gradient(rgba(196,176,138,.13),rgba(196,176,138,.13));background-size:100% 1px;background-position:0 18px;background-repeat:no-repeat;
+  border:0;border-left:3px solid #4d3f2a;padding-top:28px;clip-path:polygon(0 0,36% 0,40% 18px,100% 18px,100% 100%,0 100%)}
+.card.folder:before{content:"FOLDER";position:absolute;left:12px;top:1px;font:600 var(--t1)/17px var(--cond);letter-spacing:2px;color:var(--muted)}
+.ac-top{display:flex;align-items:center;gap:12px;min-width:0}
+.ac-name{min-width:0;font:500 var(--t3)/1.2 var(--sans);color:var(--bone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-cost{margin-top:8px;font:400 var(--t2)/1.2 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-cost .p{color:var(--plan)}.ac-cost .o{color:var(--op)}
+.card.folder .ac-cost{color:var(--bone)}
+.ac-desc{margin-top:4px;font:400 var(--t1)/1.2 var(--sans);color:var(--muted)}
+.ac-st{margin-top:auto;display:flex;gap:8px;align-items:center}
+.rstamp{display:inline-block;white-space:nowrap;font:700 var(--t1)/20px var(--cond);letter-spacing:1.5px;text-transform:uppercase;color:#e39d66;border:1px solid rgba(213,138,82,.7);padding:0 6px}
+.rstamp.grey{color:var(--muted);border-color:rgba(196,176,138,.35);border-style:dashed}
+.card.off{background-color:#100e0c;background-image:repeating-linear-gradient(135deg,rgba(196,176,138,.035) 0 2px,transparent 2px 7px);border-style:dashed}
+.card.off .ac-name{color:var(--muted)}
+.card.off .ic{opacity:.45}
+.onf{position:absolute;right:8px;top:-10px;z-index:2;font:500 var(--t1)/22px var(--mono);color:var(--bone);padding:0 8px;background:#0d0b0a;border:1px solid var(--frame-hi);white-space:nowrap}
+.ac-slot.focus .card{border-color:var(--amber-line);box-shadow:0 0 0 1px var(--amber-line),0 0 18px rgba(217,160,58,.16);background-color:#1f1913}
+.addk{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--amber);white-space:nowrap}
+.addk .key{border-color:var(--amber-line);color:var(--amber)}
+
+/* ===== the month's plan (state 3): the form, lifted off the desk; a dark board, paper on it ===== */
+.board{left:48px;top:232px;width:1512px;height:824px;background:#17130f}
+.board .clp{width:150px;height:24px;margin-left:-75px;top:-6px}
+.sheet{left:14px;right:14px;top:14px;bottom:14px;padding:22px 32px 0 40px;--fold:-20px}
+.fm-top{display:flex;align-items:center;gap:40px;height:64px;border-bottom:3px double var(--ink);padding-bottom:10px}
+.fm-title{display:flex;align-items:center;gap:14px;font:700 var(--t4)/1 var(--cond);letter-spacing:4px;color:var(--ink);white-space:nowrap}
+.fm-for{display:flex;align-items:baseline;gap:12px}
+.fm-for .lb{font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink-soft)}
+.fm-for b{font:700 var(--t3)/1.3 var(--type);border-bottom:1.5px solid var(--ink);padding:0 8px}
+.btn-x{margin-left:auto;display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1.5px solid var(--ink);font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink)}
+.fm-body{display:grid;grid-template-columns:852px 480px;gap:58px;margin-top:14px}
+.tbl-h,.tbl-r{display:grid;grid-template-columns:44px 76px 390px 198px 104px 40px;align-items:center}
+.tbl-h{height:34px;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink-soft);border-bottom:1.5px solid var(--ink)}
+.tbl-r{height:42px;border-bottom:1px solid rgba(35,28,20,.28);position:relative}
+.tbl-r.spill{background:linear-gradient(90deg,rgba(12,56,51,.13),rgba(12,56,51,.03))}
+.c-n{font:700 var(--t1)/1 var(--type);color:var(--ink-soft);text-align:center}
+.c-mv{display:flex;gap:6px;padding-left:8px}
+.g{width:30px;height:28px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(26,20,13,.7);font:700 var(--t1)/1 var(--mono);color:var(--ink)}
+.g.na{border:1px dashed rgba(26,20,13,.45);color:var(--ink-soft);background:repeating-linear-gradient(135deg,rgba(26,20,13,.08) 0 2px,transparent 2px 6px)}
+.c-it{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 0 10px}
+.c-it .nm{font:700 var(--t2)/1 var(--type);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-it .src{font:500 var(--t1)/1 var(--sans);color:var(--ink-soft);margin-left:8px}
+.c-h{display:flex;align-items:center;gap:8px;padding-left:8px;font:400 var(--t2)/1 var(--type);white-space:nowrap}
+.c-h .p{color:var(--plan-ink);font-weight:700}.c-h .o{color:var(--op-ink);font-weight:700}
+.tag{font:700 var(--t1)/20px var(--cond);letter-spacing:.5px;color:#e2d8c0;background:var(--op-ink);padding:0 6px;white-space:nowrap}
+.c-c{font:400 var(--t2)/1 var(--type);text-align:right;padding-right:12px;white-space:nowrap}
+.c-x{display:flex;justify-content:center}
+.tot{display:flex;align-items:center;height:46px;border-top:3px double var(--ink);font:700 var(--t2)/1 var(--type)}
+.tot .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink-soft);margin-right:12px}
+.tot .p{color:var(--plan-ink)}.tot .o{color:var(--op-ink)}
+.tot>.k{width:130px;padding-left:12px}
+.tot .cst{margin-left:auto;padding-right:52px}
+.tools{display:flex;gap:14px;margin-top:14px}
+.tools span.b{display:flex;align-items:center;gap:10px;height:40px;padding:0 14px;border:1.5px solid var(--ink);font:500 var(--t2)/1 var(--sans);color:var(--ink)}
+.fine{margin-top:18px;padding-top:10px;border-top:1px dashed rgba(35,28,20,.45);font:400 var(--t1)/1.4 var(--sans);color:var(--ink-soft)}
+.sec{display:flex;align-items:center;gap:10px;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink);border-bottom:1.5px solid var(--ink);padding-bottom:6px;margin-bottom:10px}
+.side>section+section{margin-top:16px}
+.hr-l{display:flex;align-items:baseline;gap:16px;height:24px}
+.hr-l .lb{font:700 var(--t1)/1 var(--cond);letter-spacing:2px}
+.hr-l .lb.p{color:var(--plan-ink)}.hr-l .lb.o{color:var(--op-ink)}
+.hr-l em{font:700 var(--t2)/1 var(--type);font-style:normal;color:var(--ink)}
+.hr-l em.zero{color:var(--oxide)}
+.pen{margin-left:auto;margin-right:30px;font:700 var(--t1)/1 var(--type);color:var(--op-ink)}
+.boxes{display:flex;gap:6px;margin-top:6px}
+.bx{width:34px;height:28px;border:1.5px solid rgba(26,20,13,.5);position:relative}
+.bx.pl{background:var(--pfill);border-color:var(--plan-ink)}
+.bx.op{background:var(--ofill);border-color:var(--op-ink)}
+.bx.sp{border:2px solid var(--op-ink);background:repeating-linear-gradient(135deg,rgba(12,56,51,.5) 0 2px,transparent 2px 5px)}
+.hrs-wrap{position:relative}
+.hrs-wrap svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.led{margin-top:10px}
+.ln{display:flex;align-items:center;height:32px;font:400 var(--t2)/1 var(--type)}
+.ln .k{white-space:nowrap}
+.ln .dots{flex:1;margin:0 8px;height:2px;margin-top:10px;background:radial-gradient(circle,var(--ink-soft) 1px,transparent 1.4px) 0 0/8px 2px repeat-x;opacity:.6}
+.ln .v{white-space:nowrap;font-weight:700}
+.ln.sub{padding-left:22px;color:var(--ink-soft)}
+.ln.sub .v{color:var(--op-ink)}
+.ln.big{height:40px;border-top:3px double var(--ink);margin-top:6px;font-size:var(--t3)}
+.ln.big .k{font-weight:700}
+.stp{display:flex;align-items:center;gap:6px}
+.stp .val{width:44px;height:30px;border:1.5px solid var(--ink);font:700 var(--t2)/27px var(--type);text-align:center}
+.stp i{position:relative;display:block;width:30px;height:30px;border:1.5px solid var(--ink)}
+.stp i:before,.stp i.plus:after{content:"";position:absolute;left:7px;right:7px;top:12px;height:3px;background:var(--ink)}
+.stp i.plus:after{left:12px;right:auto;width:3px;top:7px;height:13px}
+.cap{margin-top:4px;font:400 var(--t1)/1.4 var(--sans);color:var(--ink-soft)}
+.rq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rq span{height:40px;border:1.5px solid rgba(26,20,13,.45);font:700 var(--t1)/37px var(--cond);letter-spacing:2px;color:var(--ink-soft);text-align:center;text-transform:uppercase}
+.rq span.on{border:2.5px solid var(--oxide);color:var(--oxide);line-height:35px}
+
+/* ===== WATCH (state 4): the memo (the event) and the teleprinter roll (the month feed) ===== */
+.memo{left:560px;top:246px;width:690px;height:500px;padding:24px 30px;transform:rotate(.4deg);--fold:34%}
+.pclip{position:absolute;left:330px;top:-16px;width:24px;height:62px;border:3px solid #4a4741;border-radius:12px}
+.memo-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px double var(--ink);padding-bottom:10px}
+.memo-h .lb{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--oxide)}
+.needs{font:700 var(--t1)/22px var(--cond);letter-spacing:2px;color:var(--oxide);border:2px solid var(--oxide);padding:0 8px;transform:rotate(-1.5deg)}
+.memo-t{margin-top:16px;font:700 var(--t4)/1.1 var(--type);color:var(--ink)}
+.memo-d{margin-top:10px;font:400 var(--t2)/1.4 var(--type);color:var(--ink)}
+.ask{margin-top:22px;display:flex;justify-content:space-between;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--ink-soft);border-bottom:1.5px solid var(--ink);padding-bottom:6px}
+.ch{display:grid;grid-template-columns:40px 38px 1fr 236px;align-items:center;height:60px;border-bottom:1px solid rgba(35,28,20,.3);padding:0 6px}
+.ch .n{font:700 var(--t1)/1 var(--cond);background:#2b231a;color:#c9bc9f;text-align:center;padding:4px 0;width:28px}
+.ch .tick{width:24px;height:24px;border:2px solid var(--ink);position:relative}
+.ch.on .tick:after{content:"";position:absolute;left:5px;top:-4px;width:9px;height:18px;border:solid var(--oxide);border-width:0 4px 4px 0;transform:rotate(40deg)}
+.ch.on{border:2px solid var(--ink);box-shadow:inset 4px 0 0 var(--amber);background:rgba(255,246,222,.14)}
+.ch .nm{display:block;font:700 var(--t2)/1 var(--type);color:var(--ink)}
+.ch .ef{display:block;margin-top:6px;font:700 var(--t1)/1 var(--type);color:var(--green)}
+.ch .ef.none{color:var(--ink)}
+.ch .c{font:700 var(--t1)/1 var(--type);text-align:right;white-space:nowrap;color:var(--ink)}
+.memo-f{position:absolute;left:30px;right:30px;bottom:22px;display:flex;align-items:center;justify-content:space-between}
+.memo-f .have{font:700 var(--t1)/1 var(--type);color:var(--ink)}
+.file{display:flex;align-items:center;gap:10px;height:44px;padding:0 10px 0 16px;background:#221b14;color:#cfc2a5;font:700 var(--t2)/1 var(--cond);letter-spacing:1.5px;box-shadow:0 0 0 2px var(--amber-line)}
+.file .key{color:#cfc2a5;background:transparent;border-color:rgba(207,194,165,.5)}
+.tape{left:1276px;top:232px;width:596px;height:578px;padding:18px 20px;
+  background-image:repeating-linear-gradient(180deg,transparent 0 31px,rgba(35,28,20,.08) 31px 32px)}
+.tape-h{display:flex;justify-content:space-between;font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-soft);border-bottom:1.5px solid var(--ink);padding-bottom:6px;margin-bottom:6px}
+.tl{display:grid;grid-template-columns:76px 1fr;font:400 var(--t1)/1 var(--type);color:var(--ink)}
+.tl b{color:var(--ink-soft);padding:4px 0}
+.tl span{line-height:22px;padding:3px 0}
+.tl.hot,.tl.hot b{color:var(--oxide);font-weight:700}
+
+/* ===== the month review (state 5): the printed ledger ===== */
+.rcpt{left:356px;top:236px;width:1204px;height:812px;padding:28px 44px 0;--fold:51%}
+.rcpt .tear{position:absolute;left:0;right:0;height:10px;background:radial-gradient(circle at 8px 0,var(--void) 5px,transparent 5.5px) 0 0/16px 10px repeat-x}
+.rcpt .tear.t{top:0}.rcpt .tear.b{bottom:0;transform:scaleY(-1)}
+.r-h{text-align:center;border-bottom:2px dashed rgba(35,28,20,.55);padding-bottom:14px}
+.r-h h1{font:700 var(--t4)/1.2 var(--type);color:var(--ink)}
+.r-h p{margin-top:6px;font:400 var(--t2)/1.4 var(--type)}
+.r-cols{display:grid;grid-template-columns:470px 1fr;gap:48px}
+.r-sec{margin-top:24px}
+.r-sec h5{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-soft);padding-bottom:6px;border-bottom:2px solid var(--ink);margin-bottom:4px}
+.mv{display:grid;grid-template-columns:90px 1fr 150px;font:400 var(--t2)/34px var(--type)}
+.mv .d{text-align:right;font-weight:700}
+.mv .bad{color:var(--oxide);font-weight:700}
+.r-line{display:flex;justify-content:space-between;font:400 var(--t2)/34px var(--type)}
+.r-line b{font-weight:700}
+.r-line .bad{color:var(--oxide)}
+.r-line.tot{border-top:1.5px solid var(--ink);margin-top:2px}
+.r-note{margin-top:6px;font:700 var(--t1)/1.4 var(--type);color:var(--ink-soft)}
+.hp{display:grid;grid-template-columns:76px 1fr;font:400 var(--t1)/22px var(--type);padding:3px 0;color:var(--ink)}
+.hp b{color:var(--ink-soft)}
+.hp em{font-style:normal;color:var(--ink-soft)}
+.hp .ok{color:var(--green);font-weight:700}
+.hp.memo-l{font-weight:700}
+.hp.memo-l .ev{color:var(--oxide)}
+
+/* the mock-up control (H): not part of the game screen */
+.mock-snd{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:50;font:600 16px/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;text-transform:uppercase;
+  color:#d6cebd;background:rgba(9,8,7,.86);border:1px dashed rgba(214,206,189,.55);padding:7px 14px;cursor:pointer}
+.mock-snd:hover,.mock-snd:focus-visible{border-style:solid;border-color:#d9a03a;color:#e8dcc2;outline:none}
+#check{position:fixed;left:0;top:0;z-index:99;background:#000;color:#0f0;font:12px monospace;white-space:pre;max-height:100vh;overflow:auto}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+"use strict";
+var Q = new URLSearchParams(location.search);
+var STATE = String(Q.get("state") || "3");
+var STILL = !!Q.get("still") || !!Q.get("check");
+var S = document.getElementById("stage");
+function fit(){
+  var s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  var x = (window.innerWidth - 1920*s)/2, y = (window.innerHeight - 1080*s)/2;
+  S.style.transform = "translate("+x+"px,"+y+"px) scale("+s+")";
+}
+fit(); window.addEventListener("resize", fit);
+
+/* ------------------------------------------------------------------
+   THE RUN (fork/design/hifi/run-state.md, revisions 2 and 3), as in hifi C.
+   ------------------------------------------------------------------ */
+var JUL = {month:"JULY", year:"2017", day:4, money:"$245,000", compute:"100", research:"0", papers:"0", rep:50, doom:20.0, trend:"", artBand:0};
+var NOV = {month:"NOVEMBER", year:"2017", day:1, money:"$140,000", compute:"65", research:"-12", papers:"0", rep:32, doom:40.2, trend:"rising", artBand:1};
+// WATCH, Tue 14 Nov: plays' fixed results applied at Commit; P(Doom) held at the month-start reading (fixture), no direction word
+var WATCH = Object.assign({}, NOV, {day:14, money:"$37,400", rep:34, research:"-6", trend:""});
+var DEC = {month:"DECEMBER", year:"2017", day:1, money:"$12,400", compute:"65", research:"-6", papers:"0", rep:34, doom:56.7, trend:"", artBand:2};
+var APR = {month:"APRIL", year:"2018", day:2, money:"$12,300", compute:"65", research:"4", papers:"0", rep:21, doom:81.4, trend:"", artBand:3};
+// State 3: the month's plan. [icon, play, where it lives, hours, pool, cost]
+var PLAN3 = [
+ ["hire_safety","Hire: Safety Researcher","Hire Staff",1,"plan","$60,000"],
+ ["read","Read the Literature","Scouting",1,"plan",""],
+ ["read","Read the Literature","Scouting",1,"plan",""],
+ ["post","Post Online","Scouting",1,"plan",""],
+ ["audit","Safety Audit","",2,"op","$40,000"],
+ ["connections","Work Your Connections","",2,"op","6 rep"],
+ ["meetups","Go to Meetups","Scouting",1,"op","$300"],
+ ["networking","Networking","Publicity",1,"op",""],
+ ["tour","Tour Offices","Office",1,"op",""],
+ ["meetups","Go to Meetups","Scouting",1,"op","$300"],
+ ["supplies","Order Office Supplies","Operations",1,"op","$2,000"]
+];
+
+/* ------------------------------------------------------------------
+   Pip's icons (copied from godot/assets/icons) + "new_" placeholders (need art)
+   ------------------------------------------------------------------ */
+var I = {
+ money:"resource_money_64.png", compute:"resource_compute_small_64.png", research:"resource_research_small_64.png", papers:"resource_papers_small_64.png",
+ rep:"resource_reputation_64.png", doom:"resource_doom_small_64.png", hours:"resource_action_points_64.png",
+ actions:"ui_guide_actions_64.png", schedule:"ui_config_date_64.png",
+ staff:"ui_staff_management_64.png", upgrades:"button_upgrade_normal_64.png", ledger:"ui_budget_finance_64.png", guide:"ui_control_help_64.png",
+ fundraising:"ui_guide_resources_64.png", financing:"action_funding_loan_64.png", buy_compute:"action_facility_upgrade_compute_64.png",
+ hire:"button_hire_normal_64.png", advertise:"new_advertise_notice.svg", connections:"action_publicity_network_64.png", onboard:"employee_status_training_64.png",
+ safety:"action_research_alignment_64.png", capability:"action_research_capability_control_64.png", publish:"action_research_formal_verification_64.png", audit:"employee_role_auditor_64.png",
+ scouting:"action_research_monitoring_64.png", travel:"new_travel_suitcase.svg", publicity:"new_publicity_megaphone.svg",
+ operations:"employee_role_engineer_64.png", office:"action_facility_expand_office_64.png", strategic:"ui_guide_strategy_64.png",
+ hire_safety:"employee_role_safety_specialist_64.png", read:"ui_guide_book_64.png", post:"new_post_online_bubble.svg",
+ meetups:"new_meetup_badge.svg", networking:"network_64.png", tour:"ui_infrastructure_facilities_64.png", supplies:"new_supplies_box.svg"
+};
+function ic(k, sz){ return '<span class="plate-ic pi-'+sz+'"><img class="ic ic-'+sz+'" src="assets/icons/'+I[k]+'" alt=""></span>'; }
+var CN = '<i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>';
+
+/* ------------------------------------------------------------------
+   The doom meter colours (G, as in H): ThemeManager DOOM_STOPS, get_doom_stroke_color,
+   DOOM_STATUS_BANDS (godot/autoload/theme_manager.gd). Text uses a lifted tint for 4.5:1.
+   ------------------------------------------------------------------ */
+var STOPS=[[0,[.30,.80,.35]],[15,[.30,.80,.35]],[30,[.88,.78,.18]],[45,[.92,.50,.13]],[60,[.82,.20,.17]],[74,[.48,.07,.14]],[87,[.40,.06,.48]],[100,[.28,.03,.46]]];
+function doomRGB(p){for(var i=0;i<STOPS.length-1;i++){var a=STOPS[i],b=STOPS[i+1];if(p<=b[0]){var t=(p-a[0])/((b[0]-a[0])||1);return [0,1,2].map(function(j){return a[1][j]+(b[1][j]-a[1][j])*t;});}}return STOPS[STOPS.length-1][1];}
+function doomStroke(p){var c=doomRGB(p),lum=.2126*c[0]+.7152*c[1]+.0722*c[2];if(lum<.22){var t=(.22-lum)/.22*.8,B=[.90,.40,.85];c=c.map(function(v,j){return v+(B[j]-v)*t;});}return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+var BANDS=[[15,'NOMINAL'],[37,'ELEVATED'],[52,'HIGH'],[67,'SEVERE'],[80,'EXTREME'],[92,'CATASTROPHIC'],[101,'TERMINAL']];
+function lin(v){return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);}
+function doomText(p){var m=doomStroke(p).match(/\d+/g).map(function(v){return v/255;});var t=0,c=m;
+  while(t<1){c=m.map(function(v){return v+(1-v)*t;});var L=.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);if((L+.05)/(.006+.05)>=5)break;t+=.05;}
+  return 'rgb('+c.map(function(v){return Math.round(v*255);}).join(',')+')';}
+function bandIndex(p){for(var i=0;i<BANDS.length;i++)if(p<BANDS[i][0])return i;return 6;}
+
+/* ------------------------------------------------------------------
+   The room and its doom layer (H): "doom is a layer, not a repaint".
+   Art band 0 (month 1) is the lightest; band 3 darkens it again; TERMINAL keeps headroom.
+   ------------------------------------------------------------------ */
+var DOOM_LAYER = {
+  0:{ filter:"brightness(.62) saturate(.55) contrast(1.06)", grade:"rgba(60,40,18,.16)",
+      glow:"radial-gradient(ellipse 240px 170px at 1392px 486px,rgba(217,160,58,.10),transparent 70%)", sky:"" },
+  1:{ filter:"brightness(.55) saturate(.45) contrast(1.08)", grade:"rgba(40,34,30,.24)",
+      glow:"radial-gradient(ellipse 280px 190px at 1392px 486px,rgba(213,138,82,.12),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(120,130,140,.10),rgba(90,100,110,.06))" },
+  2:{ filter:"brightness(.46) saturate(.35) contrast(1.1)", grade:"rgba(30,34,44,.34)",
+      glow:"radial-gradient(ellipse 290px 200px at 1392px 486px,rgba(170,60,48,.18),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(70,90,140,.24),rgba(40,50,90,.2))" },
+  3:{ filter:"brightness(.40) saturate(.3) contrast(1.14)", grade:"rgba(80,14,24,.45)",
+      glow:"radial-gradient(ellipse 330px 230px at 1392px 486px,rgba(110,52,130,.32),rgba(110,52,130,.08) 45%,transparent 72%)",
+      sky:"linear-gradient(180deg,rgba(110,52,130,.45),rgba(140,18,23,.35))" }
+};
+function room(d){
+  var L = DOOM_LAYER[d.artBand], h = '<div class="room-bg" style="filter:'+L.filter+'"></div>';
+  if (L.sky) h += '<div class="abs" style="left:968px;top:300px;width:520px;height:190px;pointer-events:none;background:'+L.sky+';mix-blend-mode:'+(d.artBand>=3?'color':'soft-light')+
+    ';-webkit-mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%)"></div>';
+  h += '<div class="room-grade" style="background:'+L.grade+';mix-blend-mode:multiply"></div>';
+  h += '<div class="room-glow" style="background:'+L.glow+';mix-blend-mode:screen"></div>';
+  h += '<div class="room-shade"></div><div class="desk"></div>';
+  if (d.artBand>=3){   // band 3: soot closes in from the edges, violet bleeds into the shadows (H's late layer)
+    h += '<div class="room-glow" style="background:radial-gradient(ellipse 1150px 720px at 50% 46%,transparent 35%,rgba(8,3,12,.62) 100%)"></div>';
+    h += '<div class="room-glow" style="background:linear-gradient(180deg,rgba(40,12,52,.22),rgba(10,4,14,0) 40%,rgba(10,4,14,.35));mix-blend-mode:multiply"></div>';
+  }
+  return h;
+}
+
+/* ------------------------------------------------------------------
+   The dateline (H): a spy-film title card, date only. Types in only on a month's
+   entry (states 1, 5, 6); inside a month (2, 3, 4) the date is already set.
+   ?still=1 and prefers-reduced-motion show it whole.
+   ------------------------------------------------------------------ */
+var DATELINE = null;
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var RIB_OP = [1,.86,.97,.9,1,.82,.95,1,.88], RIB_DY = [0,1,0,0,-1,0,1,0,0];
+function datelineTimes(text){ var t = [], at = 260; Array.prototype.forEach.call(text, function(ch,i){ if (i) at += 95 + (ch===" "?60:0); t.push(at); }); return t; }
+function datelineSet(dl){
+  dl.classList.remove("typing");
+  Array.prototype.forEach.call(dl.querySelectorAll("span"), function(s,i){ s.style.animationDelay=""; s.style.opacity = RIB_OP[i%RIB_OP.length]; s.style.transform = "translateY("+RIB_DY[i%RIB_DY.length]+"px)"; });
+}
+function datelineType(dl, times){
+  if (REDUCED){ datelineSet(dl); return; }
+  dl.classList.remove("typing"); void dl.offsetWidth;
+  Array.prototype.forEach.call(dl.querySelectorAll("span"), function(s,i){ s.style.opacity=""; s.style.transform=""; s.style.animationDelay = times[i]+"ms"; });
+  dl.querySelector(".caret").style.animationDelay = (times[times.length-1]+120)+"ms";
+  dl.classList.add("typing");
+}
+function dateline(d){
+  var text = d.month+" "+d.day+", "+d.year, h = '<div class="abs dl" id="dl">';
+  Array.prototype.forEach.call(text, function(ch,i){
+    h += '<span style="--o:'+RIB_OP[i%RIB_OP.length]+';--y:'+RIB_DY[i%RIB_DY.length]+'px">'+(ch===" "?"&nbsp;":ch)+'</span>';
+  });
+  DATELINE = {text:text};
+  return h + '<i class="caret"></i></div>';
+}
+function datelineStart(entry){
+  var dl = document.getElementById("dl"); DATELINE.el = dl;
+  if (STILL || !entry) datelineSet(dl); else datelineType(dl, datelineTimes(DATELINE.text));
+}
+
+/* SOUND_START */
+/* ==================================================================
+   TYPEWRITER SOUND BLOCK -- self-contained; copy it whole to reuse
+   (no dependency on the rest of this page).
+   The spy-film title-card strike, synthesised with the Web Audio API
+   (no samples). Public:
+     playDateline(text, {onChar, onDone}) -> char times in ms from now,
+       or null without Web Audio. Call it from a click (browsers block
+       sound before one). onChar(i, ch) fires as character i strikes
+       (spaces included, silent); onDone() after the carriage return.
+       Use the returned times as CSS animation delays, or onChar, or both.
+     TypeSound.play(text) -> the same times, sound only
+     TypeSound.render(text, sampleRate, seed) -> Promise<AudioBuffer>
+       (OfflineAudioContext; seeded, so a render repeats exactly)
+     TypeSound.toWav(audioBuffer) -> Uint8Array, 16-bit PCM mono
+   ================================================================== */
+var TypeSound = (function(){
+  function rng(seed){ var x = (seed>>>0) || 0x2f6b1d; return function(){ x ^= x<<13; x >>>= 0; x ^= x>>>17; x ^= x<<5; x >>>= 0; return x/4294967296; }; }
+  function noiseBuf(ctx, sec, r){ var n = Math.ceil(ctx.sampleRate*sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++) d[i] = r()*2-1; return b; }
+  // a small hard room: 0.5 s of noise falling off as (1-t)^4
+  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
+  function env(ctx, g, t, a, peak, decay){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t+a); g.gain.exponentialRampToValueAtTime(0.0001, t+a+decay); }
+  function noise(ctx, bus, buf, r, t, type, freq, q, a, peak, decay){
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
+    src.connect(f); f.connect(g); g.connect(bus);
+    src.start(t, r()*(buf.duration-.3)); src.stop(t+a+decay+.02);
+  }
+  function tone(ctx, bus, t, f0, f1, glide, a, peak, decay, wave){
+    var o = ctx.createOscillator(); o.type = wave || "sine";
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t+glide);
+    var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+a+decay+.02);
+  }
+  // one key: type-bar slap + click + platen thump + key rattle; v = how hard, p = pitch spread
+  function strike(ctx, bus, buf, r, t){
+    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12;
+    noise(ctx, bus, buf, r, t, "bandpass", 2600*p, 1.2, .001, .9*v, .045);    // the slap of the type bar on the platen
+    noise(ctx, bus, buf, r, t, "highpass", 5200*p, .7, .0005, .45*v, .006);   // the click on contact
+    tone(ctx, bus, t, 170*p, 62*p, .05, .002, .85*v, .09);                     // the thump through the desk
+    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .16*v, .11);   // the key's own rattle
+  }
+  // the carriage return: a short slide, then a low stop
+  function thunk(ctx, bus, buf, r, t){
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 2;
+    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(1300, t+.22);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.12, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
+    src.connect(f); f.connect(g); g.connect(bus); src.start(t, r()); src.stop(t+.26);
+    tone(ctx, bus, t+.24, 95, 42, .12, .003, 1.0, .32);
+    noise(ctx, bus, buf, r, t+.24, "bandpass", 300, 1, .002, .4, .08);
+  }
+  // timing: 95 ms a key, +-22 ms, spaces silent and 60 ms longer, a beat after punctuation
+  function schedule(ctx, out, text, r, start, withThunk){
+    var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .002; comp.release.value = .12;
+    var master = ctx.createGain(); master.gain.value = .8;
+    var bus = ctx.createGain(); bus.gain.value = 1;
+    var verb = ctx.createConvolver(); verb.buffer = room(ctx, r);
+    var wet = ctx.createGain(); wet.gain.value = .18;
+    bus.connect(comp); bus.connect(verb); verb.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
+    var buf = noiseBuf(ctx, 1.5, r), times = [], at = 0, prev = "";
+    Array.prototype.forEach.call(text, function(ch, i){
+      if (i) at += .095 + (r()-.5)*.044 + (ch===" " ? .06 : 0) + (prev==="," ? .04 : 0);
+      times.push(Math.round((start+at)*1000));
+      if (ch !== " ") strike(ctx, bus, buf, r, start+at);
+      prev = ch;
+    });
+    var end = start + at;
+    if (withThunk !== false){ thunk(ctx, bus, buf, r, end+.32); end += .32 + .24 + .35; }
+    return {times:times, end:end + .5};
+  }
+  var live = null;
+  function play(text){
+    var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    live = live || new C(); if (live.state === "suspended") live.resume();
+    var lead = .06, sch = schedule(live, live.destination, text, Math.random, live.currentTime + lead, true);
+    var base = Math.round((live.currentTime + lead)*1000);
+    return sch.times.map(function(ms){ return ms - base + lead*1000; });
+  }
+  function render(text, sampleRate, seed){
+    sampleRate = sampleRate || 22050;
+    var r = rng(seed || 1917), probe = new OfflineAudioContext(1, 1, sampleRate);
+    var dur = schedule(probe, probe.destination, text, rng(seed || 1917), .05, true).end;
+    var ctx = new OfflineAudioContext(1, Math.ceil(dur*sampleRate), sampleRate);
+    schedule(ctx, ctx.destination, text, r, .05, true);
+    return ctx.startRendering();
+  }
+  function toWav(ab){
+    var d = ab.getChannelData(0), n = d.length, peak = 0, i;
+    for (i=0;i<n;i++) peak = Math.max(peak, Math.abs(d[i]));
+    var k = peak > .891 ? .891/peak : 1;                 // never above -1 dBFS
+    var out = new Uint8Array(44 + n*2), v = new DataView(out.buffer);
+    function str(o, x){ for (var j=0;j<x.length;j++) out[o+j] = x.charCodeAt(j); }
+    str(0,"RIFF"); v.setUint32(4, 36+n*2, true); str(8,"WAVE"); str(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+    v.setUint32(24, ab.sampleRate, true); v.setUint32(28, ab.sampleRate*2, true); v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,"data"); v.setUint32(40, n*2, true);
+    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i]*k)); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
+    return out;
+  }
+  return {play:play, render:render, toWav:toWav};
+})();
+function playDateline(text, opts){
+  opts = opts || {};
+  var times = TypeSound.play(text);
+  if (!times) return null;
+  if (opts.onChar) Array.prototype.forEach.call(text, function(ch, i){ setTimeout(function(){ opts.onChar(i, ch); }, times[i]); });
+  if (opts.onDone) setTimeout(opts.onDone, times[times.length-1] + 900);
+  return times;
+}
+/* ================== END TYPEWRITER SOUND BLOCK ================== */
+/* SOUND_END */
+
+/* the mock-up control (H): replays the dateline type-on with sound (a click, so the browser allows audio) */
+function soundControl(){
+  if (STILL) return;
+  var b = document.createElement("button"); b.className = "mock-snd"; b.type = "button"; b.textContent = "Mock-up: type the date with sound";
+  b.addEventListener("click", function(){ if (!DATELINE) return; var times = playDateline(DATELINE.text); if (times) datelineType(DATELINE.el, times); });
+  document.body.appendChild(b);
+}
+
+/* ------------------------------------------------------------------
+   Top row: the accounts, P(Doom) and reputation
+   ------------------------------------------------------------------ */
+function accounts(d){
+  function cell(k,l,v,bad){ return '<div class="cell'+(bad?' neg':'')+'">'+ic(k,"r")+'<div><div class="k">'+l+'</div><div class="v">'+v+'</div></div></div>'; }
+  return '<div class="abs pnl acc">'+CN+cell("money","MONEY",d.money)+cell("compute","COMPUTE",d.compute)+cell("research","RESEARCH",d.research,d.research.charAt(0)==="-")+cell("papers","PAPERS",d.papers)+'</div>';
+}
+function doomMeter(d){
+  var cx=92, cy=92, R=76, sw=12, start=-225, sweep=270;
+  function pt(v,r){ var a=(start + sweep*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); var large=(sweep*(v1-v0)/100)>180?1:0; return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 "+large+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var ring = doomStroke(d.doom), col = doomText(d.doom), bi = bandIndex(d.doom);
+  var s = '<svg width="184" height="156" viewBox="0 0 184 156" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,d.doom,R)+'" stroke="'+ring+'" stroke-width="'+sw+'" fill="none"/>';
+  BANDS.forEach(function(b){ var v=Math.min(b[0],100); if (v<100){ var a=pt(v,R+9), z=pt(v,R+14); s += '<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+z[0].toFixed(1)+'" y2="'+z[1].toFixed(1)+'" stroke="rgba(214,206,189,.32)" stroke-width="1.5"/>'; } });
+  s += '</svg>';
+  var lad = '', l0 = 0;
+  BANDS.forEach(function(b,i){ var hi=Math.min(b[0],100), mid=(l0+hi)/2; lad += '<i class="'+(i===bi?'on':'')+'" style="flex:'+(hi-l0)+';background:'+doomStroke(mid)+'"></i>'; l0=hi; });
+  return '<div class="abs pnl doomw">'+CN+'<div class="ph">'+ic("doom","s")+'<span>P(DOOM)</span></div>'+s+
+    '<div class="d-pct" style="color:'+col+'">'+d.doom.toFixed(1)+'%</div>'+
+    '<div class="d-r"><div class="d-band" style="color:'+col+'">'+BANDS[bi][1]+'</div>'+
+    (d.trend?'<div class="d-trend" style="color:'+col+';border-color:'+col+'">'+d.trend.toUpperCase()+'</div>':'')+
+    '<div class="ladder">'+lad+'</div>'+
+    // the game's own warning at band 5+ (main_ui.gd: "Very close to game over!")
+    (bi>=5?'<div class="d-warn" style="color:'+col+'">Very close to game over</div>':'<div class="d-lab">band '+(bi+1)+' of 7</div>')+'</div></div>';
+}
+function repMeter(d){
+  var cx=80, cy=82, R=64, sw=14;
+  function pt(v,r){ var a=(180 + 180*v/100)*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; }
+  function arc(v0,v1,r){ var p0=pt(v0,r), p1=pt(v1,r); return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); }
+  var s = '<svg width="160" height="90" viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path d="'+arc(0,100,R)+'" stroke="rgba(214,206,189,.08)" stroke-width="'+sw+'" fill="none"/>';
+  s += '<path d="'+arc(0,Math.max(0.5,d.rep),R)+'" stroke="#a99d88" stroke-width="'+sw+'" fill="none"/>';
+  var a=pt(0,R-sw/2-2), z=pt(0,R+sw/2+6); s += '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+z[0]+'" y2="'+z[1]+'" stroke="'+(d.rep<=10?"#d24a3a":"#9b3328")+'" stroke-width="4"/>';
+  s += '</svg>';
+  return '<div class="abs pnl repw">'+CN+'<div class="ph">'+ic("rep","s")+'<span>REPUTATION</span></div>'+s+
+    '<div class="r-num">'+d.rep+'</div><div class="r-scale"><span>0</span><span>100</span></div><div class="rp-note"><b>0</b> ends the run</div></div>';
+}
+function wall(d){ return accounts(d)+doomMeter(d)+repMeter(d); }
+
+/* ------------------------------------------------------------------
+   The desk. o: {mode:'plan'|'watch'|'review', menu, cards, planLeft, opLeft, foot, staff, held, glow, day}
+   Background keys show only when no layer owns the keys (council rule 2).
+   ------------------------------------------------------------------ */
+var CAT_GLOW = ["radial-gradient(circle,rgba(217,160,58,.10),transparent 70%)","radial-gradient(circle,rgba(213,138,82,.12),transparent 70%)",
+  "radial-gradient(circle,rgba(170,60,48,.18),transparent 70%)","radial-gradient(circle,rgba(110,52,130,.5),rgba(110,52,130,.14) 45%,transparent 70%)"];
+function desk(d,o){
+  var locked = o.mode!=="plan", keys = !(o.menu||locked), h = '';
+  // the card box
+  h += '<div class="abs box'+(o.glow?' glow':'')+(locked?' locked':'')+'"><span class="cards"><i></i><i></i><i></i></span>'+
+       '<div class="abs pnl front">'+CN+'<div class="ttl">'+ic("actions","m")+'<span>ACTION CARDS</span></div>'+
+       '<div class="row">'+(locked?'Closed this month':o.cards+' on file')+'</div>'+
+       '<div class="sub">'+(locked?'Opens again at the next plan':'Cards and folders')+'</div>'+(keys?'<span class="key kbr">A</span>':'')+'</div></div>';
+  // the schedule clipboard
+  var body;
+  if (o.mode==="watch"){
+    var days=''; for (var i=1;i<=22;i++) days += '<i class="day'+(i<o.day?' done':i===o.day?' now':'')+'"></i>';
+    body = '<div class="hrow"><div class="l"><span class="lb">COMMITTED WED 1 NOV</span><em>11 plays</em></div></div>'+
+           '<div class="hrow"><div class="l"><span class="lb">WORKDAY</span><em>'+o.day+' of 22</em></div><div class="days">'+days+'</div></div>';
+  } else if (o.mode==="review"){
+    body = '<div class="hrow"><div class="l"><span class="lb">NOVEMBER CLOSED</span><em>11 plays</em></div></div><div class="foot">December form blank</div>';
+  } else {
+    var pb='', ob='';
+    for (var j=0;j<12;j++) pb += '<i class="sbx'+(j<o.planLeft?' pl':'')+'"></i>';
+    for (j=0;j<8;j++) ob += '<i class="sbx'+(j<o.opLeft?' op':'')+'"></i>';
+    body = '<div class="hrow"><div class="l"><span class="lb p">PLANNING</span><em>'+o.planLeft+' of 12 left</em></div><div class="sboxes">'+pb+'</div></div>'+
+           '<div class="hrow"><div class="l"><span class="lb o">OPERATING</span><em>'+o.opLeft+' of 8 left</em></div><div class="sboxes">'+ob+'</div></div>'+
+           (o.foot?'<div class="foot">'+o.foot+'</div>':'');
+  }
+  h += '<div class="abs clipb"><div class="abs paper sh"><div class="hd">'+ic("schedule","s")+'<b>SCHEDULE</b></div>'+body+(keys?'<span class="key kbr">P</span>':'')+'</div><i class="clp"></i></div>';
+  // the office cat's photo; its glow (and at band 3 its smoke) is part of the doom layer
+  if (d.artBand>=3) h += '<div class="room-glow" style="background:radial-gradient(ellipse 40px 150px at 900px 790px,rgba(130,100,128,.18),transparent 70%),radial-gradient(ellipse 30px 120px at 990px 750px,rgba(130,100,128,.12),transparent 70%),radial-gradient(ellipse 50px 110px at 950px 690px,rgba(130,100,128,.08),transparent 70%);filter:blur(8px)"></div>';
+  h += '<div class="cat-glow" style="left:806px;top:822px;width:280px;height:280px;background:'+CAT_GLOW[d.artBand]+';mix-blend-mode:screen"></div>';
+  h += '<div class="abs catf"'+(d.artBand>=3?' style="box-shadow:0 10px 18px rgba(0,0,0,.65),0 0 0 1px rgba(110,52,130,.6),0 0 26px rgba(110,52,130,.45)"':'')+'><img src="assets/office_cat_doom-cat.webp" alt=""><div class="nm">Doom Cat</div></div>';
+  // the shortcut objects
+  [["STAFF FILE","S",o.staff,"staff"],["UPGRADES","U","7 on offer","upgrades"],["LEDGER","L","Clean","ledger"],["GUIDE","G","Player Guide","guide"]].forEach(function(x,i){
+    h += '<div class="abs sc" style="left:'+(1180+(i%2)*200)+'px;top:'+(856+Math.floor(i/2)*102)+'px"><div class="t">'+ic(x[3],"m")+'<span>'+x[0]+'</span></div>'+
+         '<div class="r"><span>'+x[2]+'</span>'+(keys?'<span class="key">'+x[1]+'</span>':'')+'</div></div>';
+  });
+  // held for events, above a quiet Commit (Commit never moves)
+  if (o.mode==="watch"){
+    h += '<div class="abs pnl held w">'+CN+'<div class="paused"><i></i>PAUSED FOR YOUR ANSWER</div>'+
+         '<div class="speed"><span>1x</span><span class="on">2x</span><span>4x</span></div>'+
+         '<div class="row"><span class="lbl">HELD FOR EVENTS</span><span class="val">'+o.held+' hr</span></div></div>'+
+         '<div class="abs cmt off"><span>MONTH IN PLAY</span></div>';
+  } else {
+    h += '<div class="abs pnl held">'+CN+'<div class="row"><span class="lbl">HELD FOR EVENTS</span><span class="val">'+o.held+' hr</span></div>'+
+         '<div class="sub">untyped; what events do not use is gone at month end</div></div>';
+    if (o.mode==="review") h += '<div class="abs cmt go"><span>BEGIN PLANNING<br>DECEMBER 2017</span><span class="key">Enter</span></div>';
+    else h += '<div class="abs cmt"><span>COMMIT THE MONTH</span>'+(o.menu?'':'<span class="key">Enter</span>')+'</div>';
+  }
+  return h;
+}
+var GRAIN = '<div class="grain"></div>';
+
+/* ---------- STATE 1: month 1, the first screen after the cold open ---------- */
+function state1(){
+  // the cold open's hand-off line (cold_open_sequence.gd HANDOFF_HINT_TEXT); Scouting lives in the card box, so the card box glows
+  var note = '<div class="abs paper adv"><div class="k">ADVISOR</div>'+
+    '<p>You do not know anything yet.<br>Go and find out -- scouting<br>(the glowing button).</p>'+
+    '<div class="ft"><span>Got it</span></div></div>'+
+    '<svg class="adv-ptr" style="left:150px;top:690px" width="80" height="150" viewBox="0 0 80 150">'+
+      '<path d="M40 2 V136" fill="none" stroke="#d9a03a" stroke-width="2"/><path d="M32 128 L40 142 L48 128 Z" fill="#d9a03a"/></svg>';
+  return room(JUL)+wall(JUL)+desk(JUL,{mode:"plan",cards:15,planLeft:12,opLeft:8,foot:"Form blank",staff:"No staff hired",held:20,glow:1})+GRAIN+dateline(JUL)+note;
+}
+
+/* ---------- STATE 2: choosing an action (the card drawer) ---------- */
+var CARDS2 = [
+ ["Funds",[
+   {k:"fundraising",n:"Fundraising",c:"4 choices &gt;",f:1},
+   {k:"financing",n:"Financing",c:"7 choices &gt;",f:1},
+   {k:"buy_compute",n:"Purchase Compute",c:"$50,000, no hours"}]],
+ ["People",[
+   {k:"hire",n:"Hire Staff",c:'7 roles, 1 <span class="p">plan hr</span> each &gt;',f:1,onf:1},
+   {k:"advertise",n:"Advertise a Role",c:"",st:["Soon"],grey:1,off:1},
+   {k:"connections",n:"Work Your Connections",c:'2 <span class="o">op hr</span>, 6 rep'},
+   {k:"onboard",n:"Onboard New Hires",c:'<span class="o">op hr</span> + money per step',st:["Nobody hired yet"],grey:1,off:1}]],
+ ["Research",[
+   {k:"safety",n:"Safety Research",c:'1 <span class="p">plan hr</span>, 10 research',st:["Short 22 research"],off:1},
+   {k:"capability",n:"Capability Research",c:'1 <span class="p">plan hr</span>, 10 research',st:["Short 22 research"],off:1},
+   {k:"publish",n:"Publish Safety Paper",c:'1 <span class="p">plan hr</span>, 20 research',st:["Short 32 research"],off:1},
+   {k:"audit",n:"Safety Audit",c:'2 <span class="o">op hr</span>, $40,000',d:"Comprehensive safety review",focus:1}]],
+ ["Outreach",[
+   {k:"scouting",n:"Scouting",c:"3 choices &gt;",f:1,onf:2},
+   {k:"travel",n:"Travel &amp; Conferences",c:"4 choices &gt;",f:1,st:["Submit Paper: short 27 research"]},
+   {k:"publicity",n:"Publicity",c:"5 choices &gt;",f:1}]],
+ ["The lab",[
+   {k:"operations",n:"Operations",c:"3 choices &gt;",f:1},
+   {k:"office",n:"Office",c:"4 choices &gt;",f:1},
+   {k:"strategic",n:"Strategic",c:"4 choices &gt;",f:1}]]
+];
+function card(c){
+  return '<div class="ac-slot'+(c.focus?' focus':'')+'"><div class="card'+(c.f?' folder':'')+(c.off?' off':'')+'"><span class="ac-top">'+ic(c.k,"m")+'<span class="ac-name">'+c.n+'</span></span>'+
+    (c.c?'<span class="ac-cost">'+c.c+'</span>':'')+(c.d?'<span class="ac-desc">'+c.d+'</span>':'')+
+    '<span class="ac-st">'+(c.st||[]).map(function(s){ return '<span class="rstamp'+(c.grey?' grey':'')+'">'+s+'</span>'; }).join('')+
+    (c.focus?'<span class="addk">Add to form <span class="key">Enter</span></span>':'')+'</span></div>'+
+    (c.onf?'<span class="onf">on form: '+c.onf+'</span>':'')+'</div>';
+}
+function pips(free,total,o){ var s=''; for (var i=0;i<total;i++) s += '<i class="pip'+(o?' o':'')+(i>=free?' used':'')+'"></i>'; return s; }
+function state2(){
+  var h = '<div class="abs pnl mn">'+CN+'<div class="mn-hd"><span class="mn-t">'+ic("actions","m")+'ACTION CARDS</span>'+
+    '<span class="chip p"><em>PLANNING</em><span class="pips">'+pips(9,12)+'</span><b>9 of 12 left</b></span>'+
+    '<span class="chip o"><em>OPERATING</em><span class="pips">'+pips(8,8,1)+'</span><b>8 of 8 left</b></span>'+
+    '<span class="chip">MONEY <b>$140,000</b></span><span class="chip neg">RESEARCH <b>-12</b></span>'+
+    '<span class="esc">CLOSE <span class="key">Esc</span></span></div><div class="ac-rows">';
+  CARDS2.forEach(function(r){
+    h += '<div class="ac-row"><div class="ac-div"><span>'+r[0].toUpperCase()+'</span></div><div class="ac-slots">'+r[1].map(card).join('');
+    for (var i=r[1].length;i<4;i++) h += '<div></div>';
+    h += '</div></div>';
+  });
+  h += '</div></div>';
+  return room(NOV)+'<div class="dim"></div>'+wall(NOV)+desk(NOV,{mode:"plan",menu:1,cards:17,planLeft:9,opLeft:8,foot:"",staff:"No staff hired",held:17})+GRAIN+dateline(NOV)+h;
+}
+
+/* ---------- STATE 3: the month's plan (the schedule form) ---------- */
+function schedule(st,rows,o){
+  var planCap=12, opCap=8, planWork=0, opWork=0;
+  rows.forEach(function(r){ if (r[4]==="plan") planWork+=r[3]; else opWork+=r[3]; });
+  var spill = Math.max(0,opWork-opCap);                 // ADR-0011 2026-07-28: operating work may draw on planning hours
+  var planLeft = planCap-planWork-spill, opLeft = Math.max(0,opCap-opWork);
+  var held = planLeft+opLeft+o.reserve;                 // unspent remainder + explicit reserve (none here)
+  var acc=0, spillRow=-1;                               // the play whose hours ran past the 8th operating hour, in queue order
+  rows.forEach(function(r,i){ if (r[4]==="op"){ acc+=r[3]; if (acc>opCap && spillRow<0) spillRow=i; } });
+  var h = '<div class="abs pnl board">'+CN+'<div class="abs paper sheet">'+
+    '<div class="fm-top"><div class="fm-title">'+ic("schedule","m")+'SCHEDULE OF THE MONTH</div>'+
+    '<div class="fm-for"><span class="lb">FOR THE MONTH OF</span><b>'+st.month+' '+st.year+'</b></div>'+
+    '<span class="btn-x">CLOSE <span class="key">Esc</span></span></div><div class="fm-body"><div>';
+  h += '<div class="tbl-h"><span class="c-n" style="font:inherit">NO.</span><span style="padding-left:8px">ORDER</span><span style="padding-left:10px">PLAY</span><span style="padding-left:8px">HOURS</span><span style="text-align:right;padding-right:12px">COST</span><span></span></div>';
+  rows.forEach(function(r,i){
+    var hrs = '<span>'+r[3]+' <span class="'+(r[4]==="op"?"o":"p")+'">'+(r[4]==="op"?"op":"plan")+' hr</span></span>';
+    if (i===spillRow) hrs += '<span class="tag">from planning</span>';
+    h += '<div class="tbl-r'+(i===spillRow?' spill':'')+'"><span class="c-n">'+(i+1)+'</span>'+
+       '<span class="c-mv"><span class="g'+(i===0?' na':'')+'">^</span><span class="g'+(i===rows.length-1?' na':'')+'">v</span></span>'+
+       '<span class="c-it">'+ic(r[0],"s")+'<span class="nm">'+r[1]+(r[2]?'<span class="src">'+r[2]+'</span>':'')+'</span></span>'+
+       '<span class="c-h">'+hrs+'</span><span class="c-c">'+r[5]+'</span><span class="c-x"><span class="g">x</span></span></div>';
+  });
+  h += '<div class="tot"><span class="k">TOTALS</span><span><span class="k">HOURS</span>'+planWork+' <span class="p">plan hr</span> + '+opWork+' <span class="o">op hr</span></span><span class="cst"><span class="k">COST</span>'+o.cost+'</span></div>'+
+     '<div class="tools"><span class="b">Undo <span class="key">Z</span></span><span class="b">Clear form <span class="key">C</span></span></div>'+
+     '<div class="fine">Operating work may spill into planning hours. Planning work may never use operating hours.</div>';
+  h += '</div><div class="side">';
+  function boxes(cap,left,cls,sp){ var b=''; for (var i=0;i<cap;i++){ var c = i<left ? cls : (i>=cap-sp ? 'sp' : ''); b += '<i class="bx '+c+'"></i>'; } return b; }
+  var bw=40, planY=24+6, opY=planY+28+18+24+6, opEnd=opCap*bw-6, spX=(planCap-1)*bw+17;
+  var arrow = spill ? '<svg width="480" height="140">'+
+     '<path d="M'+(opEnd+8)+' '+(opY+14)+' H'+(spX-14)+' Q'+spX+' '+(opY+14)+' '+spX+' '+(opY)+' V'+(planY+38)+'" fill="none" stroke="#0c3833" stroke-width="2" stroke-dasharray="6 4"/>'+
+     '<path d="M'+(spX-7)+' '+(planY+42)+' L'+spX+' '+(planY+31)+' L'+(spX+7)+' '+(planY+42)+'" fill="none" stroke="#0c3833" stroke-width="2" stroke-linejoin="round"/></svg>' : '';
+  h += '<section><div class="sec">'+ic("hours","s")+'FOUNDER\'S HOURS</div><div class="hrs-wrap">'+
+       '<div class="hr-l"><span class="lb p">PLANNING</span><em class="'+(planLeft===0?'zero':'')+'">'+planLeft+' of '+planCap+' left</em></div>'+
+       '<div class="boxes">'+boxes(planCap,planLeft,'pl',spill)+'</div>'+
+       '<div class="hr-l" style="margin-top:18px"><span class="lb o">OPERATING</span><em class="'+(opLeft===0?'zero':'')+'">'+opLeft+' of '+opCap+' left</em>'+(spill?'<span class="pen">'+spill+' hr spills up</span>':'')+'</div>'+
+       '<div class="boxes">'+boxes(opCap,opLeft,'op',0)+'</div>'+arrow+'</div>'+
+     '<div class="led">'+
+       '<div class="ln"><span class="k">Planning work</span><span class="dots"></span><span class="v">'+planWork+' hr</span></div>'+
+       '<div class="ln"><span class="k">Operating work</span><span class="dots"></span><span class="v">'+opWork+' hr</span></div>'+
+       (spill?'<div class="ln sub"><span class="k">of which from planning hours</span><span class="dots"></span><span class="v">'+spill+' hr</span></div>':'')+
+       '<div class="ln"><span class="k">Set aside for events</span><span class="dots"></span><span class="stp"><span class="val">'+o.reserve+'</span><i></i><i class="plus"></i></span></div>'+
+       '<div class="ln big"><span class="k">Held for events at Commit</span><span class="dots"></span><span class="v">'+held+' hr</span></div>'+
+       '<div class="cap">Hours not spent at Commit wait for this month\'s events, then lapse at month end.</div></div></section>';
+  h += '<section><div class="sec">'+ic("money","s")+'AFTER COSTS</div>'+
+     '<div class="ln"><span class="k">Money</span><span class="dots"></span><span class="v">'+st.money+' -&gt; '+o.moneyAfter+'</span></div>'+
+     '<div class="ln"><span class="k">Reputation</span><span class="dots"></span><span class="v">'+st.rep+' -&gt; '+o.repAfter+'</span></div></section>';
+  h += '<section><div class="sec">'+ic("research","s")+'RESEARCH QUALITY</div>'+
+     '<div class="rq"><span>Rushed</span><span class="on">Standard</span><span>Thorough</span></div>'+
+     '<div class="cap">Standard: baseline speed. No side effects.</div></section>';
+  h += '</div></div></div><i class="clp"></i></div>';
+  return {html:h, held:held};
+}
+function state3(){
+  var f = schedule(NOV,PLAN3,{reserve:0,cost:"$102,600 + 6 rep",moneyAfter:"$37,400",repAfter:26});
+  return room(NOV)+'<div class="dim"></div>'+wall(NOV)+desk(NOV,{mode:"plan",menu:1,cards:17,planLeft:7,opLeft:0,foot:"",staff:"No staff hired",held:f.held})+GRAIN+dateline(NOV)+f.html;
+}
+
+/* ---------- STATE 4: WATCH, an event that asks for a choice ---------- */
+function state4(){
+  var memo = '<div class="abs paper memo"><i class="pclip"></i>'+
+    '<div class="memo-h"><span class="lb">MEMO</span><span class="needs">NEEDS YOUR ANSWER</span></div>'+
+    '<div class="memo-t">Talent Opportunity</div><div class="memo-d">A brilliant researcher wants to join your lab at reduced cost!</div>'+
+    '<div class="ask"><span>TICK ONE</span><span>COST</span></div>'+
+    '<div class="ch on"><span class="n">1</span><span class="tick"></span><span><span class="nm">Fast-Track Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000 + 1 held hr</span></div>'+
+    '<div class="ch"><span class="n">2</span><span class="tick"></span><span><span class="nm">Standard Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000 + 1 held hr</span></div>'+
+    '<div class="ch"><span class="n">3</span><span class="tick"></span><span><span class="nm">Decline Offer</span><span class="ef none">no change</span></span><span class="c">free</span></div>'+
+    '<div class="memo-f"><span class="have">In hand: $37,400, 7 held hr</span><span class="file">File answer <span class="key">Enter</span></span></div></div>';
+  var feed = [
+    ["01 Nov","Month committed: 11 plays"],
+    ["01 Nov","Safety Researcher hired"],
+    ["01 Nov","Read for a day (+3.0 research). Nobody noticed. (x2)"],
+    ["01 Nov","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+    ["01 Nov","Safety audit (+scrutiny, +3 reputation)"],
+    ["01 Nov","Reached out through your network -- a pre-vetted lead may surface shortly."],
+    ["01 Nov","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+    ["01 Nov","Networking (+3 reputation)"],
+    ["01 Nov","Tour Offices: Three landlords will quote you terms"],
+    ["01 Nov","Worked the room (+1.5 reputation). No leads you have room for."],
+    ["01 Nov","Office supplies restocked (+50 stationery, now at 100)"],
+    ["14 Nov","MEMO: Talent Opportunity",1]];
+  var tape = '<div class="abs paper roll tape"><div class="tape-h"><span>TELEPRINTER</span><span>NOVEMBER 2017</span></div>'+
+    feed.map(function(l){ return '<div class="tl'+(l[2]?' hot':'')+'"><b>'+l[0]+'</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>';
+  return room(WATCH)+'<div class="dim light"></div>'+wall(WATCH)+desk(WATCH,{mode:"watch",staff:"1 on payroll",held:7,day:10})+GRAIN+dateline(WATCH)+memo+tape;
+}
+
+/* ---------- STATE 5: end of month, the month review ---------- */
+function state5(){
+  var done = [
+    ["01 Nov","Hire: Safety Researcher",'<span class="ok">hired</span>'],
+    ["01 Nov","Read the Literature x2","Read for a day (+3.0 research). Nobody noticed."],
+    ["01 Nov","Post Online","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+    ["01 Nov","Safety Audit","Safety audit (+scrutiny, +3 reputation)"],
+    ["01 Nov","Work Your Connections","Reached out through your network -- a pre-vetted lead may surface shortly."],
+    ["01 Nov","Go to Meetups","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+    ["01 Nov","Networking","Networking (+3 reputation)"],
+    ["01 Nov","Tour Offices","Three landlords will quote you terms"],
+    ["01 Nov","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
+    ["01 Nov","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"]];
+  var r = '<div class="abs paper rcpt"><i class="tear t"></i><i class="tear b"></i>'+
+   '<div class="r-h"><h1>Month Review -- December 2017</h1><p>December 2017 begins.</p></div>'+
+   '<div class="r-cols"><div>'+
+     '<div class="r-sec"><h5>LAST MONTH\'S MOVEMENT</h5>'+
+       '<div class="mv"><span>Funds</span><span>$140,000 -&gt; $12,400</span><span class="d bad">-$127,600</span></div>'+
+       '<div class="mv"><span>Staff</span><span>0 -&gt; 2</span><span class="d">+2</span></div>'+
+       '<div class="mv"><span>Doom</span><span>HIGH -&gt; SEVERE</span><span class="d bad">crossed up</span></div></div>'+
+     '<div class="r-sec"><h5>MONEY</h5>'+
+       '<div class="r-line"><span>Opened</span><b>$140,000</b></div>'+
+       '<div class="r-line"><span>Plays on the form</span><b class="bad">-$102,600</b></div>'+
+       '<div class="r-line"><span>Fast-Track Hiring</span><b class="bad">-$25,000</b></div>'+
+       '<div class="r-line tot"><span>Closed</span><b>$12,400</b></div></div>'+
+     '<div class="r-sec"><h5>FOUNDER\'S HOURS</h5>'+
+       '<div class="r-line"><span>Held for events</span><b>7 hr</b></div>'+
+       '<div class="r-line"><span>Used on Talent Opportunity</span><b>1 hr</b></div>'+
+       '<div class="r-line"><span>Lapsed at month end</span><b>6 hr</b></div>'+
+       '<div class="r-note">Attention: 20 fresh decisions this month (last month\'s unspent reserve evaporated -- no banking).</div></div>'+
+   '</div><div>'+
+     '<div class="r-sec"><h5>WHAT HAPPENED IN NOVEMBER</h5>'+
+     done.map(function(l){ return '<div class="hp"><b>'+l[0]+'</b><span>'+l[1]+' <em>-- '+l[2]+'</em></span></div>'; }).join('')+
+     '<div class="hp memo-l"><b>14 Nov</b><span class="ok"><span class="ev">MEMO Talent Opportunity</span> -- Fast-tracked hiring process! (+1 safety researcher)</span></div></div>'+
+   '</div></div></div>';
+  return room(DEC)+'<div class="dim"></div>'+wall(DEC)+desk(DEC,{mode:"review",staff:"2 on payroll",held:20})+GRAIN+dateline(DEC)+r;
+}
+
+/* ---------- STATE 6: late game, CATASTROPHIC (art band 3) ---------- */
+function state6(){
+  return room(APR)+wall(APR)+desk(APR,{mode:"plan",cards:17,planLeft:12,opLeft:8,foot:"Form blank",staff:"2 on payroll",held:20})+GRAIN+dateline(APR);
+}
+
+/* ------------------------------------------------------------------
+   ?check=1: overflow, text outside its box, off stage, overlaps, sizes under 16px,
+   plus a TXT line per visible text box for the pixel contrast measure (as in H).
+   ------------------------------------------------------------------ */
+function selfCheck(){
+  var leaves = Array.prototype.filter.call(document.querySelectorAll("#stage *"), function(e){
+    return Array.prototype.some.call(e.childNodes, function(n){ return n.nodeType===3 && n.textContent.trim(); });
+  });
+  var out = [], txt = [], st = S.getBoundingClientRect(), sizes = {}, sc = st.width/1920;
+  leaves.forEach(function(e){
+    var cs = getComputedStyle(e), t = "'"+e.textContent.trim().slice(0,30)+"'";
+    sizes[cs.fontSize] = (sizes[cs.fontSize]||0)+1;
+    if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+t);
+    var r = e.getBoundingClientRect();
+    if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+t);
+    var box = e.closest(".pnl,.paper,.cmt,.sc,.card,.tbl-r,.ch,.chip,.held .row,.dl,.front,.esc,.btn-x,.file,.rq span,.paused,.speed,.tools .b");
+    if (box && box!==e){ var b=box.getBoundingClientRect();
+      if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+t); }
+    if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+t);
+    var op = 1; for (var a=e; a && a!==S; a=a.parentElement) op *= parseFloat(getComputedStyle(a).opacity);
+    var cx = (r.left+r.right)/2, cy = (r.top+r.bottom)/2, top = document.elementFromPoint(cx, cy);
+    var seen = top && (top===e || e.contains(top) || top.contains(e));
+    if (seen) txt.push("TXT "+[(r.left-st.left)/sc,(r.top-st.top)/sc,r.width/sc,r.height/sc].map(function(v){return v.toFixed(0);}).join(" ")+" "+cs.color.replace(/ /g,"")+" "+op.toFixed(2)+" "+t);
+  });
+  function root(e){ while (e.parentNode && e.parentNode!==S) e = e.parentNode; return e; }
+  var R = leaves.map(function(e){ return e.getBoundingClientRect(); });
+  for (var i=0;i<leaves.length;i++) for (var j=i+1;j<leaves.length;j++){
+    if (leaves[i].contains(leaves[j])||leaves[j].contains(leaves[i])) continue;
+    if (root(leaves[i])!==root(leaves[j])) continue;
+    var A=R[i], B=R[j], w=Math.min(A.right,B.right)-Math.max(A.left,B.left), hh=Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top);
+    if (w>2&&hh>2) out.push("OVERLAP '"+leaves[i].textContent.trim().slice(0,24)+"' x '"+leaves[j].textContent.trim().slice(0,24)+"'");
+  }
+  // objects on the wall and desk must not overlap each other; sheets (menus, review) may cover the desk
+  var objs = Array.prototype.slice.call(S.querySelectorAll(".acc,.doomw,.repw,.box,.clipb,.catf,.sc,.held,.cmt,.adv,.memo,.tape,.rcpt,.mn,.board"));
+  var SHEET = /\b(mn|board|rcpt)\b/, DESK = /\b(box|clipb|catf|sc)\b/;
+  objs.forEach(function(x,i){ objs.slice(i+1).forEach(function(y){
+    if ((SHEET.test(y.className)&&DESK.test(x.className))||(SHEET.test(x.className)&&DESK.test(y.className))) return;
+    var A=x.getBoundingClientRect(), B=y.getBoundingClientRect();
+    if (A.left<B.right-1&&B.left<A.right-1&&A.top<B.bottom-1&&B.top<A.bottom-1) out.push("OBJ-OVERLAP "+x.className+" / "+y.className);
+  }); });
+  out.push("FONT SIZES (css px at 1920): "+Object.keys(sizes).sort().map(function(k){ return k+" x"+sizes[k]; }).join(", "));
+  var pre = document.createElement("pre"); pre.id="check"; pre.textContent = "CHECK-BEGIN\n"+out.concat(txt).join("\n")+"\nCHECK-END"; document.body.appendChild(pre);
+}
+
+var VIEWS = {"1":state1,"2":state2,"3":state3,"4":state4,"5":state5,"6":state6};
+S.innerHTML = (VIEWS[STATE] || state3)();
+datelineStart(STATE==="1"||STATE==="5"||STATE==="6");
+soundControl();
+if (Q.get("check")) document.fonts.ready.then(function(){ setTimeout(selfCheck, 200); });
+</script>
+</body>
+</html>
