@@ -29,7 +29,7 @@
   /* accent: only where something needs attention */
   --amber:#d9a03a; --amber-line:rgba(217,160,58,.62); --warn:#d58a52; --blood:#9b3328;
   /* paper: the only light thing, aged and dirty */
-  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#1e1810; --ink-soft:#30281d;
+  --paper:#bfb39a; --paper-dk:#a89b80; --ink:#1a140d; --ink-soft:#221b13;
   --mono:"IBM Plex Mono",Consolas,monospace; --sans:"IBM Plex Sans","Segoe UI",sans-serif;
   --cond:"Barlow Condensed",sans-serif; --type:"Courier Prime","Courier New",monospace;
   /* film grain (no image file): fractal noise, alpha only */
@@ -143,7 +143,9 @@ body{font-family:var(--sans);color:var(--bone)}
 .pip.spill{border-color:var(--op-fill);background:repeating-linear-gradient(135deg,rgba(108,143,134,.85) 0 2px,transparent 2px 5px)}
 .pip.o{border-color:var(--op-fill);background:var(--op-fill)}
 .pip.o.used{background:transparent;border-color:rgba(108,143,134,.4)}
-.res-b{display:inline-block;width:30px;height:28px;line-height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--bone);font:500 var(--t2)/26px var(--mono)}
+.res-b{display:inline-block;position:relative;width:30px;height:28px;border:1px solid var(--frame-hi)}
+.res-b:before,.res-b.plus:after{content:"";position:absolute;left:8px;right:8px;top:11px;height:3px;background:var(--bone)}
+.res-b.plus:after{left:12px;right:auto;width:3px;top:5px;height:15px}
 .res{gap:12px;font:500 var(--t2)/1 var(--mono);color:var(--bone)}
 .sys{grid-column:1 / -1;font:400 var(--t1)/1 var(--sans);color:var(--muted);gap:12px}
 .tag{display:inline-block;font:500 var(--t1)/22px var(--mono);padding:0 7px;border:1px solid var(--op-fill);color:var(--op);
@@ -164,8 +166,8 @@ body{font-family:var(--sans);color:var(--bone)}
 .q-row .c{font:400 var(--t2)/1 var(--mono)}
 .q-row .dash{color:var(--dim)}
 .q-ctl{display:flex;justify-content:flex-end;gap:8px}
-.q-ctl b{font:400 var(--t1)/24px var(--mono);width:30px;height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--muted)}
-.q-ctl b.na{border:1px dashed rgba(196,176,138,.16);color:var(--dim);background:repeating-linear-gradient(135deg,rgba(196,176,138,.05) 0 2px,transparent 2px 6px)}
+.q-ctl b{font:500 var(--t1)/24px var(--mono);width:30px;height:26px;text-align:center;border:1px solid var(--frame-hi);color:var(--bone)}
+.q-ctl b.na{border:1px dashed rgba(196,176,138,.16);color:var(--muted);background:repeating-linear-gradient(135deg,rgba(196,176,138,.05) 0 2px,transparent 2px 6px)}
 .q-row.spillrow{background:linear-gradient(90deg,rgba(108,143,134,.08),rgba(108,143,134,0) 70%)}
 .q-tools{display:flex;justify-content:space-between;align-items:center;height:60px}
 .q-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--frame-hi);padding:6px 12px;font:400 var(--t2)/1 var(--sans);color:var(--bone);margin-right:12px}
@@ -244,14 +246,14 @@ body{font-family:var(--sans);color:var(--bone)}
 .cat-glow{position:absolute;pointer-events:none;border-radius:50%}
 
 /* ===== paper: the only light thing, aged, dimmed, dirty ===== */
-.paper{isolation:isolate;background:linear-gradient(172deg,#bcb095,#b0a387 62%,#a79a7e);color:var(--ink);border-radius:1px;
+.paper{isolation:isolate;background:linear-gradient(172deg,#c3b79c,#b8ab8f 62%,#afa286);color:var(--ink);border-radius:1px;
   box-shadow:0 22px 44px rgba(0,0,0,.72),inset 0 0 46px rgba(70,48,22,.3),inset 0 0 5px rgba(60,40,20,.45)}
 .paper:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--smut) 0 0/600px,var(--grain) 0 0/256px;mix-blend-mode:multiply;opacity:.16}
-.paper .key{color:var(--ink);border-color:rgba(35,28,20,.6)}
+.paper .key{color:#d2c6aa;background:#2b231a;border-color:#2b231a;font-weight:700}
 
 /* tutorial: the advisor's note (cold open hand-off) */
 .adv{left:842px;top:618px;width:400px;padding:20px 22px 18px;transform:rotate(-.5deg)}
-.adv .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d}
+.adv .k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#3d0e08}
 .adv p{font:400 var(--t2)/1.4 var(--type);margin-top:12px;color:var(--ink)}
 .adv .ptr{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px dashed rgba(35,28,20,.4);font:700 var(--t1)/1 var(--type);color:var(--ink)}
 .adv-arrow{position:absolute;right:-30px;top:30px;width:30px;height:2px;background:var(--amber)}
@@ -308,23 +310,23 @@ body{font-family:var(--sans);color:var(--bone)}
 
 /* ===== WATCH (state 4): the event, on paper ===== */
 .ev{left:668px;top:96px;width:640px;padding:26px 30px 24px;transform:rotate(-.5deg)}
-.ev-k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d;display:flex;justify-content:space-between}
+.ev-k{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#3d0e08;display:flex;justify-content:space-between}
 .ev-t{font:700 var(--t4)/1.1 var(--type);margin:14px 0 10px;color:var(--ink)}
 .ev-p{font:400 var(--t2)/1.4 var(--type);color:var(--ink)}
 .ev-o{margin-top:18px;display:flex;flex-direction:column;gap:10px}
 .ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:62px;border:1px solid rgba(35,28,20,.45);padding:0 14px;font:700 var(--t2)/1 var(--type);color:var(--ink);background:rgba(255,248,230,.06)}
 .ev-o>div.on{border:2px solid var(--ink);background:rgba(255,246,222,.16);padding:0 13px;box-shadow:inset 4px 0 0 var(--amber)}
 .ev-o i{font:700 var(--t1)/1 var(--cond);font-style:normal;background:#2b231a;color:#c9bc9f;text-align:center;padding:4px 0;width:28px}
-.ev-o span{font:400 var(--t1)/1 var(--type);color:var(--ink-soft);display:flex;align-items:center;gap:12px}
+.ev-o span{font:400 var(--t1)/1 var(--type);color:var(--ink);display:flex;align-items:center;gap:12px}
 .ev-o .nm{display:flex;flex-direction:column;gap:6px}
-.ev-o .nm em{font:700 var(--t1)/1 var(--type);font-style:normal;color:#0f2e28}
-.ev-o .nm em.none{color:var(--ink-soft);font-weight:400}
-.ev-f{margin-top:14px;font:400 var(--t1)/1 var(--type);color:var(--ink-soft);display:flex;justify-content:space-between}
+.ev-o .nm em{font:700 var(--t1)/1 var(--type);font-style:normal;color:#0b2621}
+.ev-o .nm em.none{color:var(--ink);font-weight:700}
+.ev-f{margin-top:14px;font:700 var(--t1)/1 var(--type);color:var(--ink);display:flex;justify-content:space-between}
 
 /* ===== month review (state 5): the printout, on paper ===== */
 .rv{left:56px;top:190px;width:1184px;height:850px;padding:30px 44px 28px;display:flex;flex-direction:column}
 .rv:after{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(35,28,20,.16) 22px 30px);border-bottom:1px dashed rgba(35,28,20,.35)}
-.rv-k{display:flex;justify-content:space-between;font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#4c140d;margin-top:4px}
+.rv-k{display:flex;justify-content:space-between;font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:#3d0e08;margin-top:4px}
 .rv-head{display:flex;align-items:baseline;gap:24px;margin:12px 0 4px}
 .rv-t{font:700 var(--t4)/1.1 var(--type)}
 .rv-lede{font:400 var(--t2)/1.4 var(--type)}
@@ -333,18 +335,18 @@ body{font-family:var(--sans);color:var(--bone)}
 .rv h5{font:700 var(--t1)/1 var(--cond);letter-spacing:2.5px;color:var(--ink-soft);padding-bottom:8px;border-bottom:2px solid var(--ink)}
 .rv-res{display:grid;grid-template-columns:34px 240px 1fr;column-gap:8px;font:400 var(--t1)/1.3 var(--type);color:var(--ink)}
 .rv-res>span{padding:4px 0;border-bottom:1px dotted rgba(35,28,20,.4)}
-.rv-res .d{color:var(--ink-soft)}
+.rv-res .d{color:var(--ink-soft);font-weight:700}
 .rv-res .n{font-weight:700}
-.rv-res .ok{color:#0f2e28;font-weight:700}
-.rv-res .evn{color:#4c140d;font-weight:700}
+.rv-res .ok{color:#0b2621;font-weight:700}
+.rv-res .evn{color:#3d0e08;font-weight:700}
 .rv-res .last{border-bottom:none}
-.rv-res .g{grid-column:1 / -1;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:#4c140d;padding:8px 0 3px;border-bottom:1px solid rgba(35,28,20,.55)}
+.rv-res .g{grid-column:1 / -1;font:700 var(--t1)/1 var(--cond);letter-spacing:2px;color:#3d0e08;padding:8px 0 3px;border-bottom:1px solid rgba(35,28,20,.55)}
 .rv-right{display:flex;flex-direction:column}
 .rv-mv{display:grid;grid-template-columns:78px 1fr;font:400 var(--t2)/1.3 var(--type)}
 .rv-mv>span{padding:9px 0;border-bottom:1px dotted rgba(35,28,20,.4)}
 .rv-mv .s{font:700 var(--t1)/1.5 var(--cond);letter-spacing:2px;color:var(--ink-soft)}
-.rv-mv .x{display:block;font-size:var(--t1);color:var(--ink-soft);margin-top:2px}
-.rv-mv .bad{color:#4c140d;font-weight:700}
+.rv-mv .x{display:block;font-size:var(--t1);font-weight:700;color:var(--ink-soft);margin-top:2px}
+.rv-mv .bad{color:#3d0e08;font-weight:700}
 .rv-go{margin-top:auto;padding-top:16px;border-top:1px dashed rgba(35,28,20,.4);display:flex;flex-direction:column;gap:14px}
 .rv-go .note{font:400 var(--t1)/1.35 var(--type);color:var(--ink-soft)}
 .rv-btn{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 10px 0 14px;background:#221b14;color:#cfc2a5;font:700 var(--t2)/1 var(--cond);letter-spacing:1px;white-space:nowrap;gap:12px;
@@ -505,21 +507,22 @@ function room(d){
 }
 
 /* The dateline: a spy-film title card, date only (the game names no place for the lab).
-   Each month change types it in afresh; renders (?still=1) and reduced motion show it whole. */
+   It types in only on a month's entry (states 1, 5, 6). Inside a month (states 2, 3, 4,
+   and WATCH's day steps) the date is already set. Renders (?still=1) and reduced motion show it whole. */
 var MONTHS = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
-function dateline(d){
-  var text = d.month+" "+d.day+", "+d.year;
-  var dl = add(el("div","abs dl"+(STILL?"":" typing")));
+function dateline(d, entry){
+  var text = d.month+" "+d.day+", "+d.year, still = STILL || !entry;
+  var dl = add(el("div","abs dl"+(still?"":" typing")));
   // a worn ribbon: each strike lands a little lighter or lower (fixed pattern, not random)
   var OP = [1,.86,.97,.9,1,.82,.95,1,.88], DY = [0,1,0,0,-1,0,1,0,0];
   Array.prototype.forEach.call(text, function(ch,i){
     var s = el("span", null, ch===" " ? "&nbsp;" : ch);
     s.style.setProperty("--o", OP[i%OP.length]); s.style.setProperty("--y", DY[i%DY.length]+"px");
-    if (STILL){ s.style.opacity = OP[i%OP.length]; s.style.transform = "translateY("+DY[i%DY.length]+"px)"; }
+    if (still){ s.style.opacity = OP[i%OP.length]; s.style.transform = "translateY("+DY[i%DY.length]+"px)"; }
     else s.style.animationDelay = (260 + i*95 + (ch===" "?60:0))+"ms";
     dl.appendChild(s);
   });
-  var c = el("i","caret"); if (!STILL) c.style.animationDelay = (260 + text.length*95 + 120)+"ms"; dl.appendChild(c);
+  var c = el("i","caret"); if (!still) c.style.animationDelay = (260 + text.length*95 + 120)+"ms"; dl.appendChild(c);
 }
 
 /* P(Doom): G's meter, drawn as a 270-degree tachometer. Level and band only, never a delta (ADR-0015). */
@@ -570,7 +573,7 @@ var SHORTCUTS = [["ACTIONS","A"],["PLAN","P"],["STAFF","E"],["UPGRADES","U"],["L
 function shortcutRack(active, list, hideKeys){
   var k = panel("keys");
   (list||SHORTCUTS).forEach(function(s){
-    k.appendChild(el("div","kb"+(active===s[0]?" on":"")+(s[2]?" off":""),ic(s[0],"ic-kb","pi-kb")+"<span class=lab>"+s[0]+"</span>"+(hideKeys?"":"<span class=key>"+s[1]+"</span>")));
+    k.appendChild(el("div","kb"+(active===s[0]?" on":"")+(s[2]?" off":""),ic(s[0],"ic-kb","pi-kb")+"<span class=lab>"+s[0]+"</span>"+(hideKeys||s[2]?"":"<span class=key>"+s[1]+"</span>")));
   });
 }
 /* The month: held hours in a small panel above a quiet Commit. Commit never moves;
@@ -583,7 +586,7 @@ function commit(d, menuOpen, watch){
       "<div class=speed>"+["Pause","1x","2x","4x"].map(function(x,i){ return "<span"+(i===0?" class=on":"")+">"+x+"</span>"; }).join("")+"</div>"+
       "<div class=row style='padding-top:16px'><span class=lbl>HELD FOR EVENTS</span><span class=val>"+d.held+" hr</span></div>", "top:612px;height:356px");
     // Commit keeps its place; while the month runs it cannot be pressed
-    add(el("div","abs cmt off","<span>MONTH RUNNING</span>"));
+    add(el("div","abs cmt off","<span>MONTH IN PLAY</span>"));
     return;
   }
   panel("held", "<div class=row><span class=lbl>HELD FOR EVENTS</span><span class=val>"+d.held+" hr</span></div>"+
@@ -607,15 +610,15 @@ function attentionBars(p){
          "<span class=why>"+p.planWork+" hr planning work + <span class=o>"+p.spill+" hr operating (spill)</span></span>"+
          "<span class='l op'>OPERATING</span><span class=pips>"+o+"</span><span class='v"+(p.opLeft?"":" zero")+"'>"+p.opLeft+" of "+p.opTotal+" left</span>"+
          "<span class=why><span class=o>"+(p.opWork-p.spill)+" hr operating work</span></span>"+
-         "<span class='l rs'>RESERVE</span><span class=res><span class=res-b>-</span>"+p.reserve+" hr<span class=res-b>+</span></span><span></span>"+
+         "<span class='l rs'>RESERVE</span><span class=res><span class=res-b aria-label='less reserve'></span>"+p.reserve+" hr<span class='res-b plus' aria-label='more reserve'></span></span><span></span>"+
          "<span class=why>set aside now, untyped</span>"+
          "<span class=sys><span class=tag>SPILL</span>"+p.spill+" hr of operating work is drawn from planning. Planning work never draws on operating hours.</span>";
 }
 function planScreen(p){
-  room(p); doomMeter(p); repMeter(p); shortcutRack("PLAN"); commit(p, true);
-  add(el("div","dim"));
+  room(p); add(el("div","dim"));
+  doomMeter(p); repMeter(p); shortcutRack("PLAN"); commit(p, true);
   add(el("div","grain"));
-  dateline(p);
+  dateline(p, false);
   var t = panel("sheet"); t.appendChild(el("div","scan"));
 
   t.appendChild(el("div","p-head","<span class=p-title>THE MONTH AHEAD</span><span class=p-sub>"+p.rows.length+" plays queued &middot; 20 hr this month</span>"));
@@ -687,10 +690,12 @@ function terminal(p){
 }
 function home(p, opts){
   opts = opts || {};
-  room(p); officeCat(p); doomMeter(p); repMeter(p); terminal(p);
+  room(p); officeCat(p); terminal(p);
+  if (opts.dim) add(el("div","dim"));   // a sheet over the desk: the instruments stay above the dim
+  doomMeter(p); repMeter(p);
   shortcutRack(opts.active, opts.rack); commit(p, !!opts.menuOpen);
   add(el("div","grain"));
-  if (!opts.menuOpen) dateline(p);
+  dateline(p, true);   // home states here are each a month's entry (1: July, 5: December, 6: April)
 }
 
 /* ---------- STATE 1: month 1, the first screen after the cold open ---------- */
@@ -758,9 +763,10 @@ function cardFile(p){
 }
 function handScreen(){
   var p = book(NOV, NOV_QUEUE.slice(0,3));
-  room(p); doomMeter(p); repMeter(p); shortcutRack("ACTIONS"); commit(p, true);
-  add(el("div","dim")); add(el("div","grain"));
-  dateline(p);
+  room(p); add(el("div","dim"));
+  doomMeter(p); repMeter(p); shortcutRack("ACTIONS"); commit(p, true);
+  add(el("div","grain"));
+  dateline(p, false);
   cardFile(p);
 }
 
@@ -779,12 +785,13 @@ function watchScreen(){
     "<div><span class=n>01</span>Networking (+3 reputation)</div>"+
     "<div><span class=n>14</span>Talent Opportunity [!]</div>"+
     "<div class='row'><span><span class=n></span><span class=op>at work: 1 safety researcher</span></span></div>"+
-    "<div class='row dim2'><span><span class=n></span>Feed and results</span><span class=key>F</span></div>"));
+    "<div class='row dim2'><span><span class=n></span>Feed and results</span></div>"));
   terminalFoot(t);
-  shortcutRack(null, [["FEED","F"],["STAFF","E"],["LEDGER","L"],["GUIDE","F1"],["ACTIONS","A",1],["PLAN","P",1],["UPGRADES","U",1]]);
+  // the event owns the keys while it waits for a reply: no keycaps on the rack (live or disabled) or the terminal
+  shortcutRack(null, [["FEED","F"],["STAFF","E"],["LEDGER","L"],["GUIDE","F1"],["ACTIONS","A",1],["PLAN","P",1],["UPGRADES","U",1]], true);
   commit(p, true, {clock:"TUE 14 NOV", day:10, days:22, paused:true});
   add(el("div","grain"));
-  dateline(w);
+  dateline(w, false);   // WATCH's day steps: the date is already set
   // the event: core_events.json talent_recruitment, its own words and costs
   var ev = add(el("div","abs paper ev"));
   ev.appendChild(el("div","ev-k","<span>ACROSS YOUR DESK</span><span>TUE 14 NOV 2017</span>"));
@@ -801,9 +808,7 @@ function watchScreen(){
 /* ---------- STATE 5: the month review, before December's plan ---------- */
 function reviewScreen(){
   var p = book(DEC, []);
-  home(p, {menuOpen:true});
-  add(el("div","dim"));
-  dateline(p);   // a new month: the dateline types in afresh above the review
+  home(p, {menuOpen:true, dim:true});   // a new month: the dateline types in afresh above the review
   var r = add(el("div","abs paper rv"));
   r.appendChild(el("div","rv-k","<span>FROM THE TELEPRINTER</span><span>FRI 1 DEC 2017</span>"));
   r.appendChild(el("div","rv-head","<span class=rv-t>Month Review -- December 2017</span><span class=rv-lede>December 2017 begins.</span>"));

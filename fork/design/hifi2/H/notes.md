@@ -1,6 +1,7 @@
 # H. The Desk, Grim -- notes (grim pass, hifi2)
 
-Status: all six states built, rendered and checked.
+Status: all six states built, rendered and checked; council round 1 fixes
+applied (see "Fix round").
 
 Files:
 - `concept.html`: `?state=1..6`. `?still=1` shows the dateline without its
@@ -78,12 +79,15 @@ up their label's letter spacing.
   - "Feed and results [F]".
 - The rack is the WATCH set: FEED, STAFF, LEDGER and GUIDE live; ACTIONS,
   PLAN and UPGRADES disabled (dashed, hatched).
+- While the event waits for a reply, no rack plate shows a keycap (the
+  event owns the keys), and neither does the terminal's "Feed and results"
+  line.
 - The month panel above Commit grows to the rack's height (612-968):
   - THE MONTH clock "TUE 14 NOV / workday 10 of 22";
   - a dark-red "PAUSED FOR YOU" bar;
   - the speed row (Pause on, 1x, 2x, 4x);
   - "HELD FOR EVENTS 7 hr".
-- Commit keeps its place but reads "MONTH RUNNING", dashed and inert.
+- Commit keeps its place but reads "MONTH IN PLAY", dashed and inert.
 - The event (core_events.json talent_recruitment) is aged paper:
   "ACROSS YOUR DESK / TUE 14 NOV 2017", "Talent Opportunity", and three
   options, each with its effect:
@@ -191,15 +195,15 @@ up their label's letter spacing.
 8. **No person or operator silhouette.** None. The icons with heads
    (Hire, Staff) are Pip's own, as in A.
 
-## Dateline rules (the design's reading; carried as an open question)
+## Dateline rules
 
 - The dateline shows the game date.
-- It types in afresh only when the month changes: state 5 is the case
-  shown.
+- It types in only on a month's entry: states 1 (July), 5 (into December)
+  and 6 (April). In-month states (2, 3, 4) and WATCH's day steps show the
+  date already set (council r1 item 2).
 - Within a month the day updates in place, without the type-on, so WATCH
   reads "NOVEMBER 14, 2017". This keeps it from contradicting the clock.
-- In state 2 and state 3 it sits above the dim layer. It is always
-  visible, and the menus open below it.
+- It always sits above the dim layer, and the menus open below it.
 
 ## Room to get darker
 
@@ -214,36 +218,41 @@ up their label's letter spacing.
   smoke, and the meter at its last colour.
 - The panels never darken (a layer, not a repaint).
 
-## Contrast (measured, every state)
+## Contrast (measured on composited pixels, every state, both sizes)
 
-Method:
-- `?check=1` writes a TXT line per text box: position, computed colour and
-  effective opacity. Only text that is on top at its centre is counted
-  (`elementFromPoint`), so text under a menu or sheet is skipped.
-- A script samples the rendered 1920 PNG inside each box. The background
-  is the median luminance of the half of the pixels farthest from the text
-  colour. The text colour is blended by its opacity, then the WCAG ratio is
-  computed.
+Method (fix round; council r1 item 1):
+- `?check=1` writes the box of every text element. Text under a sheet (the
+  terminal under the review) is skipped by an occlusion test; nothing is
+  skipped for being under the dim layer, because the colours are read from
+  the render.
+- A script reads each box from the rendered PNG at 1920x1080 and at
+  1280x720. Background = the median luminance of the box. Text = the stroke
+  core: the k-th pixel farthest from the background, k = max(4, 0.5% of
+  the box), so a few stray pixels cannot set it. No CSS colour is used, so
+  the dim layer, grain, paper grime and antialiasing all count.
 
-| State | Text boxes | Under 4.5:1 | Lowest |
-|---|---|---|---|
-| 1 | 53 | 0 | 5.24 ("100" on the reputation scale) |
-| 2 | 134 | 0 | 5.78 |
-| 3 | 191 | 0 | 4.88 (row number "11" on the spill tint) |
-| 4 | 84 | 0 | 4.75 (event footer "held for events 7 hr", paper) |
-| 5 | 100 | 0 | 5.10 ("Talent Opportunity", red ink on paper) |
-| 6 | 50 | 0 | 4.76 ("CATASTROPHIC", lifted violet tint) |
+| State | Text boxes | Lowest at 1920 | Lowest at 1280x720 | Under 4.5:1 |
+|---|---|---|---|---|
+| 1 | 53 | 5.38 (reputation "100") | 4.58 (held note) | 0 |
+| 2 | 134 | 5.38 (reputation "100") | 4.58 (held note) | 0 |
+| 3 | 189 | 4.82 (row "11" on the spill tint) | 4.50 ("top level") | 0 |
+| 4 | 76 | 5.35 (terminal "01") | 4.62 (reputation "0") | 0 |
+| 5 | 100 | 4.91 ("SEVERE") | 4.58 (held note) | 0 |
+| 6 | 50 | 4.88 ("CATASTROPHIC") | 4.58 (held note) | 0 |
 
-Fixes the measure forced during the pass:
-- paper inks darkened (ink-soft #30281d, red #4c140d, green #0f2e28);
-- the grime on paper reduced;
-- the selected event option lightened instead of shaded;
-- the dim text token raised to #968d7c;
-- disabled controls (inert ^ v, WATCH rack, blocked cards) told apart by a
-  dashed, hatched plate, never by fading text below 4.5:1.
+What the pixel measure forced (beyond items 1-5):
+- paper a little lighter (#c3b79c to #afa286) and inks darker (ink #1a140d,
+  ink-soft #221b13, red #3d0e08, green #0b2621);
+- 16px Courier on paper in bold where it is a label or footer (event
+  footer, "no change", review row numbers and movement notes);
+- paper keycaps inverted (paper-coloured on a dark ink fill);
+- queue ^ v x glyphs in bone, weight 500; inert ones in muted, still told
+  apart by the dashed, hatched box;
+- the reserve - / + drawn as solid 3px bars, not text (a 1px minus broke up
+  at 720).
 
-The meters, rack and Commit under the dim layer (states 2, 3 and 5) were
-measured as drawn there.
+Earlier (PASS 2) fixes still in place: the dim text token #968d7c, and
+disabled controls shown by a dashed, hatched plate, never by faded text.
 
 ## Agreed rules, checked
 
@@ -254,10 +263,12 @@ measured as drawn there.
   - state 1: Commit's Enter (no layer open);
   - state 2: the card file's "A Esc" and the detail strip's Enter;
   - state 3: "P Esc", Commit without Enter;
-  - state 4: the event's Enter; Commit inert;
+  - state 4: the event's Enter only; Commit inert; no keycaps on the
+    rack or terminal;
   - state 5: the review's Enter, Commit without Enter;
   - state 6: Commit's Enter.
-  The rack keeps its letter shortcuts, as in A.
+  Elsewhere the rack keeps its letter shortcuts, as in A; disabled plates
+  never show one.
 - **Every repeated play has its own edit target:** state 3, each row has
   its own ^ v x.
 - **Council r1 fixes kept:**
@@ -323,17 +334,18 @@ Nothing new in this pass; A's and E's notes still stand:
 
 - **Typewriter sound:** one key strike per character and a carriage return
   at the end? Which mix bus, and is it muted with UI sounds? Not built.
-- **Dateline:** type in at game start (month 1) as well as on each month
-  change? And is the in-month day update (no type-on) right, or should it
-  stay on the 1st?
+- **Dateline:** settled by the council for the mock-up (types in on a
+  month's entry only, including month 1); the in-month day update is still
+  the design's reading.
 - **"LAB TERMINAL 1":** the plan and home panels are no longer CRTs. Keep
   the name as a footer label, or drop it?
 - **Actions menu box:** it now uses the plan sheet's box (rack and Commit
   stay visible) rather than A's wide frame over the rack. Keep this, or go
   back to A's frame with a shorter card file?
-- **Commit in WATCH:** shown as "MONTH RUNNING" and inert in its usual
-  place. Alternatively hide it while the month runs (A replaced it with
-  the clock housing).
+- **Not in the fix round (council r1, to the report):** the "LAB TERMINAL
+  1" label and green LED; the date shown three times in state 4; whether
+  the dateline is chunky enough; paper creases, frame bevel and soot;
+  state 6 room brightness (.36 vs .42).
 - **The Staff and Hire icon question** from the hifi report is still open
   (carried, not decided).
 
@@ -351,3 +363,23 @@ renders for consistency. Fixed in the pass:
   and reduced.
 - The type-on animation was checked mid-run (a render stopped at 1.1 s
   shows "NOVEMBER 1").
+
+## Fix round (council round 1, fork/design/hifi2/council/r1-agreed.md)
+
+1. **Dim layer order (states 2, 3, 5).** `.dim` now goes straight after the
+   room (state 5: after the room, the terminal and the cat print). P(Doom),
+   reputation, the shortcut rack (with its lit plate), Held for events and
+   Commit sit above it. Contrast re-measured on composited pixels at both
+   sizes (table above).
+2. **Dateline type-on only on a month's entry.** `dateline(d, entry)`:
+   states 1, 5 and 6 type in; states 2, 3 and 4 (and WATCH's day steps)
+   show the date set. `?still=1` and `prefers-reduced-motion` unchanged.
+3. **WATCH Commit slot** reads "MONTH IN PLAY". The clock keeps "PAUSED FOR
+   YOU".
+4. **State 4 paper text in --ink:** the footer, the option costs and
+   Decline's "no change". The pixel measure at 720 also needed them bold.
+5. **No keycaps on disabled rack plates (any state), and none on the live
+   plates while Talent Opportunity waits.** The terminal's "Feed and
+   results" key is dropped in state 4 too, for the same reason.
+
+WebPs re-exported at about 300 KB (quality 97-98): 169-303 KB.

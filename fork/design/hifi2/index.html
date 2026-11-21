@@ -110,7 +110,7 @@ function tab(label, on, fn) {
   const b = document.createElement("button");
   b.className = "tab"; b.type = "button"; b.textContent = label;
   b.setAttribute("aria-pressed", on ? "true" : "false");
-  b.onclick = () => { fn(); const nb = [...document.querySelectorAll("nav button.tab")].find(x => x.textContent === label); if (nb) nb.focus(); };
+  b.onclick = () => { fn(); const nb = [...document.querySelectorAll("button.tab")].find(x => x.textContent === label); if (nb) nb.focus(); };
   return b;
 }
 function render() {
