@@ -61,12 +61,18 @@ H is a UI and presentation change only.
   - Operating work may spill into planning hours. Planning work may never
     use operating hours. The gate is `MonthPlan.can_spend_hours`
     (`scripts/core/month_plan.gd:182`).
-  - Travel uses operating hours only and may not spill (amendment (e)).
+  - The one exception to the spill is conference travel: it uses
+    operating hours only and may not spill (ADR-0011 amendment (e), lines
+    169-171).
   - The reserve is untyped: hours not spent on plays are held for events,
     and what events do not use evaporates at month end. There is no
     banking (ADR-0009 point 4).
-  - Hours are billed in queue order, so the play that spills is the first
-    operating play past the 8th operating hour.
+  - The game books a play's declared hours when it is queued. Plays that
+    charge themselves (the hiring pipeline and the like) also debit hours
+    when they run, at Commit (`game_manager.gd:715-717`). MonthPlan's pool
+    totals are the authority. The mock-up's spill tag on a row is its own
+    estimate, made in queue order; the game does not record a spill per
+    row.
 
 ## 2. Tokens
 
@@ -281,7 +287,7 @@ Positions are x,y on the 1920x1080 canvas.
     number);
   - a 7-step band ladder with the current band marked;
   - the line "band N of 7". At band index 5 and up it becomes the game's
-    own warning, "Very close to game over" (`main_ui.gd:1009`).
+    own warning, "Very close to game over" (`main_ui.gd:1010`).
 - States: normal; rising; warning (band 5+). The panel itself never
   changes colour.
 
@@ -291,7 +297,8 @@ Positions are x,y on the 1920x1080 canvas.
 - A semicircle (radius 64, stroke 14) in bone `#a99d88`, scale 0 to 100,
   the value in mono under it.
 - A blood-red mark at 0 with the note "0 ends the run". That is the game's
-  rule: reputation at 0 or below ends the run (`game_state.gd:617`).
+  rule: reputation at 0 or below ends the run (`game_state.gd:791`;
+  `death_attribution.gd:46` files it as a reputation death).
 - No colour change by level. The game's own low-reputation warnings (30 and
   under, 20 and under; `main_ui.gd:1015`) stay in the game's log.
 
@@ -306,38 +313,48 @@ Positions are x,y on the 1920x1080 canvas.
   the month review). Inside a month it shows the date already set. During
   WATCH the day changes in place without typing ("NOVEMBER 14, 2017"), so
   it never disagrees with the clock.
-- **Timing:** the first letter at 260 ms (60 ms when the sound plays), then
-  one letter every 95 ms
-  (with the sound, +-22 ms per key), a space adds 60 ms, a comma adds a
-  40 ms beat. "NOVEMBER 1, 2017" types in about 1.6 s, and the carriage
-  return lands about 0.55 s after the last letter. Drive the letters from
-  the sound's schedule so they land on the strikes.
+- **Timing:** the first letter at 260 ms (60 ms when the sound plays),
+  then one letter every 95 ms (with the sound, +-22 ms per key); a space
+  adds 60 ms and a comma adds a 40 ms beat. "NOVEMBER 1, 2017" types in
+  about 1.6 s, and the carriage return stops about 0.56 s after the last
+  letter. Drive the letters from the sound's schedule so they land on the
+  strikes.
 - With reduced motion (if the game gets such a setting), show the date
   whole. The mock-up still plays the sound.
 - It sits above every dim layer, and menus open below it.
 
 **The sound** (synthesised in the mock-up, between `SOUND_START` and
 `SOUND_END` in `concept.html`; nothing is sampled from a film). Aim: the
-hard, heavy typewriter strike of a spy-film title card, heard through a
-desk in a small hard room.
+hard typewriter strike of a spy-film title card: steel on the platen
+first, a short thud through the desk under it, no bell.
 
-Each key strike is four layers started together. Two random values per key
-vary it: v (0.85 to 1.15, how hard) and p (0.94 to 1.06, pitch).
+Each key strike is five layers. Three random values per key vary it: v
+(0.85 to 1.15, how hard), p (0.94 to 1.06, the noise layers' pitch) and q
+(0.975 to 1.025, the thump's own narrower pitch, so keys do not sound like
+tuned blocks).
 
-| Layer | Source | Shape |
-|---|---|---|
-| slap | white noise, band-pass 2600 Hz x p, Q 1.2 | 1 ms attack to 0.9 v, decays over 45 ms |
-| click | noise, high-pass 5200 Hz x p | 0.45 v, gone in 6 ms |
-| thump | sine falling 170 to 62 Hz x p over 50 ms | 0.85 v, decays over 90 ms |
-| rattle | noise, band-pass 900 Hz x p, Q 4, 4 ms late | 0.16 v, decays over 110 ms |
+| Layer | Source | Start | Shape |
+|---|---|---|---|
+| contact | noise, high-pass 4500 Hz x p | 0 ms | 0.5 ms attack to 0.8 v, decays over 9 ms |
+| slap | noise, band-pass 2900 Hz x p, Q 1.4 | 0 ms | 1 ms attack to 0.85 v, decays over 25 ms |
+| thump | sine falling 170 to 62 Hz x q over 40 ms | 0 ms | 0.68 v, decays over 45 ms |
+| rattle | noise, band-pass 900 Hz x p, Q 4 | 4 ms | 0.12 v, decays over 70 ms |
+| escapement tick | noise, band-pass 3900 Hz x p, Q 14 | 17 ms | 0.2 v, decays over 12 ms |
 
-- **Spaces** are silent.
+- **Timing:** 95 ms between keys, +-22 ms random. A space is silent and
+  adds 60 ms. A comma adds a 40 ms beat after it.
 - **Carriage return**, 320 ms after the last key: a 240 ms slide (noise,
-  low-pass sweeping 400 to 1300 Hz, rising to 0.12), then the stop (a sine
+  low-pass sweeping 550 to 1750 Hz, rising to 0.27), then the stop (a sine
   falling 95 to 42 Hz over 120 ms at 1.0, decaying over 320 ms, plus a
   300 Hz band-pass knock at 0.4 for 80 ms).
-- **Room and level:** a 0.5 s noise reverb tail at 18% wet; a compressor
-  (threshold -18 dB, ratio 4, attack 2 ms, release 120 ms); master gain 0.8.
+- **Room and level:** a 0.7 s noise reverb tail, its wet path low-passed
+  at 2.5 kHz, at 23% wet; a compressor (threshold -18 dB, ratio 4, attack
+  2 ms, release 120 ms); master gain 0.84.
+- **One at a time.** While a play is still sounding, through its room
+  tail, a new call is ignored: it returns null and fires no callbacks.
+  The control that started it stays disabled until onDone, with or
+  without reduced motion. Two plays can never overlap. The game needs the
+  same rule.
 
 For the game asset, see section 6.3.
 
@@ -355,7 +372,8 @@ For the game asset, see section 6.3.
   - hint: an amber ring and glow, used once, for the tutorial's first
     pointer;
   - disabled: dashed edge, hatched, no keycap;
-  - keys held: when paper owns the keys, no plate shows a keycap.
+  - keys held: while a WATCH event waits for a reply, no plate shows a
+    keycap. Under the month review the plates keep theirs.
 - IN-TRAY and UPGRADES are drawn closed only. What IN-TRAY collects is for
   the builder to settle from today's notices.
 
@@ -427,8 +445,10 @@ For the game asset, see section 6.3.
 - One row per queued play, in run order. Repeats get their own rows. Each
   row: number, play, where it lives, a pool chip with its hours, its cost,
   and ^ v x (move up, move down, remove).
-- The play whose hours spilled into planning is tagged on its row ("1 from
-  plan"). The grid is the source of truth; the tag is a display choice.
+- The play whose hours spilled into planning carries a "SPILL 1" tag in
+  the POOL column, and a SPILL line under the grid says how many operating
+  hours were drawn from planning. The tag is the mock-up's queue-order
+  estimate (section 1.2); MonthPlan's pool totals are the source of truth.
 - Below the rows:
   - the total: plays, plan + op hours, money + reputation;
   - AFTER COSTS: money and reputation after the listed costs, and the hours
@@ -441,8 +461,11 @@ For the game asset, see section 6.3.
 
 ### 3.9 Paper: the event card and the month review
 
-Paper is the topmost layer when it is up. It owns Enter, and the desk
-behind it shows no keycaps.
+Paper is the topmost layer when it is up, and it owns Enter.
+- Under a WATCH event, no other keycap shows: not on the rack, not on the
+  feed.
+- Under the month review, the rack keeps its letters, and Enter belongs to
+  the review sheet alone (Commit shows no Enter).
 
 **Event card** (668,96, 640 wide):
 - "ACROSS YOUR DESK", the event's name and its data text.
@@ -489,7 +512,7 @@ Inside the grown held panel:
   0.05 s per day (`screen_mode.gd:37`);
 - HELD FOR EVENTS.
 
-Today's pause button is a disabled stub (`screen_mode.gd:98`), but events
+Today's pause button is a disabled stub (`screen_mode.gd:101`), but events
 already pause playback. In H, the Pause segment shows that state. A pause
 the player can press is outside this spec.
 
@@ -517,7 +540,7 @@ April 2018 late game.
 | 2 | Actions open (Wed 1 Nov 2017, 3 plays queued) | card file with 17 cards, blocked reasons, stamps; detail strip for Safety Audit | add a play (Enter); open a door card; back to desk (A or Esc) | A, Esc; Enter on the detail strip only |
 | 3 | The month's plan (same day, 11 plays) | Attention grid (7 of 12 planning left, 0 of 8 operating), 11 rows, the spilled hour, totals, AFTER COSTS ($37,400, 26 rep, 7 hr held), research quality, reserve | reorder or remove a row; Undo; Clear; back to desk | P, Esc, Z, C; no Enter on Commit |
 | 4 | WATCH, an event waits (Tue 14 Nov 2017) | feed and month bar; WATCH rack; clock, PAUSED FOR YOU, speed, held 7 hr; Commit "MONTH IN PLAY"; the event on paper | choose an option | the event's keys and Enter only; no other keycaps |
-| 5 | Month review (Fri 1 Dec 2017, 56.7% SEVERE, art band 2) | dateline types DECEMBER; dimmed desk; the review sheet | begin planning | Enter on the review only |
+| 5 | Month review (Fri 1 Dec 2017, 56.7% SEVERE, art band 2) | dateline types DECEMBER; dimmed desk; the review sheet | begin planning | rack letters; Enter on the review only |
 | 6 | Late game (Mon 2 Apr 2018, 81.4% CATASTROPHIC, art band 3) | the desk of screen 1 with the late layer; the meter's warning line; nothing queued | as screen 1 | as screen 1 |
 
 ### 4.1 Key rules
@@ -564,7 +587,7 @@ redesign; this table reuses them.
 |---|---|---|
 | Room and doom layer | `Backdrop`, `BackdropScrim` | per-band art layers on top; keyed to the doom band |
 | Dateline | none (today: `TopBar/TurnLabel`, `TurnCountLabel`) | new label plus the sound; "Turn N" (workdays) goes |
-| Balances (money, compute, research, papers) | `TopBar/*Label` | move into the card file's balance strip and the plan panel; values unchanged |
+| Balances (money, compute, research, papers) | `TopBar/*Label` | only the card file's balance strip shows all four; the plan panel at rest shows Attention and queued plays; the Plan sheet's AFTER COSTS shows money, reputation and held hours; the desk at rest shows no balances; values unchanged |
 | P(Doom) meter | `ContentArea/InstrumentColumn/CoreZone/RightZones` (`DoomMeter` scene, `NumericDoomLabel`, `DoomExplanation`) | restyled; band ladder and warning line added from the game's own data |
 | Reputation tachometer | `TopBar/ReputationLabel` | new instrument; same value |
 | Office cat print | `OfficeCat` in `CatZone` (`office_cat.gd`) | shown as a photo print on the desk |
@@ -631,15 +654,19 @@ would need darker versions to match H:
 ### 6.3 The sound asset
 
 - Reference: `fork/design/hifi3/H/dateline-sound.wav`, rendered from the
-  mock-up's own code typing "NOVEMBER 1, 2017". Mono, 16-bit, 22,050 Hz,
-  3.05 s, peak -2.06 dBFS, RMS -21.7 dBFS. 14 strikes, and the carriage
-  return stop at 2.21 s.
+  mock-up's own code (`TypeSound.render`, seed 1917) typing "NOVEMBER 1,
+  2017". Mono, 16-bit, 44,100 Hz, 3.29 s. Raw peak -2.48 dBFS, written
+  with no gain or normalisation; RMS -24.1 dBFS; no clipped samples. 14
+  strikes (56 ms to 1688 ms) and the carriage-return stop at 2.25 s.
 - For the game, make it as one-shots, so any date can be typed and the
   letters stay in sync:
-  - 6 to 8 key strikes, varied as in 3.3;
+  - 6 to 8 key strikes, varied as in 3.3 (contact, slap, thump, rattle and
+    escapement tick in each);
   - one carriage-return slide and stop;
-  - WAV, mono, 16-bit, 44.1 kHz, peaks under -1 dBFS, room and compression
-    baked in.
+  - WAV, mono, 16-bit, 44.1 kHz, raw peaks at or under -1.5 dBFS, room and
+    compression baked in.
+- One dateline at a time: a new month's type-on never starts over one
+  still sounding (3.3).
 - The game picks a strike per letter at the dateline's timing. It may
   reuse the reference render's timing for a fixed string. These picks are
   presentation only: they must not draw from the game's RNG
@@ -673,6 +700,10 @@ would need darker versions to match H:
     the ADR).
   - H shows Reserve live while any hour is unspent.
   - This affects what a player can do, so it is Pip's call too.
+- **The always-on resource bar goes.** H drops today's top bar of
+  balances: they show in the card file (A), and money and reputation in
+  the Plan sheet. Whether the player should see them on the desk at all
+  times is Pip's call.
 - **The AFTER COSTS preview** is new. It adds no hidden information (it
   subtracts listed costs), but Pip may not want a preview at all.
 - **Fonts:** small at 15 vs the 16 px floor, and the missing 22 step
@@ -691,9 +722,11 @@ would need darker versions to match H:
   $8,000 and 3 hours; connections 6 reputation and 2 hours), so any screen
   that reads costs from the action shows them as free.
 - **Research below zero** (-12 in November) has no warning.
-- **"Turn N" counts workdays**, not months. Safety Audit's and Strategic's
-  unlocks (`turn_min` 5 and 10) also count workdays, so both open in the
-  first fortnight.
+- **"Turn N" counts workdays**, not months. The unlock gates compare
+  against the same count. Safety Audit needs `turn_min` 5 only, so it
+  opens in the first week. Strategic needs `turn_min` 10 and reputation at
+  least 30 (`data/actions/core.json:113-116`), so it opens in the first
+  fortnight while reputation holds.
 - **Unmapped icons.** `tour_offices`, `scout_read`, `scout_meetups` and
   `scout_shitpost` have no entry in `data/icon_mapping.json`, so the game
   draws its magenta placeholder.

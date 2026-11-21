@@ -2,12 +2,16 @@ function typeDate(withSound) {
   const line = document.getElementById("dlLine"), btn = document.getElementById("dlPlay"), note = document.getElementById("dlNote");
   const text = MONTHS[mi];
   if (typing) return;
+  if (withSound && window.TypeSound && TypeSound.busy && TypeSound.busy()) return;  // the last play's tail is still sounding
   note.textContent = "";
   let times = null;
   if (reduced()) {
     line.textContent = text;
-    times = withSound ? playDateline(text, {}) : null;
-    if (withSound && !times) note.textContent = "This browser cannot play the sound.";
+    if (!withSound) return;
+    typing = true; btn.disabled = true;
+    const free = () => { btn.disabled = false; typing = null; };
+    times = playDateline(text, { onDone: free });
+    if (!times) { note.textContent = "This browser cannot play the sound."; free(); }
     return;
   }
   btn.disabled = true;

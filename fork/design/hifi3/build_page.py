@@ -112,8 +112,16 @@ def md_to_html(md):
                 lists.append((ind, tag))
             else:
                 out.append("</li><li>")
-            out.append(inline(m.group(3)))
-            i += 1
+            # join the item's continuation lines first, so bold or code
+            # wrapped across lines is formatted as one run
+            text = [m.group(3)]
+            j = i + 1
+            while (j < len(lines) and lines[j].strip() and lines[j].startswith(" ")
+                   and not re.match(r"\s*([-*]|\d+[.)])\s", lines[j])
+                   and not lines[j].strip().startswith("```")):
+                text.append(lines[j].strip()); j += 1
+            out.append(inline(" ".join(text)))
+            i = j
             continue
         if lists and line.startswith(" "):
             out.append(" " + inline(s))

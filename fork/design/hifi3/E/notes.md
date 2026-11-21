@@ -338,3 +338,14 @@ sheet for consistency. Fixed in the pass:
 - The plan panel had a gap at the bottom: the queue rows are now 40px.
 - The band-3 monitors read as flat purple slabs: lower opacity and a
   slight blur.
+
+## hifi3 fix round (council r1 item 5.1)
+
+- The sound block between SOUND_START and SOUND_END is H's new block,
+  byte for byte (with its replay guard and `TypeSound.busy()`), and
+  `soundControl()` is H's: the "play with sound" button is disabled on
+  click and enabled again in onDone, in both motion settings. Checked in
+  headless Chromium, with and without reduced motion: three fast clicks
+  make one `TypeSound.play` call and start one play; the button is
+  disabled after them and enabled again after onDone. The button is
+  hidden in renders (`?still=1`), so nothing was re-rendered.

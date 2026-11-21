@@ -402,6 +402,9 @@ Kept on purpose (they fit the character, or are the game's own):
 
 ### 2. The dateline sound
 
+(The numbers below are PASS 1's. The fix round changed the strike, the
+room, the WAV and added the replay guard; see "hifi3 fix round" at the end.)
+
 Where: concept.html, between `/* SOUND_START */` and `/* SOUND_END */`. The
 block needs nothing else on the page. Entry point:
 
@@ -507,3 +510,55 @@ The layout check is clean in all six states (no overflow, nothing outside
 its box or off stage, no overlaps); font sizes 16 / 18 / 22 / 28 / 40 px.
 Every agreed rule from the hifi and hifi2 councils still holds.
 WebPs re-exported at quality 97-98: 178-309 KB.
+
+## hifi3 fix round (fork/design/hifi3/council/r1-agreed.md, sections 1 and 2)
+
+### 1.1 Replay guard
+- Inside the sound block: `TypeSound.play(text, onDone)` records when its
+  last tail ends (the room tail included). While the audio clock is short
+  of that, `play()` and `playDateline()` return null and fire no onChar or
+  onDone. `TypeSound.busy()` says whether a play is still sounding. null
+  still also means "no Web Audio".
+- onDone now fires when the tail has died (30 ms after the guard
+  releases), not at a fixed 900 ms after the last letter.
+- The mock-up button disables itself on click and re-enables on onDone, in
+  both motion settings, and gets a dimmed disabled style.
+- Checked in headless Chromium, with and without reduced motion: a first
+  `playDateline` returns 16 times; a second straight after returns null,
+  and so does `TypeSound.play`; its callbacks never fire (16 onChar, 1
+  onDone in all). Three clicks on the button start one play and the button
+  is disabled; it is enabled again after the tail, and a new play then
+  starts. No page errors.
+
+### 1.2 Tuning (cadence kept at 95 ms)
+- contact click: high-pass 5200 -> 4500 Hz, peak 0.45 -> 0.8 v, decay
+  6 -> 9 ms; it leads the strike.
+- slap: band-pass 2600 -> 2900 Hz, Q 1.2 -> 1.4, peak 0.9 -> 0.85 v, decay
+  45 -> 25 ms.
+- thump: decay 90 -> 45 ms, peak 0.85 -> 0.68 v, glide 50 -> 40 ms, and its
+  own pitch draw q of +-2.5% (the noise layers keep p, +-6%).
+- rattle: 0.16 -> 0.12 v, decay 110 -> 70 ms (room for the tick).
+- new escapement tick: band-pass 3900 Hz x p, Q 14, 17 ms after the
+  strike, 0.2 v, 12 ms.
+- carriage-return slide: gain 0.12 -> 0.27, sweep 400-1300 -> 550-1750 Hz;
+  the stop is unchanged.
+- room: tail 0.5 -> 0.7 s, wet path low-passed at 2.5 kHz, wet 18 -> 23%.
+- master gain 0.8 -> 0.84 (set so the raw peak lands near -2.5 dBFS).
+- toWav no longer scales: it writes the samples as they are, clamped at
+  full scale. render() defaults to 44,100 Hz.
+
+### 1.3 Reference WAV
+`dateline-sound.wav`, `TypeSound.render("NOVEMBER 1, 2017", 44100, 1917)`:
+mono, 16-bit, 44,100 Hz, 290,088 bytes, 3.29 s. Raw peak -2.48 dBFS (no
+gain applied), RMS -24.1 dBFS, no clipped samples. An onset scan finds 14
+strikes (56 to 1688 ms) and the carriage-return stop at 2250 ms. Nobody
+here can hear it; neon listens in the re-check.
+
+### 1.4 and 2: spec
+spec.md 3.3 and 6.3 match the new code and file, and 1.2, 3.4, 3.8, 3.9,
+section 4's table, section 5's balances row, 7.1 and 7.2 carry the agreed
+fixes (see the fix-round reply).
+
+Nothing visible on the six screens changed (the button is hidden in
+renders), so the stills were not redone.
+

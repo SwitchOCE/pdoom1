@@ -315,3 +315,16 @@ Fixed along the way:
   toned down (.85 to .6).
 
 Not judged from stills: the type-on, the sound, hover and motion.
+
+## Fix round (hifi3 council r1, item 5.1)
+
+- **The sound block and the button lock.**
+  - The block between SOUND_START and SOUND_END is now H's current block, byte for byte.
+    With it, playDateline returns null while a play is still sounding, and
+    `TypeSound.busy()` exists.
+  - The "play with sound" button is disabled from the click until onDone, in both motion
+    settings. It has H's dashed disabled style.
+- **Checked in headless Chromium (Playwright, real time).** In both motion settings,
+  three fast clicks start one play and leave the button disabled. After onDone the button
+  is enabled again, and one more click starts the second play. No page errors.
+- **No re-render.** The button is hidden in the renders (`?still=1`).

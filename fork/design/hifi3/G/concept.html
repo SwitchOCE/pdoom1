@@ -309,6 +309,7 @@ body{font-family:var(--sans);color:var(--bone);font-size:18px}
 .mock-snd{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:50;font:600 16px/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;text-transform:uppercase;
   color:#d6cebd;background:rgba(9,8,7,.86);border:1px dashed rgba(214,206,189,.55);padding:7px 14px;cursor:pointer}
 .mock-snd:hover,.mock-snd:focus-visible{border-style:solid;border-color:#d9a03a;color:#e8dcc2;outline:none}
+.mock-snd:disabled{cursor:default;color:#968d7c;border-color:rgba(214,206,189,.3);border-style:dashed}
 #txt{display:none}
 </style>
 </head>
@@ -438,20 +439,25 @@ function dateline(parent){
    The spy-film title-card strike, synthesised with the Web Audio API
    (no samples). Public:
      playDateline(text, {onChar, onDone}) -> char times in ms from now,
-       or null without Web Audio. Call it from a click (browsers block
-       sound before one). onChar(i, ch) fires as character i strikes
-       (spaces included, silent); onDone() after the carriage return.
+       or null. Call it from a click (browsers block sound before one).
+       onChar(i, ch) fires as character i strikes (spaces included,
+       silent); onDone() fires once the last tail has died away.
        Use the returned times as CSS animation delays, or onChar, or both.
-     TypeSound.play(text) -> the same times, sound only
+     TypeSound.play(text) -> the same times, sound only, or null
+     TypeSound.busy() -> true while a play is still sounding
      TypeSound.render(text, sampleRate, seed) -> Promise<AudioBuffer>
        (OfflineAudioContext; seeded, so a render repeats exactly)
      TypeSound.toWav(audioBuffer) -> Uint8Array, 16-bit PCM mono
+   Replay guard: while a play is still sounding (through its tail),
+   play() and playDateline() ignore a new call and return null; no
+   onChar or onDone fires for it. null also means "no Web Audio".
+   Callers keep their control disabled until onDone.
    ================================================================== */
 var TypeSound = (function(){
   function rng(seed){ var x = (seed>>>0) || 0x2f6b1d; return function(){ x ^= x<<13; x >>>= 0; x ^= x>>>17; x ^= x<<5; x >>>= 0; return x/4294967296; }; }
   function noiseBuf(ctx, sec, r){ var n = Math.ceil(ctx.sampleRate*sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++) d[i] = r()*2-1; return b; }
-  // a small hard room: 0.5 s of noise falling off as (1-t)^4
-  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
+  // a small, dark, hard room: 0.7 s of noise falling off as (1-t)^4
+  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.7), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
   function env(ctx, g, t, a, peak, decay){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t+a); g.gain.exponentialRampToValueAtTime(0.0001, t+a+decay); }
   function noise(ctx, bus, buf, r, t, type, freq, q, a, peak, decay){
     var src = ctx.createBufferSource(); src.buffer = buf;
@@ -466,20 +472,22 @@ var TypeSound = (function(){
     var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
     o.connect(g); g.connect(bus); o.start(t); o.stop(t+a+decay+.02);
   }
-  // one key: type-bar slap + click + platen thump + key rattle; v = how hard, p = pitch spread
+  // one key: steel contact click + type-bar slap + short platen thump + rattle + escapement tick.
+  // v = how hard; p = pitch spread of the noise layers (+-6%); q = the thump's own, narrower spread (+-2.5%)
   function strike(ctx, bus, buf, r, t){
-    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12;
-    noise(ctx, bus, buf, r, t, "bandpass", 2600*p, 1.2, .001, .9*v, .045);    // the slap of the type bar on the platen
-    noise(ctx, bus, buf, r, t, "highpass", 5200*p, .7, .0005, .45*v, .006);   // the click on contact
-    tone(ctx, bus, t, 170*p, 62*p, .05, .002, .85*v, .09);                     // the thump through the desk
-    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .16*v, .11);   // the key's own rattle
+    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12, q = 1 + (r()-.5)*.05;
+    noise(ctx, bus, buf, r, t, "highpass", 4500*p, .7, .0005, .8*v, .009);    // the steel contact, leading
+    noise(ctx, bus, buf, r, t, "bandpass", 2900*p, 1.4, .001, .85*v, .025);   // the slap of the type bar on the platen
+    tone(ctx, bus, t, 170*q, 62*q, .04, .002, .68*v, .045);                    // the thump through the desk
+    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .12*v, .07);   // the key's own rattle
+    noise(ctx, bus, buf, r, t+.017, "bandpass", 3900*p, 14, .001, .2*v, .012); // the escapement tick, as the bar falls back
   }
-  // the carriage return: a short slide, then a low stop
+  // the carriage return: an audible slide, then a low stop (no bell)
   function thunk(ctx, bus, buf, r, t){
     var src = ctx.createBufferSource(); src.buffer = buf;
     var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 2;
-    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(1300, t+.22);
-    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.12, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
+    f.frequency.setValueAtTime(550, t); f.frequency.exponentialRampToValueAtTime(1750, t+.22);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.27, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
     src.connect(f); f.connect(g); g.connect(bus); src.start(t, r()); src.stop(t+.26);
     tone(ctx, bus, t+.24, 95, 42, .12, .003, 1.0, .32);
     noise(ctx, bus, buf, r, t+.24, "bandpass", 300, 1, .002, .4, .08);
@@ -487,11 +495,12 @@ var TypeSound = (function(){
   // timing: 95 ms a key, +-22 ms, spaces silent and 60 ms longer, a beat after punctuation
   function schedule(ctx, out, text, r, start, withThunk){
     var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .002; comp.release.value = .12;
-    var master = ctx.createGain(); master.gain.value = .8;
+    var master = ctx.createGain(); master.gain.value = MASTER;
     var bus = ctx.createGain(); bus.gain.value = 1;
     var verb = ctx.createConvolver(); verb.buffer = room(ctx, r);
-    var wet = ctx.createGain(); wet.gain.value = .18;
-    bus.connect(comp); bus.connect(verb); verb.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
+    var dark = ctx.createBiquadFilter(); dark.type = "lowpass"; dark.frequency.value = 2500; dark.Q.value = .7;
+    var wet = ctx.createGain(); wet.gain.value = .23;
+    bus.connect(comp); bus.connect(verb); verb.connect(dark); dark.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
     var buf = noiseBuf(ctx, 1.5, r), times = [], at = 0, prev = "";
     Array.prototype.forEach.call(text, function(ch, i){
       if (i) at += .095 + (r()-.5)*.044 + (ch===" " ? .06 : 0) + (prev==="," ? .04 : 0);
@@ -501,43 +510,45 @@ var TypeSound = (function(){
     });
     var end = start + at;
     if (withThunk !== false){ thunk(ctx, bus, buf, r, end+.32); end += .32 + .24 + .35; }
-    return {times:times, end:end + .5};
+    return {times:times, end:end + .7};    // + the room's tail
   }
-  var live = null;
-  function play(text){
+  var MASTER = .84;
+  var live = null, busyUntil = 0;
+  function busy(){ return !!live && live.currentTime < busyUntil; }
+  function play(text, onDone){
     var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    if (busy()) return null;                  // the replay guard: never two plays at once
     live = live || new C(); if (live.state === "suspended") live.resume();
-    var lead = .06, sch = schedule(live, live.destination, text, Math.random, live.currentTime + lead, true);
-    var base = Math.round((live.currentTime + lead)*1000);
+    var lead = .06, now = live.currentTime, sch = schedule(live, live.destination, text, Math.random, now + lead, true);
+    busyUntil = sch.end;
+    var base = Math.round((now + lead)*1000);
+    if (onDone) setTimeout(onDone, Math.ceil((sch.end - now)*1000) + 30);
     return sch.times.map(function(ms){ return ms - base + lead*1000; });
   }
   function render(text, sampleRate, seed){
-    sampleRate = sampleRate || 22050;
+    sampleRate = sampleRate || 44100;
     var r = rng(seed || 1917), probe = new OfflineAudioContext(1, 1, sampleRate);
     var dur = schedule(probe, probe.destination, text, rng(seed || 1917), .05, true).end;
     var ctx = new OfflineAudioContext(1, Math.ceil(dur*sampleRate), sampleRate);
     schedule(ctx, ctx.destination, text, r, .05, true);
     return ctx.startRendering();
   }
-  function toWav(ab){
-    var d = ab.getChannelData(0), n = d.length, peak = 0, i;
-    for (i=0;i<n;i++) peak = Math.max(peak, Math.abs(d[i]));
-    var k = peak > .891 ? .891/peak : 1;                 // never above -1 dBFS
+  function toWav(ab){                          // writes the samples as they are: no gain, clamped at full scale
+    var d = ab.getChannelData(0), n = d.length, i;
     var out = new Uint8Array(44 + n*2), v = new DataView(out.buffer);
     function str(o, x){ for (var j=0;j<x.length;j++) out[o+j] = x.charCodeAt(j); }
     str(0,"RIFF"); v.setUint32(4, 36+n*2, true); str(8,"WAVE"); str(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
     v.setUint32(24, ab.sampleRate, true); v.setUint32(28, ab.sampleRate*2, true); v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,"data"); v.setUint32(40, n*2, true);
-    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i]*k)); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
+    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
     return out;
   }
-  return {play:play, render:render, toWav:toWav};
+  return {play:play, busy:busy, render:render, toWav:toWav};
 })();
 function playDateline(text, opts){
   opts = opts || {};
-  var times = TypeSound.play(text);
+  var times = TypeSound.play(text, opts.onDone);
   if (!times) return null;
   if (opts.onChar) Array.prototype.forEach.call(text, function(ch, i){ setTimeout(function(){ opts.onChar(i, ch); }, times[i]); });
-  if (opts.onDone) setTimeout(opts.onDone, times[times.length-1] + 900);
   return times;
 }
 /* ================== END TYPEWRITER SOUND BLOCK ================== */
@@ -548,10 +559,13 @@ function soundControl(){
   if (STILL) return;
   var b = document.createElement("button"); b.className = "mock-snd"; b.type = "button";
   b.textContent = "Mock-up: type the date with sound";
+  /* locked from the click until onDone, in both motion settings (the block guards as well) */
   b.addEventListener("click", function(){
-    if (!DATELINE) return;
-    var times = playDateline(DATELINE.text);
-    if (times) datelineType(DATELINE.el, times);
+    if (!DATELINE || b.disabled) return;
+    var times = playDateline(DATELINE.text, {onDone:function(){ b.disabled = false; }});
+    if (!times) return;
+    b.disabled = true;
+    datelineType(DATELINE.el, times);
   });
   document.body.appendChild(b);
 }

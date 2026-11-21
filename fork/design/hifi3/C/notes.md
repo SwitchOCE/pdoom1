@@ -283,3 +283,25 @@ Checked by eye at 1920 (a montage of all six) and on crops at 720:
   movement and messages columns align.
 - **Layout check:** with `?check=1`, every state reports no overlaps, no
   text outside its box and no text under 16px.
+
+## hifi3 fix round (fork/design/hifi3/council/r1-agreed.md)
+
+- 4.1: the schedule board's clamp moved down 6px (top -6px to 0). It now
+  clears the P(DOOM) panel by 8px at 1920 (about 5px at 1280x720), where it
+  used to clear it by 2px. State 3 was re-rendered at both sizes, along with
+  s3.webp (274 KB). Contrast is unchanged (4.58 at 1920, 4.57 at 720, 0
+  under 4.5). The layout check is clean.
+- 5.1: H's block between SOUND_START and SOUND_END was copied byte for
+  byte; a string compare with H confirms it. The "play with sound" control
+  is now locked:
+  - it is disabled on the click that starts a play, and enabled again in
+    onDone, in both motion settings;
+  - a click that playDateline answers with null leaves it enabled;
+  - it uses H's dashed :disabled style.
+  Checked in headless Chromium on state 1 with three clicks 40ms apart, with
+  and without --force-prefers-reduced-motion. One play started each time,
+  the control was disabled during it, and it was enabled again after onDone.
+  (Under --virtual-time-budget the audio clock does not advance, so busy()
+  still read true after onDone there. That is an artefact of the test
+  harness, not of the page.) The control is hidden under ?still=1, so no
+  re-render was needed.

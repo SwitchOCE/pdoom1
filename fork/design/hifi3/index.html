@@ -120,6 +120,9 @@ button.act.quiet{border-color:#5d5442;color:#d8cdb2}
 .spec li{margin:.2em 0}
 .spec pre{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:12px;overflow-x:auto;font:12.5px/1.55 var(--code)}
 .spec pre code{background:none;padding:0}
+.spec :not(pre)>code,.spec td{overflow-wrap:anywhere}
+.spec .tbl-wrap{max-width:100%}
+.spec-body,.spec details{min-width:0}
 .spec table{font-size:13.5px}
 .spec-body{max-width:760px}
 details.spec-box{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:6px 20px 16px}
@@ -216,88 +219,57 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
 <h3>1.1 The aim</h3>
 <p>H keeps the player's view on one desk for the whole month. You plan at the desk, watch the month play out from it, and read the month's results on it.</p>
 <ul><li>
-The room behind the desk is Pip's office art. It gets darker as doom
- rises, so the player feels the danger before they read a number.
+The room behind the desk is Pip's office art. It gets darker as doom rises, so the player feels the danger before they read a number.
 </li><li>
-Everything the player acts on sits in panels that never darken. Doom is
- a layer over the room. It is not a repaint of the controls.
+Everything the player acts on sits in panels that never darken. Doom is a layer over the room. It is not a repaint of the controls.
 </li><li>
-Paper is the only light thing on screen: the advisor's note, an event
- that needs a reply, and the month review. When paper is up, it holds the
- keys.
+Paper is the only light thing on screen: the advisor's note, an event that needs a reply, and the month review. When paper is up, it holds the keys.
 </li><li>
-Each new month opens with the date typed across the top left, with a
- typewriter sound, like the title card of a spy film. It names only the
- date. The game names no place for the lab, so the dateline names none.
+Each new month opens with the date typed across the top left, with a typewriter sound, like the title card of a spy film. It names only the date. The game names no place for the lab, so the dateline names none.
 </li><li>
-The look is grim and worn: near-black grounds, bone-coloured text, brass
- edges, film grain and grime. Anything that does not fit that character
- is left out. The mock-up's "LAB TERMINAL 1" label and its CRT scan lines
- were removed for that reason.
+The look is grim and worn: near-black grounds, bone-coloured text, brass edges, film grain and grime. Anything that does not fit that character is left out. The mock-up's "LAB TERMINAL 1" label and its CRT scan lines were removed for that reason.
 </li></ul>
 <h3>1.2 What it must not change</h3>
 <p>H is a UI and presentation change only.</p>
 <ul><li>
-<b>No mechanics.</b> With the same seed and the same inputs, a run must play
- out exactly as it does today. No cost, odds, formula, action, event or
- turn step changes. The UI draws no random numbers.
+<b>No mechanics.</b> With the same seed and the same inputs, a run must play out exactly as it does today. No cost, odds, formula, action, event or turn step changes. The UI draws no random numbers.
 </li><li>
-<b>ADR-0015, no printed doom deltas.</b> The P(Doom) meter shows the level
- the game already shows (for example 40.2%), its band name and a RISING
- label. Nowhere does H print a change in doom as a number. The month
- review reports doom by band only: "HIGH -&gt; SEVERE (crossed up)".
+<b>ADR-0015, no printed doom deltas.</b> The P(Doom) meter shows the level the game already shows (for example 40.2%), its band name and a RISING label. Nowhere does H print a change in doom as a number. The month review reports doom by band only: "HIGH -&gt; SEVERE (crossed up)".
 </li><li>
-<b>ADR-0001, spending buys sight.</b> H shows only what the player already
- sees today, or what can be worked out from it. Things the game hides
- stay hidden:
+<b>ADR-0001, spending buys sight.</b> H shows only what the player already sees today, or what can be worked out from it. Things the game hides stay hidden:
 <ul><li>
 where doom comes from, unless the player has paid to see it;
 </li><li>
-rivals the player has not discovered (the review has no rivals block
- unless the game prints one);
+rivals the player has not discovered (the review has no rivals block unless the game prints one);
 </li><li>
 a candidate's hidden self-worth and offer range;
 </li><li>
 the odds and results of an event choice before it is made;
 </li><li>
-what a play will yield before Commit. The plan's AFTER COSTS line
- subtracts the listed costs and nothing else.
+what a play will yield before Commit. The plan's AFTER COSTS line subtracts the listed costs and nothing else.
 </li></ul>
 </li><li>
 <b>ADR-0011, the Attention rule</b> (amendment 2026-07-28):
 <ul><li>
-The month's Attention is 20 hours on the standard difficulty
- (<code>data/balance/defaults.json</code> <code>attention_per_month</code>: 24 easy, 20
- standard, 16 hard). <code>planning_share</code> 0.6 splits it into 12 planning
- hours and 8 operating hours.
+The month's Attention is 20 hours on the standard difficulty (<code>data/balance/defaults.json</code> <code>attention_per_month</code>: 24 easy, 20 standard, 16 hard). <code>planning_share</code> 0.6 splits it into 12 planning hours and 8 operating hours.
 </li><li>
-Operating work may spill into planning hours. Planning work may never
- use operating hours. The gate is <code>MonthPlan.can_spend_hours</code>
- (<code>scripts/core/month_plan.gd:182</code>).
+Operating work may spill into planning hours. Planning work may never use operating hours. The gate is <code>MonthPlan.can_spend_hours</code> (<code>scripts/core/month_plan.gd:182</code>).
 </li><li>
-Travel uses operating hours only and may not spill (amendment (e)).
+The one exception to the spill is conference travel: it uses operating hours only and may not spill (ADR-0011 amendment (e), lines 169-171).
 </li><li>
-The reserve is untyped: hours not spent on plays are held for events,
- and what events do not use evaporates at month end. There is no
- banking (ADR-0009 point 4).
+The reserve is untyped: hours not spent on plays are held for events, and what events do not use evaporates at month end. There is no banking (ADR-0009 point 4).
 </li><li>
-Hours are billed in queue order, so the play that spills is the first
- operating play past the 8th operating hour.
+The game books a play's declared hours when it is queued. Plays that charge themselves (the hiring pipeline and the like) also debit hours when they run, at Commit (<code>game_manager.gd:715-717</code>). MonthPlan's pool totals are the authority. The mock-up's spill tag on a row is its own estimate, made in queue order; the game does not record a spill per row.
 </li></ul>
 </li></ul>
 <h2>2. Tokens</h2>
 <h3>2.1 Canvas</h3>
 <ul><li>
-The game's canvas is 1920x1080 (<code>project.godot</code>: <code>canvas_items</code> stretch,
- aspect <code>expand</code>). All positions here are on that canvas.
+The game's canvas is 1920x1080 (<code>project.godot</code>: <code>canvas_items</code> stretch, aspect <code>expand</code>). All positions here are on that canvas.
 </li><li>
-With <code>expand</code>, a wider window adds space. Anchor the left column (the
- dateline, the plan sheet, the terminal) to the left edge. Anchor the
- right column (the meters, the rack, the held panel, Commit) to the right
- edge. The room art fills the space between.
+With <code>expand</code>, a wider window adds space. Anchor the left column (the dateline, the plan sheet, the terminal) to the left edge. Anchor the right column (the meters, the rack, the held panel, Commit) to the right edge. The room art fills the space between.
 </li><li>
-The mock-up scales a fixed 1920x1080 stage, so 1280x720 is the same layout
- at two-thirds size. It was checked at both sizes.
+The mock-up scales a fixed 1920x1080 stage, so 1280x720 is the same layout at two-thirds size. It was checked at both sizes.
 </li></ul>
 <h3>2.2 Palette</h3>
 <p>Grounds and frames:</p>
@@ -312,38 +284,25 @@ The mock-up scales a fixed 1920x1080 stage, so 1280x720 is the same layout
 <h3>2.3 Doom colours and bands</h3>
 <p>H uses the game's own doom colours and bands from <code>godot/autoload/theme_manager.gd</code>. It adds no new thresholds.</p>
 <ul><li>
-<b>Bands</b> (<code>DOOM_STATUS_BANDS</code>): NOMINAL below 15, ELEVATED below 37, HIGH
- below 52, SEVERE below 67, EXTREME below 80, CATASTROPHIC below 92,
- TERMINAL above that. "Band N of 7" counts from NOMINAL = 1.
+<b>Bands</b> (<code>DOOM_STATUS_BANDS</code>): NOMINAL below 15, ELEVATED below 37, HIGH below 52, SEVERE below 67, EXTREME below 80, CATASTROPHIC below 92, TERMINAL above that. "Band N of 7" counts from NOMINAL = 1.
 </li><li>
-<b>Colour</b> (<code>DOOM_STOPS</code>, blended between stops): green to 15, yellow at
- 30, orange at 45, red at 60, dark crimson at 74, deep purple at 87,
- saturated dark purple at 100.
+<b>Colour</b> (<code>DOOM_STOPS</code>, blended between stops): green to 15, yellow at 30, orange at 45, red at 60, dark crimson at 74, deep purple at 87, saturated dark purple at 100.
 </li><li>
-<b>Arc and ticks:</b> <code>get_doom_stroke_color()</code>, which lifts dark tiers to a
- luminance floor of 0.22.
+<b>Arc and ticks:</b> <code>get_doom_stroke_color()</code>, which lifts dark tiers to a luminance floor of 0.22.
 </li><li>
-<b>Text</b> (the % and the band name): the stroke colour lifted further,
- toward a pale tint of itself, until it reaches 5:1 on the panel. The game
- has no such step today (see section 7.2).
+<b>Text</b> (the % and the band name): the stroke colour lifted further, toward a pale tint of itself, until it reaches 5:1 on the panel. The game has no such step today (see section 7.2).
 </li></ul>
 <h3>2.4 How the room darkens</h3>
 <p>The room is Pip's <code>office_wide_dawn</code> art under a doom layer. The layer has one grade and one glow source, per the palette doc's discipline. Art bands follow <code>PALETTE_AND_DOOM_INTENSITY.md</code> (0 Cosy to 4 Terminal):</p>
 <div class="tbl-wrap"><table><thead><tr><th>Art band</th><th>Doom bands</th><th>Brightness</th><th>Saturation</th><th>Contrast</th><th>Grade</th><th>Glow on far monitor</th><th>Window sky</th></tr></thead><tbody><tr><td>0</td><td>NOMINAL, early ELEVATED</td><td>.62</td><td>.55</td><td>1.06</td><td>warm brown, 16%</td><td>faint amber</td><td>none</td></tr><tr><td>1</td><td>late ELEVATED, HIGH</td><td>.55</td><td>.45</td><td>1.08</td><td>grey, 24%</td><td>low orange</td><td>overcast grey</td></tr><tr><td>2</td><td>SEVERE, EXTREME</td><td>.46</td><td>.35</td><td>1.10</td><td>blue-grey, 34%</td><td>red-orange</td><td>storm blue</td></tr><tr><td>3</td><td>CATASTROPHIC</td><td>.40</td><td>.30</td><td>1.14</td><td>blood, 45%</td><td>violet <code>#7A3B8F</code>-like</td><td>violet to red</td></tr><tr><td>4</td><td>TERMINAL</td><td>darker still</td><td></td><td></td><td></td><td></td><td>fire-lit</td></tr></tbody></table></div>
 <ul><li>
-Band 3 adds a late layer: a soot vignette from the edges, a violet
- multiply in the shadows, a violet aura and smoke on the cat's photo.
+Band 3 adds a late layer: a soot vignette from the edges, a violet multiply in the shadows, a violet aura and smoke on the cat's photo.
 </li><li>
-Band 4 is not drawn. The steps above leave room for it: a deeper
- vignette, more smoke, and the meter at its last colour.
+Band 4 is not drawn. The steps above leave room for it: a deeper vignette, more smoke, and the meter at its last colour.
 </li><li>
-The mock-up fakes the layer with CSS filters over one picture. In the
- game it should be per-band art layers (window sky, monitor glow, floor
- smoke), as the palette doc already plans.
+The mock-up fakes the layer with CSS filters over one picture. In the game it should be per-band art layers (window sky, monitor glow, floor smoke), as the palette doc already plans.
 </li><li>
-Which doom bands map to which art band is a proposal. ELEVATED spans art
- bands 0 and 1 because ELEVATED is wide (15 to 37). Today's game does not
- key the office art to doom.
+Which doom bands map to which art band is a proposal. ELEVATED spans art bands 0 and 1 because ELEVATED is wide (15 to 37). Today's game does not key the office art to doom.
 </li></ul>
 <h3>2.5 Type</h3>
 <p>The mock-up uses five sizes at 1920: 16, 18, 22, 28 and 40 px, with a 16 px floor.</p>
@@ -351,23 +310,18 @@ Which doom bands map to which art band is a proposal. ELEVATED spans art
 <div class="tbl-wrap"><table><thead><tr><th>H size</th><th>Used for</th><th>Game token</th></tr></thead><tbody><tr><td>16</td><td>labels, keycaps, notes, plan rows</td><td>small (15)</td></tr><tr><td>18</td><td>names, paper body, buttons</td><td>body (19)</td></tr><tr><td>22</td><td>band name, section heads, the event title</td><td>body (19), or a new step</td></tr><tr><td>28</td><td>values: held hours, money, the dateline</td><td>header (27)</td></tr><tr><td>40</td><td>the P(Doom) percentage</td><td>title (35)</td></tr></tbody></table></div>
 <p>Two points for Pip, since both change <code>FONT_STEPS</code>:</p>
 <ul><li>
-small is 15, one pixel under the 16 px floor H was measured at. Moving
- small to -3 (16) would keep the measured contrast valid.
+small is 15, one pixel under the 16 px floor H was measured at. Moving small to -3 (16) would keep the measured contrast valid.
 </li><li>
-The 22 step has no token. Either set it at body, or add one step (for
- example <code>"label": 3</code>).
+The 22 step has no token. Either set it at body, or add one step (for example <code>"label": 3</code>).
 </li></ul>
 <p>Faces (none is bundled with the game today; <code>godot/assets/fonts/</code> holds only a <code>.gitkeep</code>, and the terminal uses a system mono):</p>
 <div class="tbl-wrap"><table><thead><tr><th>Face</th><th>Use</th></tr></thead><tbody><tr><td>Barlow Condensed 500-700</td><td>labels, plate names, panel heads, caps with 2px tracking</td></tr><tr><td>IBM Plex Mono 400-600</td><td>every number, keycaps, hours, the feed</td></tr><tr><td>IBM Plex Sans 400-500</td><td>names, notes, card text</td></tr><tr><td>Courier Prime 400-700</td><td>the dateline and all paper</td></tr></tbody></table></div>
 <p>All four are under the SIL Open Font License, so they can ship with the game.</p>
 <h3>2.6 Spacing and lines</h3>
 <ul><li>
-Outer gutter: 56 px on the left, 40 px from the top for the meters (24 px
- for the dateline), 40 px from the right and bottom edges.
+Outer gutter: 56 px on the left, 40 px from the top for the meters (24 px for the dateline), 40 px from the right and bottom edges.
 </li><li>
-Gaps: 16 px between the two meters and between the sheet and the rack;
- 40 px between the rack and the held panel. Inside panels: 16 px side
- padding, 12 px between rows.
+Gaps: 16 px between the two meters and between the sheet and the rack; 40 px between the rack and the held panel. Inside panels: 16 px side padding, 12 px between rows.
 </li><li>
 Rack plates: 46 px tall, 10 px apart.
 </li><li>
@@ -381,30 +335,20 @@ corner ticks 2 px, 12 px long, in brass;
 </li><li>
 a plate's left edge 3 px (amber when lit);
 </li><li>
-focus is a 1 px amber hairline; the selected paper option has a 2 px
- ink frame.
+focus is a 1 px amber hairline; the selected paper option has a 2 px ink frame.
 </li></ul>
 </li><li>
-Corners: 2 px radius on panels, 1 to 2 px on chips and keycaps. Nothing
- is rounded more than that.
+Corners: 2 px radius on panels, 1 to 2 px on chips and keycaps. Nothing is rounded more than that.
 </li></ul>
 <h3>2.7 Grime and texture</h3>
 <ul><li>
-<b>Panels:</b> flat dark fill with soot on the inside (a 26 px inner shadow
- at 42% black, and a heavier one along the bottom edge). Over the fill:
- low-frequency smut and fine grain at 16% (screen blend), and Pip's
- <code>tex_painted_metal_panel</code> at 5% as scuffs. Worn brass ticks on the four
- corners.
+<b>Panels:</b> flat dark fill with soot on the inside (a 26 px inner shadow at 42% black, and a heavier one along the bottom edge). Over the fill: low-frequency smut and fine grain at 16% (screen blend), and Pip's <code>tex_painted_metal_panel</code> at 5% as scuffs. Worn brass ticks on the four corners.
 </li><li>
-<b>Paper:</b> the gradient above. Smut and grain multiplied at 16%, burnt
- edges (inner shadows), one fold crease, darker worn corners. The event
- card's fold sits at 36.5% of its height so it misses the text.
+<b>Paper:</b> the gradient above. Smut and grain multiplied at 16%, burnt edges (inner shadows), one fold crease, darker worn corners. The event card's fold sits at 36.5% of its height so it misses the text.
 </li><li>
 <b>Whole screen:</b> film grain at 20% (overlay blend).
 </li><li>
-Grime must never sit under small text at a strength that breaks the
- contrast floor. The mock-up's textures are procedural noise; the game
- can use small tiling textures instead.
+Grime must never sit under small text at a strength that breaks the contrast floor. The mock-up's textures are procedural noise; the game can use small tiling textures instead.
 </li></ul>
 <h3>2.8 The contrast floor</h3>
 <p>All text must reach <b>4.5:1</b> against what is really behind it.</p>
@@ -412,11 +356,9 @@ Grime must never sit under small text at a strength that breaks the
 <div class="tbl-wrap"><table><thead><tr><th>State</th><th>Text boxes</th><th>Lowest at 1920</th><th>Lowest at 1280x720</th></tr></thead><tbody><tr><td>1</td><td>52</td><td>5.38</td><td>4.63</td></tr><tr><td>2</td><td>134</td><td>5.38</td><td>4.63</td></tr><tr><td>3</td><td>188</td><td>4.86</td><td>4.54</td></tr><tr><td>4</td><td>74</td><td>5.35</td><td>4.67</td></tr><tr><td>5</td><td>100</td><td>4.91</td><td>4.63</td></tr><tr><td>6</td><td>49</td><td>4.88</td><td>4.63</td></tr></tbody></table></div>
 <p>Two rules came out of the measuring:</p>
 <ul><li>
-Disabled controls are shown with a dashed edge and hatching, not by
- fading the text. Their labels keep dim colour (5:1 or better).
+Disabled controls are shown with a dashed edge and hatching, not by fading the text. Their labels keep dim colour (5:1 or better).
 </li><li>
-Paper labels at 16 px are bold, and paper keycaps are inverted
- (light on ink).
+Paper labels at 16 px are bold, and paper keycaps are inverted (light on ink).
 </li></ul>
 <h2>3. Components</h2>
 <p>Positions are x,y on the 1920x1080 canvas.</p>
@@ -424,90 +366,65 @@ Paper labels at 16 px are bold, and paper keycaps are inverted
 <ul><li>
 Panel at 1400,40, 280x330.
 </li><li>
-A 270-degree arc (radius 96, stroke 16) in the doom stroke colour, with a
- tick at each band edge.
+A 270-degree arc (radius 96, stroke 16) in the doom stroke colour, with a tick at each band edge.
 </li><li>
-In the middle: the % at 40 px and the band name at 22 px (18 px when the
- name is long, like CATASTROPHIC). Both in the doom text colour.
+In the middle: the % at 40 px and the band name at 22 px (18 px when the name is long, like CATASTROPHIC). Both in the doom text colour.
 </li><li>
 Under the arc:
 <ul><li>
-a RISING chip, when the game reports a rising trend (a label, never a
- number);
+a RISING chip, when the game reports a rising trend (a label, never a number);
 </li><li>
 a 7-step band ladder with the current band marked;
 </li><li>
-the line "band N of 7". At band index 5 and up it becomes the game's
- own warning, "Very close to game over" (<code>main_ui.gd:1009</code>).
+the line "band N of 7". At band index 5 and up it becomes the game's own warning, "Very close to game over" (<code>main_ui.gd:1010</code>).
 </li></ul>
 </li><li>
-States: normal; rising; warning (band 5+). The panel itself never
- changes colour.
+States: normal; rising; warning (band 5+). The panel itself never changes colour.
 </li></ul>
 <h3>3.2 Reputation tachometer</h3>
 <ul><li>
 Panel at 1696,40, 184x330.
 </li><li>
-A semicircle (radius 64, stroke 14) in bone <code>#a99d88</code>, scale 0 to 100,
- the value in mono under it.
+A semicircle (radius 64, stroke 14) in bone <code>#a99d88</code>, scale 0 to 100, the value in mono under it.
 </li><li>
-A blood-red mark at 0 with the note "0 ends the run". That is the game's
- rule: reputation at 0 or below ends the run (<code>game_state.gd:617</code>).
+A blood-red mark at 0 with the note "0 ends the run". That is the game's rule: reputation at 0 or below ends the run (<code>game_state.gd:791</code>; <code>death_attribution.gd:46</code> files it as a reputation death).
 </li><li>
-No colour change by level. The game's own low-reputation warnings (30 and
- under, 20 and under; <code>main_ui.gd:1015</code>) stay in the game's log.
+No colour change by level. The game's own low-reputation warnings (30 and under, 20 and under; <code>main_ui.gd:1015</code>) stay in the game's log.
 </li></ul>
 <h3>3.3 Dateline</h3>
 <ul><li>
-Top left at 56,24. Courier Prime 700, 28 px, 5 px tracking, <code>#d9d1bf</code>,
- upper case, date only: "NOVEMBER 1, 2017".
+Top left at 56,24. Courier Prime 700, 28 px, 5 px tracking, <code>#d9d1bf</code>, upper case, date only: "NOVEMBER 1, 2017".
 </li><li>
-A worn ribbon: letters land a little lighter or lower in a fixed
- pattern. Opacities 1, .86, .97, .9, 1, .82, .95, 1, .88 and offsets of
- 0 or 1 px, repeating. It is fixed, not random.
+A worn ribbon: letters land a little lighter or lower in a fixed pattern. Opacities 1, .86, .97, .9, 1, .82, .95, 1, .88 and offsets of 0 or 1 px, repeating. It is fixed, not random.
 </li><li>
-<b>When it types:</b> only when a month begins (the first screen, and after
- the month review). Inside a month it shows the date already set. During
- WATCH the day changes in place without typing ("NOVEMBER 14, 2017"), so
- it never disagrees with the clock.
+<b>When it types:</b> only when a month begins (the first screen, and after the month review). Inside a month it shows the date already set. During WATCH the day changes in place without typing ("NOVEMBER 14, 2017"), so it never disagrees with the clock.
 </li><li>
-<b>Timing:</b> the first letter at 260 ms (60 ms when the sound plays), then
- one letter every 95 ms
- (with the sound, +-22 ms per key), a space adds 60 ms, a comma adds a
- 40 ms beat. "NOVEMBER 1, 2017" types in about 1.6 s, and the carriage
- return lands about 0.55 s after the last letter. Drive the letters from
- the sound's schedule so they land on the strikes.
+<b>Timing:</b> the first letter at 260 ms (60 ms when the sound plays), then one letter every 95 ms (with the sound, +-22 ms per key); a space adds 60 ms and a comma adds a 40 ms beat. "NOVEMBER 1, 2017" types in about 1.6 s, and the carriage return stops about 0.56 s after the last letter. Drive the letters from the sound's schedule so they land on the strikes.
 </li><li>
-With reduced motion (if the game gets such a setting), show the date
- whole. The mock-up still plays the sound.
+With reduced motion (if the game gets such a setting), show the date whole. The mock-up still plays the sound.
 </li><li>
 It sits above every dim layer, and menus open below it.
 </li></ul>
-<p><b>The sound</b> (synthesised in the mock-up, between <code>SOUND_START</code> and <code>SOUND_END</code> in <code>concept.html</code>; nothing is sampled from a film). Aim: the hard, heavy typewriter strike of a spy-film title card, heard through a desk in a small hard room.</p>
-<p>Each key strike is four layers started together. Two random values per key vary it: v (0.85 to 1.15, how hard) and p (0.94 to 1.06, pitch).</p>
-<div class="tbl-wrap"><table><thead><tr><th>Layer</th><th>Source</th><th>Shape</th></tr></thead><tbody><tr><td>slap</td><td>white noise, band-pass 2600 Hz x p, Q 1.2</td><td>1 ms attack to 0.9 v, decays over 45 ms</td></tr><tr><td>click</td><td>noise, high-pass 5200 Hz x p</td><td>0.45 v, gone in 6 ms</td></tr><tr><td>thump</td><td>sine falling 170 to 62 Hz x p over 50 ms</td><td>0.85 v, decays over 90 ms</td></tr><tr><td>rattle</td><td>noise, band-pass 900 Hz x p, Q 4, 4 ms late</td><td>0.16 v, decays over 110 ms</td></tr></tbody></table></div>
+<p><b>The sound</b> (synthesised in the mock-up, between <code>SOUND_START</code> and <code>SOUND_END</code> in <code>concept.html</code>; nothing is sampled from a film). Aim: the hard typewriter strike of a spy-film title card: steel on the platen first, a short thud through the desk under it, no bell.</p>
+<p>Each key strike is five layers. Three random values per key vary it: v (0.85 to 1.15, how hard), p (0.94 to 1.06, the noise layers' pitch) and q (0.975 to 1.025, the thump's own narrower pitch, so keys do not sound like tuned blocks).</p>
+<div class="tbl-wrap"><table><thead><tr><th>Layer</th><th>Source</th><th>Start</th><th>Shape</th></tr></thead><tbody><tr><td>contact</td><td>noise, high-pass 4500 Hz x p</td><td>0 ms</td><td>0.5 ms attack to 0.8 v, decays over 9 ms</td></tr><tr><td>slap</td><td>noise, band-pass 2900 Hz x p, Q 1.4</td><td>0 ms</td><td>1 ms attack to 0.85 v, decays over 25 ms</td></tr><tr><td>thump</td><td>sine falling 170 to 62 Hz x q over 40 ms</td><td>0 ms</td><td>0.68 v, decays over 45 ms</td></tr><tr><td>rattle</td><td>noise, band-pass 900 Hz x p, Q 4</td><td>4 ms</td><td>0.12 v, decays over 70 ms</td></tr><tr><td>escapement tick</td><td>noise, band-pass 3900 Hz x p, Q 14</td><td>17 ms</td><td>0.2 v, decays over 12 ms</td></tr></tbody></table></div>
 <ul><li>
-<b>Spaces</b> are silent.
+<b>Timing:</b> 95 ms between keys, +-22 ms random. A space is silent and adds 60 ms. A comma adds a 40 ms beat after it.
 </li><li>
-<b>Carriage return</b>, 320 ms after the last key: a 240 ms slide (noise,
- low-pass sweeping 400 to 1300 Hz, rising to 0.12), then the stop (a sine
- falling 95 to 42 Hz over 120 ms at 1.0, decaying over 320 ms, plus a
- 300 Hz band-pass knock at 0.4 for 80 ms).
+<b>Carriage return</b>, 320 ms after the last key: a 240 ms slide (noise, low-pass sweeping 550 to 1750 Hz, rising to 0.27), then the stop (a sine falling 95 to 42 Hz over 120 ms at 1.0, decaying over 320 ms, plus a 300 Hz band-pass knock at 0.4 for 80 ms).
 </li><li>
-<b>Room and level:</b> a 0.5 s noise reverb tail at 18% wet; a compressor
- (threshold -18 dB, ratio 4, attack 2 ms, release 120 ms); master gain 0.8.
+<b>Room and level:</b> a 0.7 s noise reverb tail, its wet path low-passed at 2.5 kHz, at 23% wet; a compressor (threshold -18 dB, ratio 4, attack 2 ms, release 120 ms); master gain 0.84.
+</li><li>
+<b>One at a time.</b> While a play is still sounding, through its room tail, a new call is ignored: it returns null and fires no callbacks. The control that started it stays disabled until onDone, with or without reduced motion. Two plays can never overlap. The game needs the same rule.
 </li></ul>
 <p>For the game asset, see section 6.3.</p>
 <h3>3.4 Menu rack</h3>
 <ul><li>
-Panel at 1268,612, 276x428. Seven plates, 46 px tall, 10 px apart. Each
- plate has Pip's icon, a condensed caps name and a keycap.
+Panel at 1268,612, 276x428. Seven plates, 46 px tall, 10 px apart. Each plate has Pip's icon, a condensed caps name and a keycap.
 </li><li>
-PLAN set: ACTIONS A, PLAN P, STAFF E, UPGRADES U, LEDGER L, IN-TRAY R,
- GUIDE F1.
+PLAN set: ACTIONS A, PLAN P, STAFF E, UPGRADES U, LEDGER L, IN-TRAY R, GUIDE F1.
 </li><li>
-WATCH set: FEED F, STAFF E, LEDGER L, GUIDE F1 live; ACTIONS, PLAN and
- UPGRADES shown disabled.
+WATCH set: FEED F, STAFF E, LEDGER L, GUIDE F1 live; ACTIONS, PLAN and UPGRADES shown disabled.
 </li><li>
 States:
 <ul><li>
@@ -515,16 +432,14 @@ rest;
 </li><li>
 lit (the open menu): amber left edge and keycap;
 </li><li>
-hint: an amber ring and glow, used once, for the tutorial's first
- pointer;
+hint: an amber ring and glow, used once, for the tutorial's first pointer;
 </li><li>
 disabled: dashed edge, hatched, no keycap;
 </li><li>
-keys held: when paper owns the keys, no plate shows a keycap.
+keys held: while a WATCH event waits for a reply, no plate shows a keycap. Under the month review the plates keep theirs.
 </li></ul>
 </li><li>
-IN-TRAY and UPGRADES are drawn closed only. What IN-TRAY collects is for
- the builder to settle from today's notices.
+IN-TRAY and UPGRADES are drawn closed only. What IN-TRAY collects is for the builder to settle from today's notices.
 </li></ul>
 <h3>3.5 Plan panel (the terminal)</h3>
 <ul><li>
@@ -532,22 +447,18 @@ Panel at 56,612, 560x428. On the desk it is the month at a glance:
 <ul><li>
 "NOVEMBER PLAN";
 </li><li>
-the Attention bars, planning N of 12 and operating N of 8, one cell per
- hour, filled = hours left;
+the Attention bars, planning N of 12 and operating N of 8, one cell per hour, filled = hours left;
 </li><li>
 the queue in short;
 </li><li>
 when empty, "Plan is empty / open Actions [A]".
 </li></ul>
 </li><li>
-In WATCH the same panel plays the month back: the month and "workday N of
- 22", a bar with one segment per workday and today marked, then the feed
- (3.11).
+In WATCH the same panel plays the month back: the month and "workday N of 22", a bar with one segment per workday and today marked, then the feed (3.11).
 </li></ul>
 <h3>3.6 Held for events, and Commit</h3>
 <ul><li>
-<b>Commit</b> sits at 1584,980, 296x60, and never moves. It is a dark plate
- with an amber hairline and caps "COMMIT THE MONTH".
+<b>Commit</b> sits at 1584,980, 296x60, and never moves. It is a dark plate with an amber hairline and caps "COMMIT THE MONTH".
 <ul><li>
 It shows the Enter keycap only when nothing above it owns Enter.
 </li><li>
@@ -556,37 +467,25 @@ Waiting (under the month review): dimmed.
 WATCH: "MONTH IN PLAY", dashed and inert.
 </li></ul>
 </li><li>
-<b>Held for events</b> is a small panel directly above Commit (1584, top 856,
- 296x112): "HELD FOR EVENTS 7 hr" and the line "untyped; what events do
- not use is gone at month end". The value is every hour not queued
- (planning left plus operating left). It is the ADR's untyped reserve,
- not an operating-only one (section 7.1).
+<b>Held for events</b> is a small panel directly above Commit (1584, top 856, 296x112): "HELD FOR EVENTS 7 hr" and the line "untyped; what events do not use is gone at month end". The value is every hour not queued (planning left plus operating left). It is the ADR's untyped reserve, not an operating-only one (section 7.1).
 </li><li>
-In WATCH the panel grows upward to the rack's top (top 612, 356 tall)
- and adds the clock (3.10). Commit stays where it is.
+In WATCH the panel grows upward to the rack's top (top 612, 356 tall) and adds the clock (3.10). Commit stays where it is.
 </li></ul>
 <h3>3.7 Action card file (Actions, A)</h3>
 <ul><li>
-A dark sheet at 56,88, 1196x952 (E's card file, retextured). The rack and
- Commit stay in view.
+A dark sheet at 56,88, 1196x952 (E's card file, retextured). The rack and Commit stay in view.
 </li><li>
 Header: ACTIONS and "A Esc BACK TO DESK".
 </li><li>
-A balance strip: money, compute, research (in warn colour with BELOW ZERO
- when under 0), papers, and hours left as pips.
+A balance strip: money, compute, research (in warn colour with BELOW ZERO when under 0), papers, and hours left as pips.
 </li><li>
-The top-level actions the game offers this month, in E's two columns and
- order: core.json minus <code>HIDDEN_FROM_ACTION_BAR_IDS</code>
- (<code>action_bar_renderer.gd:83</code>) and minus locked actions. 17 cards in
- November 2017.
+The top-level actions the game offers this month, in E's two columns and order: core.json minus <code>HIDDEN_FROM_ACTION_BAR_IDS</code> (<code>action_bar_renderer.gd:83</code>) and minus locked actions. 17 cards in November 2017.
 </li><li>
 A card is one of two kinds:
 <ul><li>
-<b>door</b> (opens choices): a darker brass left edge, "door . N choices",
- and a &gt; tab;
+<b>door</b> (opens choices): a darker brass left edge, "door . N choices", and a &gt; tab;
 </li><li>
-<b>play</b> (queues directly): hour chips in the pool colour ("1 hr PLAN",
- "2 hr OPS"), cost chips, and a + tab.
+<b>play</b> (queues directly): hour chips in the pool colour ("1 hr PLAN", "2 hr OPS"), cost chips, and a + tab.
 </li></ul>
 </li><li>
 Card states:
@@ -597,42 +496,28 @@ focus: amber hairline;
 </li><li>
 queued: a stamp, for example "2 queued";
 </li><li>
-blocked: dashed and hatched, with the reason in warn colour, for
- example "x 22 research short" or "x nobody hired yet".
+blocked: dashed and hatched, with the reason in warn colour, for example "x 22 research short" or "x nobody hired yet".
 </li></ul>
 </li><li>
-Under the file, a detail strip for the focused card. It holds the only
- Enter: the name, the data's description, hours, cost, what is left
- ("8 operating hours left"), and "Enter ADD TO PLAN".
+Under the file, a detail strip for the focused card. It holds the only Enter: the name, the data's description, hours, cost, what is left ("8 operating hours left"), and "Enter ADD TO PLAN".
 </li><li>
-Costs come from the data: Safety Research and Capability Research cost 10
- research and 1 planning hour, Publish Safety Paper 20 research and 1
- planning hour, Safety Audit $40,000 and 2 operating hours, Purchase
- Compute $50,000 and no hours (<code>data/actions/core.json</code>). Advertise a Role
- and Work Your Connections carry their costs in Balance, not in core.json
- (section 7.2).
+Costs come from the data: Safety Research and Capability Research cost 10 research and 1 planning hour, Publish Safety Paper 20 research and 1 planning hour, Safety Audit $40,000 and 2 operating hours, Purchase Compute $50,000 and no hours (<code>data/actions/core.json</code>). Advertise a Role and Work Your Connections carry their costs in Balance, not in core.json (section 7.2).
 </li></ul>
 <h3>3.8 Month plan table (Plan, P)</h3>
 <ul><li>
 The same sheet position as the card file.
 </li><li>
-At the top, the Attention grid: 12 planning cells and 8 operating cells.
- Filled = left. A hatched planning cell is an hour that operating work
- took, with a one-line legend.
+At the top, the Attention grid: 12 planning cells and 8 operating cells. Filled = left. A hatched planning cell is an hour that operating work took, with a one-line legend.
 </li><li>
-One row per queued play, in run order. Repeats get their own rows. Each
- row: number, play, where it lives, a pool chip with its hours, its cost,
- and ^ v x (move up, move down, remove).
+One row per queued play, in run order. Repeats get their own rows. Each row: number, play, where it lives, a pool chip with its hours, its cost, and ^ v x (move up, move down, remove).
 </li><li>
-The play whose hours spilled into planning is tagged on its row ("1 from
- plan"). The grid is the source of truth; the tag is a display choice.
+The play whose hours spilled into planning carries a "SPILL 1" tag in the POOL column, and a SPILL line under the grid says how many operating hours were drawn from planning. The tag is the mock-up's queue-order estimate (section 1.2); MonthPlan's pool totals are the source of truth.
 </li><li>
 Below the rows:
 <ul><li>
 the total: plays, plan + op hours, money + reputation;
 </li><li>
-AFTER COSTS: money and reputation after the listed costs, and the hours
- held. Results of plays are not included, because they land at Commit;
+AFTER COSTS: money and reputation after the listed costs, and the hours held. Results of plays are not included, because they land at Commit;
 </li><li>
 Research quality (<code>research_quality_selector.gd</code>), default Standard;
 </li><li>
@@ -646,53 +531,46 @@ the reserve stepper (- and +), live while any hour is unspent;
 Commit shows no Enter while the sheet is open.
 </li></ul>
 <h3>3.9 Paper: the event card and the month review</h3>
-<p>Paper is the topmost layer when it is up. It owns Enter, and the desk behind it shows no keycaps.</p>
+<p>Paper is the topmost layer when it is up, and it owns Enter.</p>
+<ul><li>
+Under a WATCH event, no other keycap shows: not on the rack, not on the feed.
+</li><li>
+Under the month review, the rack keeps its letters, and Enter belongs to the review sheet alone (Commit shows no Enter).
+</li></ul>
 <p><b>Event card</b> (668,96, 640 wide):</p>
 <ul><li>
 "ACROSS YOUR DESK", the event's name and its data text.
 </li><li>
-One row per option: the option key, the option text, its effect, and its
- cost.
+One row per option: the option key, the option text, its effect, and its cost.
 </li><li>
-The selected option has a 2 px ink frame, an amber edge and the Enter
- keycap.
+The selected option has a 2 px ink frame, an amber edge and the Enter keycap.
 </li><li>
 A footer: money in hand and hours held for events.
 </li><li>
-An event cannot be dismissed with Esc. Today's game swallows Esc on
- events (#452).
+An event cannot be dismissed with Esc. Today's game swallows Esc on events (#452).
 </li><li>
 Example from the data (<code>core_events.json</code> <code>talent_recruitment</code>):
 <ul><li>
 Fast-Track Hiring: $25,000 + 1 held hr, +1 safety researcher;
 </li><li>
-Standard Hiring: $25,000 + 1 held hr, +1 safety researcher. Its data
- cost is $25,000 only. <code>event_dialog.gd</code> adds the event's Attention
- price to any handled option that declares none;
+Standard Hiring: $25,000 + 1 held hr, +1 safety researcher. Its data cost is $25,000 only. <code>event_dialog.gd</code> adds the event's Attention price to any handled option that declares none;
 </li><li>
 Decline Offer: free, no change.
 </li></ul>
 </li><li>
-The mock-up labels the options 1, 2, 3. **The build should use the
- game's advertised letters, Q, W, E** (<code>dialog_keys.gd</code>,
- NAVIGATION_AUDIT principle P3). The game still accepts numbers without
- showing them.
+The mock-up labels the options 1, 2, 3. <b>The build should use the game's advertised letters, Q, W, E</b> (<code>dialog_keys.gd</code>, NAVIGATION_AUDIT principle P3). The game still accepts numbers without showing them.
 </li></ul>
 <p><b>Month review</b> (56,190, 1184x850), a teleprinter sheet:</p>
 <ul><li>
 "FROM THE TELEPRINTER" and the date;
 </li><li>
-the title and lede, as <code>game_manager.gd</code> writes them ("Month Review --
- December 2017", "December 2017 begins.");
+the title and lede, as <code>game_manager.gd</code> writes them ("Month Review -- December 2017", "December 2017 begins.");
 </li><li>
 the game's Attention line;
 </li><li>
-what happened, in dated blocks: the plays at Commit with the game's
- result messages, then each event and its outcome, then the held hours
- ("7 hr held: 1 went to Talent Opportunity, 6 evaporated.");
+what happened, in dated blocks: the plays at Commit with the game's result messages, then each event and its outcome, then the held hours ("7 hr held: 1 went to Talent Opportunity, 6 evaporated.");
 </li><li>
-LAST MONTH'S MOVEMENT: funds before -&gt; after, staff before -&gt; after, and
- doom by band only;
+LAST MONTH'S MOVEMENT: funds before -&gt; after, staff before -&gt; after, and doom by band only;
 </li><li>
 rivals only when the game prints them;
 </li><li>
@@ -704,15 +582,13 @@ one button: "Begin planning December 2017" with Enter.
 <ul><li>
 "THE MONTH", then the clock: "TUE 14 NOV" and "workday 10 of 22";
 </li><li>
-"PAUSED FOR YOU", a blood-red bar, shown when an event has paused
- playback;
+"PAUSED FOR YOU", a blood-red bar, shown when an event has paused playback;
 </li><li>
-a speed row: Pause, 1x, 2x, 4x. Today's speeds are 0.20, 0.10 and
- 0.05 s per day (<code>screen_mode.gd:37</code>);
+a speed row: Pause, 1x, 2x, 4x. Today's speeds are 0.20, 0.10 and 0.05 s per day (<code>screen_mode.gd:37</code>);
 </li><li>
 HELD FOR EVENTS.
 </li></ul>
-<p>Today's pause button is a disabled stub (<code>screen_mode.gd:98</code>), but events already pause playback. In H, the Pause segment shows that state. A pause the player can press is outside this spec.</p>
+<p>Today's pause button is a disabled stub (<code>screen_mode.gd:101</code>), but events already pause playback. In H, the Pause segment shows that state. A pause the player can press is outside this spec.</p>
 <h3>3.11 Feed</h3>
 <p>The feed is the WATCH body of the plan panel. Each line has the day number in mono, then the game's own message:</p>
 <ul><li>
@@ -727,32 +603,25 @@ events marked [!] when they wait for a reply;
 <p>H adds no wording of its own to results. While an event waits, the feed shows no keycap.</p>
 <h2>4. The six screens</h2>
 <p>The run in the mock-ups: July 2017 start, November 2017 middle (rows from <code>fork/design/hifi/run-state.md</code>, revisions 2 and 3), December review, April 2018 late game.</p>
-<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Screen</th><th>On screen</th><th>One click away</th><th>Keys shown</th></tr></thead><tbody><tr><td>1</td><td>Desk at rest, first month (Tue 4 Jul 2017, 20.0% ELEVATED, art band 0)</td><td>dateline types; meters; plan panel "Plan is empty"; rack with ACTIONS hinted; held 20 hr; Commit; the advisor's paper note pointing to ACTIONS</td><td>Actions card file, Plan, Staff, Ledger, Guide</td><td>rack letters; Commit Enter</td></tr><tr><td>2</td><td>Actions open (Wed 1 Nov 2017, 3 plays queued)</td><td>card file with 17 cards, blocked reasons, stamps; detail strip for Safety Audit</td><td>add a play (Enter); open a door card; back to desk (A or Esc)</td><td>A, Esc; Enter on the detail strip only</td></tr><tr><td>3</td><td>The month's plan (same day, 11 plays)</td><td>Attention grid (7 of 12 planning left, 0 of 8 operating), 11 rows, the spilled hour, totals, AFTER COSTS ($37,400, 26 rep, 7 hr held), research quality, reserve</td><td>reorder or remove a row; Undo; Clear; back to desk</td><td>P, Esc, Z, C; no Enter on Commit</td></tr><tr><td>4</td><td>WATCH, an event waits (Tue 14 Nov 2017)</td><td>feed and month bar; WATCH rack; clock, PAUSED FOR YOU, speed, held 7 hr; Commit "MONTH IN PLAY"; the event on paper</td><td>choose an option</td><td>the event's keys and Enter only; no other keycaps</td></tr><tr><td>5</td><td>Month review (Fri 1 Dec 2017, 56.7% SEVERE, art band 2)</td><td>dateline types DECEMBER; dimmed desk; the review sheet</td><td>begin planning</td><td>Enter on the review only</td></tr><tr><td>6</td><td>Late game (Mon 2 Apr 2018, 81.4% CATASTROPHIC, art band 3)</td><td>the desk of screen 1 with the late layer; the meter's warning line; nothing queued</td><td>as screen 1</td><td>as screen 1</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Screen</th><th>On screen</th><th>One click away</th><th>Keys shown</th></tr></thead><tbody><tr><td>1</td><td>Desk at rest, first month (Tue 4 Jul 2017, 20.0% ELEVATED, art band 0)</td><td>dateline types; meters; plan panel "Plan is empty"; rack with ACTIONS hinted; held 20 hr; Commit; the advisor's paper note pointing to ACTIONS</td><td>Actions card file, Plan, Staff, Ledger, Guide</td><td>rack letters; Commit Enter</td></tr><tr><td>2</td><td>Actions open (Wed 1 Nov 2017, 3 plays queued)</td><td>card file with 17 cards, blocked reasons, stamps; detail strip for Safety Audit</td><td>add a play (Enter); open a door card; back to desk (A or Esc)</td><td>A, Esc; Enter on the detail strip only</td></tr><tr><td>3</td><td>The month's plan (same day, 11 plays)</td><td>Attention grid (7 of 12 planning left, 0 of 8 operating), 11 rows, the spilled hour, totals, AFTER COSTS ($37,400, 26 rep, 7 hr held), research quality, reserve</td><td>reorder or remove a row; Undo; Clear; back to desk</td><td>P, Esc, Z, C; no Enter on Commit</td></tr><tr><td>4</td><td>WATCH, an event waits (Tue 14 Nov 2017)</td><td>feed and month bar; WATCH rack; clock, PAUSED FOR YOU, speed, held 7 hr; Commit "MONTH IN PLAY"; the event on paper</td><td>choose an option</td><td>the event's keys and Enter only; no other keycaps</td></tr><tr><td>5</td><td>Month review (Fri 1 Dec 2017, 56.7% SEVERE, art band 2)</td><td>dateline types DECEMBER; dimmed desk; the review sheet</td><td>begin planning</td><td>rack letters; Enter on the review only</td></tr><tr><td>6</td><td>Late game (Mon 2 Apr 2018, 81.4% CATASTROPHIC, art band 3)</td><td>the desk of screen 1 with the late layer; the meter's warning line; nothing queued</td><td>as screen 1</td><td>as screen 1</td></tr></tbody></table></div>
 <h3>4.1 Key rules</h3>
 <ul><li>
-Enter and Esc belong to the topmost layer only. Paper over a menu over
- the desk: only the top one shows Enter or Esc, and Commit shows Enter
- only when nothing else is open.
+Enter and Esc belong to the topmost layer only. Paper over a menu over the desk: only the top one shows Enter or Esc, and Commit shows Enter only when nothing else is open.
 </li><li>
 A menu's own letter closes it again (A opens and closes Actions).
 </li><li>
-Today's Esc contract applies to every menu (<code>UI_ESCAPE_CONTRACT.md</code>):
- Esc closes the topmost panel, and every panel has a visible way out.
- Events are the exception the game already makes.
+Today's Esc contract applies to every menu (<code>UI_ESCAPE_CONTRACT.md</code>): Esc closes the topmost panel, and every panel has a visible way out. Events are the exception the game already makes.
 </li></ul>
 <h3>4.2 Shortcut keys: which are new</h3>
 <div class="tbl-wrap"><table><thead><tr><th>Key</th><th>In H</th><th>Today (<code>autoload/keybind_manager.gd</code>)</th></tr></thead><tbody><tr><td>Enter</td><td>Commit, or the topmost paper's choice</td><td>Commit Plan (same)</td></tr><tr><td>Esc</td><td>close the topmost layer</td><td>the same, handled per panel</td></tr><tr><td>L</td><td>Ledger</td><td>Ledger (same)</td></tr><tr><td>Z / C</td><td>Undo / Clear in the plan</td><td>Undo / Clear (same)</td></tr><tr><td>V</td><td>toggle PLAN and WATCH, if kept</td><td>toggle view (same)</td></tr><tr><td>A</td><td>Actions card file</td><td><b>new</b></td></tr><tr><td>P</td><td>Plan sheet</td><td><b>taken</b>: opens the Publicity menu</td></tr><tr><td>E</td><td>Staff</td><td><b>new</b> (an old Staff bind is commented out)</td></tr><tr><td>U</td><td>Upgrades</td><td><b>new</b></td></tr><tr><td>R</td><td>In-tray</td><td><b>new</b> on the desk</td></tr><tr><td>F1</td><td>Guide</td><td><b>new</b></td></tr><tr><td>F</td><td>Feed, in WATCH</td><td><b>taken</b>: opens the Fundraising menu</td></tr></tbody></table></div>
 <ul><li>
-H's rack replaces the action bar, so today's 1-9 slot keys and the H, F,
- P and T menu keys need a decision before a build. A builder must not
- silently rebind them.
+H's rack replaces the action bar, so today's 1-9 slot keys and the H, F, P and T menu keys need a decision before a build. A builder must not silently rebind them.
 </li><li>
-Inside a dialog, Q W E R A S D F Z are today's choice keys. That does not
- clash with the rack, because only the topmost layer takes keys.
+Inside a dialog, Q W E R A S D F Z are today's choice keys. That does not clash with the rack, because only the topmost layer takes keys.
 </li></ul>
 <h2>5. Mapping onto today's scene</h2>
 <p>Today's main screen is <code>godot/scenes/main.tscn</code> under <code>TabManager/MainUI</code>. Scripts are in <code>godot/scripts/ui/</code>. G's notes (<code>fork/design/hifi/G/notes.md</code>) cover the same nodes for a lighter redesign; this table reuses them.</p>
-<div class="tbl-wrap"><table><thead><tr><th>H part</th><th>Today's node or script</th><th>What changes</th></tr></thead><tbody><tr><td>Room and doom layer</td><td><code>Backdrop</code>, <code>BackdropScrim</code></td><td>per-band art layers on top; keyed to the doom band</td></tr><tr><td>Dateline</td><td>none (today: <code>TopBar/TurnLabel</code>, <code>TurnCountLabel</code>)</td><td>new label plus the sound; "Turn N" (workdays) goes</td></tr><tr><td>Balances (money, compute, research, papers)</td><td><code>TopBar/*Label</code></td><td>move into the card file's balance strip and the plan panel; values unchanged</td></tr><tr><td>P(Doom) meter</td><td><code>ContentArea/InstrumentColumn/CoreZone/RightZones</code> (<code>DoomMeter</code> scene, <code>NumericDoomLabel</code>, <code>DoomExplanation</code>)</td><td>restyled; band ladder and warning line added from the game's own data</td></tr><tr><td>Reputation tachometer</td><td><code>TopBar/ReputationLabel</code></td><td>new instrument; same value</td></tr><tr><td>Office cat print</td><td><code>OfficeCat</code> in <code>CatZone</code> (<code>office_cat.gd</code>)</td><td>shown as a photo print on the desk</td></tr><tr><td>Plan panel and feed</td><td><code>PlanScreen</code> (<code>plan_screen.gd</code>) and <code>WatchScreen</code> (<code>watch_screen.gd</code>), <code>QueuePanel</code></td><td>one terminal panel with a PLAN face and a WATCH face</td></tr><tr><td>Attention grid</td><td><code>TopBar/APLabel</code>, <code>plan_screen.update_reserve_gauge</code></td><td>a cell grid per pool, with the spilled hour shown</td></tr><tr><td>Menu rack</td><td>action bar (<code>action_bar_renderer.gd</code>), <code>submenu_controller.gd</code></td><td>plates that open sheets; doors open the existing submenus</td></tr><tr><td>Action card file</td><td><code>action_bar_renderer.gd</code>, <code>submenu_controller.gd</code></td><td>one sheet of cards; same list, same gates</td></tr><tr><td>Month plan table</td><td><code>QueuePanel/QueueContainer</code>, <code>queue_gantt.gd</code>, <code>plan_controller.gd</code>, <code>research_quality_selector.gd</code></td><td>rows with reorder and remove, totals, AFTER COSTS</td></tr><tr><td>Undo, Clear, Reserve</td><td><code>BottomBar/ControlButtons</code> (<code>UndoLastButton</code>, <code>ClearQueueButton</code>, <code>ReserveAPButton</code>)</td><td>move into the plan sheet; Reserve follows section 7.1</td></tr><tr><td>Commit</td><td><code>BottomBar/ControlButtons/CommitPlanButton</code></td><td>fixed plate bottom right; H has no separate <code>EndTurnButton</code></td></tr><tr><td>Held panel, clock, speed</td><td>the WATCH control strip in <code>main_ui.gd:389</code> and <code>screen_mode.gd</code></td><td>one panel above Commit</td></tr><tr><td>Event card</td><td><code>event_dialog.gd</code>, <code>event_result_presenter.gd</code></td><td>paper styling; keys from <code>dialog_keys.gd</code></td></tr><tr><td>Month review</td><td><code>month_review_panel.gd</code></td><td>paper styling; content from <code>game_manager.gd</code></td></tr><tr><td>Staff, Ledger, Guide</td><td><code>EmployeeScreen</code>, <code>ledger_screen.gd</code>, <code>player_guide.gd</code></td><td>opened from the rack; not redrawn here</td></tr><tr><td>Modal order and Esc</td><td><code>modal_stack.gd</code>, <code>esc_to_close.gd</code></td><td>unchanged; H relies on the topmost-layer rule they enforce</td></tr><tr><td>Advisor note</td><td><code>cold_open_sequence.gd</code> <code>HANDOFF_HINT_TEXT</code></td><td>shown as a paper note pointing at the hinted plate</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>H part</th><th>Today's node or script</th><th>What changes</th></tr></thead><tbody><tr><td>Room and doom layer</td><td><code>Backdrop</code>, <code>BackdropScrim</code></td><td>per-band art layers on top; keyed to the doom band</td></tr><tr><td>Dateline</td><td>none (today: <code>TopBar/TurnLabel</code>, <code>TurnCountLabel</code>)</td><td>new label plus the sound; "Turn N" (workdays) goes</td></tr><tr><td>Balances (money, compute, research, papers)</td><td><code>TopBar/*Label</code></td><td>only the card file's balance strip shows all four; the plan panel at rest shows Attention and queued plays; the Plan sheet's AFTER COSTS shows money, reputation and held hours; the desk at rest shows no balances; values unchanged</td></tr><tr><td>P(Doom) meter</td><td><code>ContentArea/InstrumentColumn/CoreZone/RightZones</code> (<code>DoomMeter</code> scene, <code>NumericDoomLabel</code>, <code>DoomExplanation</code>)</td><td>restyled; band ladder and warning line added from the game's own data</td></tr><tr><td>Reputation tachometer</td><td><code>TopBar/ReputationLabel</code></td><td>new instrument; same value</td></tr><tr><td>Office cat print</td><td><code>OfficeCat</code> in <code>CatZone</code> (<code>office_cat.gd</code>)</td><td>shown as a photo print on the desk</td></tr><tr><td>Plan panel and feed</td><td><code>PlanScreen</code> (<code>plan_screen.gd</code>) and <code>WatchScreen</code> (<code>watch_screen.gd</code>), <code>QueuePanel</code></td><td>one terminal panel with a PLAN face and a WATCH face</td></tr><tr><td>Attention grid</td><td><code>TopBar/APLabel</code>, <code>plan_screen.update_reserve_gauge</code></td><td>a cell grid per pool, with the spilled hour shown</td></tr><tr><td>Menu rack</td><td>action bar (<code>action_bar_renderer.gd</code>), <code>submenu_controller.gd</code></td><td>plates that open sheets; doors open the existing submenus</td></tr><tr><td>Action card file</td><td><code>action_bar_renderer.gd</code>, <code>submenu_controller.gd</code></td><td>one sheet of cards; same list, same gates</td></tr><tr><td>Month plan table</td><td><code>QueuePanel/QueueContainer</code>, <code>queue_gantt.gd</code>, <code>plan_controller.gd</code>, <code>research_quality_selector.gd</code></td><td>rows with reorder and remove, totals, AFTER COSTS</td></tr><tr><td>Undo, Clear, Reserve</td><td><code>BottomBar/ControlButtons</code> (<code>UndoLastButton</code>, <code>ClearQueueButton</code>, <code>ReserveAPButton</code>)</td><td>move into the plan sheet; Reserve follows section 7.1</td></tr><tr><td>Commit</td><td><code>BottomBar/ControlButtons/CommitPlanButton</code></td><td>fixed plate bottom right; H has no separate <code>EndTurnButton</code></td></tr><tr><td>Held panel, clock, speed</td><td>the WATCH control strip in <code>main_ui.gd:389</code> and <code>screen_mode.gd</code></td><td>one panel above Commit</td></tr><tr><td>Event card</td><td><code>event_dialog.gd</code>, <code>event_result_presenter.gd</code></td><td>paper styling; keys from <code>dialog_keys.gd</code></td></tr><tr><td>Month review</td><td><code>month_review_panel.gd</code></td><td>paper styling; content from <code>game_manager.gd</code></td></tr><tr><td>Staff, Ledger, Guide</td><td><code>EmployeeScreen</code>, <code>ledger_screen.gd</code>, <code>player_guide.gd</code></td><td>opened from the rack; not redrawn here</td></tr><tr><td>Modal order and Esc</td><td><code>modal_stack.gd</code>, <code>esc_to_close.gd</code></td><td>unchanged; H relies on the topmost-layer rule they enforce</td></tr><tr><td>Advisor note</td><td><code>cold_open_sequence.gd</code> <code>HANDOFF_HINT_TEXT</code></td><td>shown as a paper note pointing at the hinted plate</td></tr></tbody></table></div>
 <h2>6. Assets</h2>
 <h3>6.1 Pip's art and icons used</h3>
 <ul><li>
@@ -764,157 +633,106 @@ The cat: <code>office_cat_doom-cat.webp</code>.
 </li><li>
 24 of Pip's icons:
 <ul><li>
-rack: <code>ui_guide_actions</code>, <code>ui_config_date</code>, <code>ui_staff_management</code>,
- <code>button_upgrade_normal</code>, <code>ui_budget_finance</code>, <code>ui_guide_book</code>;
+rack: <code>ui_guide_actions</code>, <code>ui_config_date</code>, <code>ui_staff_management</code>, <code>button_upgrade_normal</code>, <code>ui_budget_finance</code>, <code>ui_guide_book</code>;
 </li><li>
-meters and balances: <code>doom</code>, <code>reputation</code>, <code>money</code>, <code>compute</code>,
- <code>research</code>, <code>paper</code>;
+meters and balances: <code>doom</code>, <code>reputation</code>, <code>money</code>, <code>compute</code>, <code>research</code>, <code>paper</code>;
 </li><li>
-action cards and system: <code>ui_guide_resources</code>, <code>action_funding_loan</code>,
- <code>button_hire_normal</code>, <code>action_publicity_network</code>,
- <code>employee_status_training</code>, <code>action_research_ml_fundamentals</code>,
- <code>resource_safety_small</code>, <code>employee_role_auditor</code>,
- <code>ui_infrastructure_facilities</code>, <code>ui_guide_strategy</code>,
- <code>employee_status_investigating</code>, <code>ui_system_settings</code>.
+action cards and system: <code>ui_guide_resources</code>, <code>action_funding_loan</code>, <code>button_hire_normal</code>, <code>action_publicity_network</code>, <code>employee_status_training</code>, <code>action_research_ml_fundamentals</code>, <code>resource_safety_small</code>, <code>employee_role_auditor</code>, <code>ui_infrastructure_facilities</code>, <code>ui_guide_strategy</code>, <code>employee_status_investigating</code>, <code>ui_system_settings</code>.
 </li></ul>
 </li><li>
-Icons sit on near-black plates and are toned down to fit the room. They
- are not redrawn.
+Icons sit on near-black plates and are toned down to fit the room. They are not redrawn.
 </li><li>
-Pip's Staff and Hire icons (silhouettes) stay. Alex ruled that they do
- not count as a person. No human figures are added.
+Pip's Staff and Hire icons (silhouettes) stay. Alex ruled that they do not count as a person. No human figures are added.
 </li></ul>
 <p>Copies are in <code>fork/design/hifi3/H/assets/</code>.</p>
 <h3>6.2 Art that would need darker versions to match</h3>
 <p>These still read lighter and brighter than the room after toning, so they would need darker versions to match H:</p>
 <ul><li>
-the round resource icons: <code>doom</code>, <code>reputation</code>, <code>money</code>, <code>compute</code>,
- <code>research</code>, <code>paper</code>;
+the round resource icons: <code>doom</code>, <code>reputation</code>, <code>money</code>, <code>compute</code>, <code>research</code>, <code>paper</code>;
 </li><li>
-<code>ui_config_date_64</code> (PLAN, a tear-off calendar). A ledger or typed-sheet
- glyph would fit better;
+<code>ui_config_date_64</code> (PLAN, a tear-off calendar). A ledger or typed-sheet glyph would fit better;
 </li><li>
-<code>ui_guide_resources_64</code> (Fundraising) and <code>action_funding_loan_64</code>
- (Financing);
+<code>ui_guide_resources_64</code> (Fundraising) and <code>action_funding_loan_64</code> (Financing);
 </li><li>
-<code>ui_guide_strategy_64</code> (Strategic) and <code>employee_status_investigating_64</code>
- (Scouting), whose glow survives the toning;
+<code>ui_guide_strategy_64</code> (Strategic) and <code>employee_status_investigating_64</code> (Scouting), whose glow survives the toning;
 </li><li>
-<code>office_cat_doom-cat.webp</code>: a darker, grainier photo would suit the print
- on the desk. Pip's cat doom variants for bands 2 to 4 do not exist yet;
+<code>office_cat_doom-cat.webp</code>: a darker, grainier photo would suit the print on the desk. Pip's cat doom variants for bands 2 to 4 do not exist yet;
 </li><li>
-five placeholders drawn for the concepts, which need real art in Pip's
- manner: <code>new_inbox_tray</code> (In-tray), <code>new_feed_tape</code> (Feed),
- <code>new_advertise_notice</code> (Advertise a Role), <code>new_travel_suitcase</code>
- (Travel), <code>new_publicity_megaphone</code> (Publicity);
+five placeholders drawn for the concepts, which need real art in Pip's manner: <code>new_inbox_tray</code> (In-tray), <code>new_feed_tape</code> (Feed), <code>new_advertise_notice</code> (Advertise a Role), <code>new_travel_suitcase</code> (Travel), <code>new_publicity_megaphone</code> (Publicity);
 </li><li>
-per-band layers for the office: window sky, monitor glow, floor smoke
- (band 3+), as the palette doc plans.
+per-band layers for the office: window sky, monitor glow, floor smoke (band 3+), as the palette doc plans.
 </li></ul>
 <h3>6.3 The sound asset</h3>
 <ul><li>
-Reference: <code>fork/design/hifi3/H/dateline-sound.wav</code>, rendered from the
- mock-up's own code typing "NOVEMBER 1, 2017". Mono, 16-bit, 22,050 Hz,
- 3.05 s, peak -2.06 dBFS, RMS -21.7 dBFS. 14 strikes, and the carriage
- return stop at 2.21 s.
+Reference: <code>fork/design/hifi3/H/dateline-sound.wav</code>, rendered from the mock-up's own code (<code>TypeSound.render</code>, seed 1917) typing "NOVEMBER 1, 2017". Mono, 16-bit, 44,100 Hz, 3.29 s. Raw peak -2.48 dBFS, written with no gain or normalisation; RMS -24.1 dBFS; no clipped samples. 14 strikes (56 ms to 1688 ms) and the carriage-return stop at 2.25 s.
 </li><li>
-For the game, make it as one-shots, so any date can be typed and the
- letters stay in sync:
+For the game, make it as one-shots, so any date can be typed and the letters stay in sync:
 <ul><li>
-6 to 8 key strikes, varied as in 3.3;
+6 to 8 key strikes, varied as in 3.3 (contact, slap, thump, rattle and escapement tick in each);
 </li><li>
 one carriage-return slide and stop;
 </li><li>
-WAV, mono, 16-bit, 44.1 kHz, peaks under -1 dBFS, room and compression
- baked in.
+WAV, mono, 16-bit, 44.1 kHz, raw peaks at or under -1.5 dBFS, room and compression baked in.
 </li></ul>
 </li><li>
-The game picks a strike per letter at the dateline's timing. It may
- reuse the reference render's timing for a fixed string. These picks are
- presentation only: they must not draw from the game's RNG
- (<code>state.rng</code>).
+One dateline at a time: a new month's type-on never starts over one still sounding (3.3).
 </li><li>
-Bus: the game already has an SFX bus (bus 1 in
- <code>default_bus_layout.tres</code>), with an SFX volume setting
- (<code>game_config.gd</code>). Put it there. <code>godot/assets/audio/sfx/</code> is empty
- today, so this would be the game's first sound effect.
+The game picks a strike per letter at the dateline's timing. It may reuse the reference render's timing for a fixed string. These picks are presentation only: they must not draw from the game's RNG (<code>state.rng</code>).
 </li><li>
-It plays only when the dateline types (a month's first screen), never
- on in-month day changes.
+Bus: the game already has an SFX bus (bus 1 in <code>default_bus_layout.tres</code>), with an SFX volume setting (<code>game_config.gd</code>). Put it there. <code>godot/assets/audio/sfx/</code> is empty today, so this would be the game's first sound effect.
+</li><li>
+It plays only when the dateline types (a month's first screen), never on in-month day changes.
 </li></ul>
 <h2>7. Open rule questions, and bugs found on the way</h2>
 <h3>7.1 Where the mock-up follows the ADR and today's UI differs</h3>
 <ul><li>
 <b>The Attention spill.</b>
 <ul><li>
-ADR-0011 (amendment (e)) and the core gate
- (<code>MonthPlan.can_spend_hours</code>) let operating work use planning hours.
+ADR-0011 (amendment (e)) and the core gate (<code>MonthPlan.can_spend_hours</code>) let operating work use planning hours.
 </li><li>
-Today's UI pre-check in <code>main_ui.gd:1725-1741</code> refuses a play when its
- own pool is short ("Not enough Attention: need N operating hours"),
- before the core gate is asked.
+Today's UI pre-check in <code>main_ui.gd:1725-1741</code> refuses a play when its own pool is short ("Not enough Attention: need N operating hours"), before the core gate is asked.
 </li><li>
-H follows the ADR. Screen 3 shows the 9th operating hour taken from
- planning.
+H follows the ADR. Screen 3 shows the 9th operating hour taken from planning.
 </li><li>
-Making the UI agree changes which plays a player can queue, so Pip
- must rule on it.
+Making the UI agree changes which plays a player can queue, so Pip must rule on it.
 </li></ul>
 </li><li>
 <b>Reserve.</b>
 <ul><li>
-ADR-0011 amendment (f) and <code>MonthPlan.set_reserve</code> make the reserve
- untyped and not capped at operating hours.
+ADR-0011 amendment (f) and <code>MonthPlan.set_reserve</code> make the reserve untyped and not capped at operating hours.
 </li><li>
-Today's UI disables the Reserve button when no operating hours are
- left (<code>main_ui.gd:1277-1281</code>, with a comment that says the opposite of
- the ADR).
+Today's UI disables the Reserve button when no operating hours are left (<code>main_ui.gd:1277-1281</code>, with a comment that says the opposite of the ADR).
 </li><li>
 H shows Reserve live while any hour is unspent.
 </li><li>
 This affects what a player can do, so it is Pip's call too.
 </li></ul>
 </li><li>
-<b>The AFTER COSTS preview</b> is new. It adds no hidden information (it
- subtracts listed costs), but Pip may not want a preview at all.
+<b>The always-on resource bar goes.</b> H drops today's top bar of balances: they show in the card file (A), and money and reputation in the Plan sheet. Whether the player should see them on the desk at all times is Pip's call.
 </li><li>
-<b>Fonts:</b> small at 15 vs the 16 px floor, and the missing 22 step
- (2.5).
+<b>The AFTER COSTS preview</b> is new. It adds no hidden information (it subtracts listed costs), but Pip may not want a preview at all.
+</li><li>
+<b>Fonts:</b> small at 15 vs the 16 px floor, and the missing 22 step (2.5).
 </li><li>
 <b>Keys:</b> P and F are taken today, and the action-bar keys go (4.2).
 </li></ul>
 <h3>7.2 Bugs and data gaps found (not fixed)</h3>
 <ul><li>
-<b>Office Maintenance does nothing.</b> It costs $5,000 and 1 hour
- (<code>data/actions/operations.json</code>), <code>actions.gd</code> has no case for it, and
- its text says "Improves morale slightly". The action bar hides it
- (<code>action_bar_renderer.gd:83</code>), but the Operations submenu still offers
- it.
+<b>Office Maintenance does nothing.</b> It costs $5,000 and 1 hour (<code>data/actions/operations.json</code>), <code>actions.gd</code> has no case for it, and its text says "Improves morale slightly". The action bar hides it (<code>action_bar_renderer.gd:83</code>), but the Operations submenu still offers it.
 </li><li>
-<b>Empty costs in core.json.</b> Advertise a Role and Work Your Connections
- have <code>costs: {}</code>. Their real costs are in Balance <code>hiring</code> (advertise
- $8,000 and 3 hours; connections 6 reputation and 2 hours), so any screen
- that reads costs from the action shows them as free.
+<b>Empty costs in core.json.</b> Advertise a Role and Work Your Connections have <code>costs: {}</code>. Their real costs are in Balance <code>hiring</code> (advertise $8,000 and 3 hours; connections 6 reputation and 2 hours), so any screen that reads costs from the action shows them as free.
 </li><li>
 <b>Research below zero</b> (-12 in November) has no warning.
 </li><li>
-<b>"Turn N" counts workdays</b>, not months. Safety Audit's and Strategic's
- unlocks (<code>turn_min</code> 5 and 10) also count workdays, so both open in the
- first fortnight.
+<b>"Turn N" counts workdays</b>, not months. The unlock gates compare against the same count. Safety Audit needs <code>turn_min</code> 5 only, so it opens in the first week. Strategic needs <code>turn_min</code> 10 and reputation at least 30 (<code>data/actions/core.json:113-116</code>), so it opens in the first fortnight while reputation holds.
 </li><li>
-<b>Unmapped icons.</b> <code>tour_offices</code>, <code>scout_read</code>, <code>scout_meetups</code> and
- <code>scout_shitpost</code> have no entry in <code>data/icon_mapping.json</code>, so the game
- draws its magenta placeholder.
+<b>Unmapped icons.</b> <code>tour_offices</code>, <code>scout_read</code>, <code>scout_meetups</code> and <code>scout_shitpost</code> have no entry in <code>data/icon_mapping.json</code>, so the game draws its magenta placeholder.
 </li><li>
-<b>Doom text contrast.</b> The stroke colour's 0.22 luminance floor leaves
- CATASTROPHIC text about 1.8:1 on dark panels (G's measurement). H lifts
- text to 5:1 and keeps the game colour on the arc.
+<b>Doom text contrast.</b> The stroke colour's 0.22 luminance floor leaves CATASTROPHIC text about 1.8:1 on dark panels (G's measurement). H lifts text to 5:1 and keeps the game colour on the arc.
 </li><li>
-<b>Pause is a stub.</b> The WATCH pause button is disabled; only events
- pause playback.
+<b>Pause is a stub.</b> The WATCH pause button is disabled; only events pause playback.
 </li><li>
-<b>Event pictures are packed but unused</b>
- (<code>godot/assets/images/events/README.md</code>).
+<b>Event pictures are packed but unused</b> (<code>godot/assets/images/events/README.md</code>).
 </li><li>
 <b>No bundled fonts</b> and no sound effects ship today (2.5, 6.3).
 </li></ul>
@@ -943,20 +761,25 @@ This affects what a player can do, so it is Pip's call too.
    The spy-film title-card strike, synthesised with the Web Audio API
    (no samples). Public:
      playDateline(text, {onChar, onDone}) -> char times in ms from now,
-       or null without Web Audio. Call it from a click (browsers block
-       sound before one). onChar(i, ch) fires as character i strikes
-       (spaces included, silent); onDone() after the carriage return.
+       or null. Call it from a click (browsers block sound before one).
+       onChar(i, ch) fires as character i strikes (spaces included,
+       silent); onDone() fires once the last tail has died away.
        Use the returned times as CSS animation delays, or onChar, or both.
-     TypeSound.play(text) -> the same times, sound only
+     TypeSound.play(text) -> the same times, sound only, or null
+     TypeSound.busy() -> true while a play is still sounding
      TypeSound.render(text, sampleRate, seed) -> Promise<AudioBuffer>
        (OfflineAudioContext; seeded, so a render repeats exactly)
      TypeSound.toWav(audioBuffer) -> Uint8Array, 16-bit PCM mono
+   Replay guard: while a play is still sounding (through its tail),
+   play() and playDateline() ignore a new call and return null; no
+   onChar or onDone fires for it. null also means "no Web Audio".
+   Callers keep their control disabled until onDone.
    ================================================================== */
 var TypeSound = (function(){
   function rng(seed){ var x = (seed>>>0) || 0x2f6b1d; return function(){ x ^= x<<13; x >>>= 0; x ^= x>>>17; x ^= x<<5; x >>>= 0; return x/4294967296; }; }
   function noiseBuf(ctx, sec, r){ var n = Math.ceil(ctx.sampleRate*sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++) d[i] = r()*2-1; return b; }
-  // a small hard room: 0.5 s of noise falling off as (1-t)^4
-  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.5), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
+  // a small, dark, hard room: 0.7 s of noise falling off as (1-t)^4
+  function room(ctx, r){ var n = Math.ceil(ctx.sampleRate*.7), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); for (var i=0;i<n;i++){ var t=i/n; d[i] = (r()*2-1)*Math.pow(1-t,4); } return b; }
   function env(ctx, g, t, a, peak, decay){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t+a); g.gain.exponentialRampToValueAtTime(0.0001, t+a+decay); }
   function noise(ctx, bus, buf, r, t, type, freq, q, a, peak, decay){
     var src = ctx.createBufferSource(); src.buffer = buf;
@@ -971,20 +794,22 @@ var TypeSound = (function(){
     var g = ctx.createGain(); env(ctx, g, t, a, peak, decay);
     o.connect(g); g.connect(bus); o.start(t); o.stop(t+a+decay+.02);
   }
-  // one key: type-bar slap + click + platen thump + key rattle; v = how hard, p = pitch spread
+  // one key: steel contact click + type-bar slap + short platen thump + rattle + escapement tick.
+  // v = how hard; p = pitch spread of the noise layers (+-6%); q = the thump's own, narrower spread (+-2.5%)
   function strike(ctx, bus, buf, r, t){
-    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12;
-    noise(ctx, bus, buf, r, t, "bandpass", 2600*p, 1.2, .001, .9*v, .045);    // the slap of the type bar on the platen
-    noise(ctx, bus, buf, r, t, "highpass", 5200*p, .7, .0005, .45*v, .006);   // the click on contact
-    tone(ctx, bus, t, 170*p, 62*p, .05, .002, .85*v, .09);                     // the thump through the desk
-    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .16*v, .11);   // the key's own rattle
+    var v = .85 + r()*.3, p = 1 + (r()-.5)*.12, q = 1 + (r()-.5)*.05;
+    noise(ctx, bus, buf, r, t, "highpass", 4500*p, .7, .0005, .8*v, .009);    // the steel contact, leading
+    noise(ctx, bus, buf, r, t, "bandpass", 2900*p, 1.4, .001, .85*v, .025);   // the slap of the type bar on the platen
+    tone(ctx, bus, t, 170*q, 62*q, .04, .002, .68*v, .045);                    // the thump through the desk
+    noise(ctx, bus, buf, r, t+.004, "bandpass", 900*p, 4, .003, .12*v, .07);   // the key's own rattle
+    noise(ctx, bus, buf, r, t+.017, "bandpass", 3900*p, 14, .001, .2*v, .012); // the escapement tick, as the bar falls back
   }
-  // the carriage return: a short slide, then a low stop
+  // the carriage return: an audible slide, then a low stop (no bell)
   function thunk(ctx, bus, buf, r, t){
     var src = ctx.createBufferSource(); src.buffer = buf;
     var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 2;
-    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(1300, t+.22);
-    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.12, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
+    f.frequency.setValueAtTime(550, t); f.frequency.exponentialRampToValueAtTime(1750, t+.22);
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.27, t+.18); g.gain.exponentialRampToValueAtTime(0.0001, t+.24);
     src.connect(f); f.connect(g); g.connect(bus); src.start(t, r()); src.stop(t+.26);
     tone(ctx, bus, t+.24, 95, 42, .12, .003, 1.0, .32);
     noise(ctx, bus, buf, r, t+.24, "bandpass", 300, 1, .002, .4, .08);
@@ -992,11 +817,12 @@ var TypeSound = (function(){
   // timing: 95 ms a key, +-22 ms, spaces silent and 60 ms longer, a beat after punctuation
   function schedule(ctx, out, text, r, start, withThunk){
     var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = .002; comp.release.value = .12;
-    var master = ctx.createGain(); master.gain.value = .8;
+    var master = ctx.createGain(); master.gain.value = MASTER;
     var bus = ctx.createGain(); bus.gain.value = 1;
     var verb = ctx.createConvolver(); verb.buffer = room(ctx, r);
-    var wet = ctx.createGain(); wet.gain.value = .18;
-    bus.connect(comp); bus.connect(verb); verb.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
+    var dark = ctx.createBiquadFilter(); dark.type = "lowpass"; dark.frequency.value = 2500; dark.Q.value = .7;
+    var wet = ctx.createGain(); wet.gain.value = .23;
+    bus.connect(comp); bus.connect(verb); verb.connect(dark); dark.connect(wet); wet.connect(comp); comp.connect(master); master.connect(out);
     var buf = noiseBuf(ctx, 1.5, r), times = [], at = 0, prev = "";
     Array.prototype.forEach.call(text, function(ch, i){
       if (i) at += .095 + (r()-.5)*.044 + (ch===" " ? .06 : 0) + (prev==="," ? .04 : 0);
@@ -1006,43 +832,45 @@ var TypeSound = (function(){
     });
     var end = start + at;
     if (withThunk !== false){ thunk(ctx, bus, buf, r, end+.32); end += .32 + .24 + .35; }
-    return {times:times, end:end + .5};
+    return {times:times, end:end + .7};    // + the room's tail
   }
-  var live = null;
-  function play(text){
+  var MASTER = .84;
+  var live = null, busyUntil = 0;
+  function busy(){ return !!live && live.currentTime < busyUntil; }
+  function play(text, onDone){
     var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    if (busy()) return null;                  // the replay guard: never two plays at once
     live = live || new C(); if (live.state === "suspended") live.resume();
-    var lead = .06, sch = schedule(live, live.destination, text, Math.random, live.currentTime + lead, true);
-    var base = Math.round((live.currentTime + lead)*1000);
+    var lead = .06, now = live.currentTime, sch = schedule(live, live.destination, text, Math.random, now + lead, true);
+    busyUntil = sch.end;
+    var base = Math.round((now + lead)*1000);
+    if (onDone) setTimeout(onDone, Math.ceil((sch.end - now)*1000) + 30);
     return sch.times.map(function(ms){ return ms - base + lead*1000; });
   }
   function render(text, sampleRate, seed){
-    sampleRate = sampleRate || 22050;
+    sampleRate = sampleRate || 44100;
     var r = rng(seed || 1917), probe = new OfflineAudioContext(1, 1, sampleRate);
     var dur = schedule(probe, probe.destination, text, rng(seed || 1917), .05, true).end;
     var ctx = new OfflineAudioContext(1, Math.ceil(dur*sampleRate), sampleRate);
     schedule(ctx, ctx.destination, text, r, .05, true);
     return ctx.startRendering();
   }
-  function toWav(ab){
-    var d = ab.getChannelData(0), n = d.length, peak = 0, i;
-    for (i=0;i<n;i++) peak = Math.max(peak, Math.abs(d[i]));
-    var k = peak > .891 ? .891/peak : 1;                 // never above -1 dBFS
+  function toWav(ab){                          // writes the samples as they are: no gain, clamped at full scale
+    var d = ab.getChannelData(0), n = d.length, i;
     var out = new Uint8Array(44 + n*2), v = new DataView(out.buffer);
     function str(o, x){ for (var j=0;j<x.length;j++) out[o+j] = x.charCodeAt(j); }
     str(0,"RIFF"); v.setUint32(4, 36+n*2, true); str(8,"WAVE"); str(12,"fmt "); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
     v.setUint32(24, ab.sampleRate, true); v.setUint32(28, ab.sampleRate*2, true); v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,"data"); v.setUint32(40, n*2, true);
-    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i]*k)); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
+    for (i=0;i<n;i++){ var x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44+i*2, x<0 ? x*32768 : x*32767, true); }
     return out;
   }
-  return {play:play, render:render, toWav:toWav};
+  return {play:play, busy:busy, render:render, toWav:toWav};
 })();
 function playDateline(text, opts){
   opts = opts || {};
-  var times = TypeSound.play(text);
+  var times = TypeSound.play(text, opts.onDone);
   if (!times) return null;
   if (opts.onChar) Array.prototype.forEach.call(text, function(ch, i){ setTimeout(function(){ opts.onChar(i, ch); }, times[i]); });
-  if (opts.onDone) setTimeout(opts.onDone, times[times.length-1] + 900);
   return times;
 }
 /* ================== END TYPEWRITER SOUND BLOCK ================== */
@@ -1164,12 +992,16 @@ function typeDate(withSound) {
   const line = document.getElementById("dlLine"), btn = document.getElementById("dlPlay"), note = document.getElementById("dlNote");
   const text = MONTHS[mi];
   if (typing) return;
+  if (withSound && window.TypeSound && TypeSound.busy && TypeSound.busy()) return;  // the last play's tail is still sounding
   note.textContent = "";
   let times = null;
   if (reduced()) {
     line.textContent = text;
-    times = withSound ? playDateline(text, {}) : null;
-    if (withSound && !times) note.textContent = "This browser cannot play the sound.";
+    if (!withSound) return;
+    typing = true; btn.disabled = true;
+    const free = () => { btn.disabled = false; typing = null; };
+    times = playDateline(text, { onDone: free });
+    if (!times) { note.textContent = "This browser cannot play the sound."; free(); }
     return;
   }
   btn.disabled = true;
