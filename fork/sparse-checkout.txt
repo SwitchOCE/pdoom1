@@ -18,6 +18,7 @@
 !/*/
 /godot/
 /.claude/CLAUDE.md
+/.claude/skills/
 /fork/
 /shared/
 
