@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paperwork Desk</title>
+<meta name="viewport" content="width=1920">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#efe6d0; --paper-line:#c9d3d6;
+  --ink:#24201b; --ink2:#4a4238; --print:#2c5a4d; --print-soft:#7c9a8f;
+  --red:#b02a22; --red-ink:rgba(176,42,34,.95);
+  --plan:#94600f; --plan-fill:#d9a441; --op:#1d6869; --op-fill:#3f9a96;
+  --manila:#d6b77c; --amber:#F6A800; --lamp-off:#4a3328;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#3a2a30}
+body{font-family:"IBM Plex Sans Condensed",Arial Narrow,sans-serif;color:var(--ink)}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#3a2a30}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.key{display:inline-block;font:700 16px/20px "Courier Prime",monospace;padding:0 6px;border:1.5px solid currentColor;border-radius:3px}
+.p{color:var(--plan);font-weight:700}.o{color:var(--op);font-weight:700}
+
+/* ---------- the office (art) ---------- */
+.art{position:absolute;inset:0;background:url(assets/office_wide_dawn.webp) center 40%/cover}
+.art::before{content:"";position:absolute;inset:0;background:var(--doomwash)}
+.art::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(20,12,16,0) 40%,rgba(20,12,16,.55))}
+
+/* ---------- wall instruments ---------- */
+.wl-cal{position:absolute;left:48px;top:40px;width:150px;height:170px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.4);text-align:center;z-index:2}
+.wl-cal-pin{position:absolute;left:69px;top:-6px;width:12px;height:12px;border-radius:50%;background:#9b9b9b;box-shadow:0 2px 2px rgba(0,0,0,.5)}
+.wl-cal-yr{height:34px;background:var(--red);color:#f6ece0;font:600 18px/34px Oswald;letter-spacing:3px}
+.wl-cal-mo{font:700 62px/78px Oswald;color:var(--ink);letter-spacing:2px}
+.wl-cal-sub{font:600 16px/20px "IBM Plex Sans Condensed";color:var(--ink2);text-transform:uppercase;letter-spacing:1px}
+.wl-acc{position:absolute;left:222px;top:52px;height:64px;padding:0 14px;display:flex;align-items:center;gap:14px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.4);z-index:2;transform:rotate(-.6deg)}
+.wl-acc::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#9b9b9b}
+.wl-acc span{font:600 16px/20px "IBM Plex Sans Condensed";letter-spacing:.3px;text-transform:uppercase;color:var(--ink2)}
+.wl-acc b{display:block;font:700 20px/24px "Courier Prime";letter-spacing:0;text-transform:none;color:var(--ink)}
+.wl-acc b.neg{color:var(--red)}
+.wl-doom{position:absolute;left:760px;top:30px;width:400px;height:180px;padding:12px 18px;border-radius:6px;z-index:2;
+  background:linear-gradient(180deg,#5d4a3a,#46372b);border:3px solid #2b2019;box-shadow:inset 0 1px 0 rgba(255,220,170,.25),3px 5px 0 rgba(0,0,0,.45)}
+.wl-doom-l{font:700 17px/22px Oswald;letter-spacing:3px;color:#f3e3c4}
+.wl-doom-scr{margin-top:6px;height:88px;border-radius:4px;border:2px solid #1f1612;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 50%,#4a2416,#341a12 75%);display:flex;align-items:center;justify-content:center}
+.wl-doom-scr::after{content:"";position:absolute;inset:0;background:url(assets/tex_amber_scanlines_512.png);background-size:256px;opacity:.18;mix-blend-mode:screen}
+.wl-doom-v{font:400 96px/88px VT323;letter-spacing:4px;color:var(--doomc);text-shadow:0 0 14px var(--doomc)}
+.wl-doom-r{font:400 30px/30px VT323;letter-spacing:2px;color:var(--doomc);margin-left:16px;align-self:flex-end;margin-bottom:14px}
+.wl-lamps{margin-top:10px;display:flex;gap:4px}
+.wl-lamp{flex:1;height:14px;border-radius:2px;background:var(--lamp-off);border:1px solid #2a1c16}
+.wl-lamp.on{background:var(--doomc);box-shadow:0 0 6px var(--doomc)}
+.wl-lamp.end{background:#6d1814}
+.wl-rep{position:absolute;right:48px;top:40px;width:230px;height:170px;border-radius:6px;padding:10px 14px;z-index:2;
+  background:linear-gradient(180deg,#e9dfc8,#d9ccb0);border:3px solid #6b5636;box-shadow:3px 5px 0 rgba(0,0,0,.4)}
+.wl-rep-top{display:flex;justify-content:space-between;align-items:baseline}
+.wl-rep-l{font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--ink2);text-transform:uppercase}
+.wl-rep-v{font:700 36px/36px Oswald;color:var(--ink)}
+.wl-rep svg{display:block;margin:2px auto 0}
+
+/* ---------- desk (foreground) ---------- */
+.dk{position:absolute;left:0;top:846px;width:1920px;height:234px;z-index:2;
+  background:linear-gradient(180deg,rgba(30,18,10,.55),rgba(30,18,10,0) 26px),linear-gradient(rgba(122,88,52,.5),rgba(96,68,40,.6)),url(assets/tex_plywood_stained_512.png);
+  background-size:auto,auto,512px;box-shadow:0 -4px 12px rgba(0,0,0,.45)}
+.dk-obj{position:absolute;z-index:4}
+/* action card box */
+.dk-box{left:48px;top:836px;width:280px;height:216px}
+.dk-box .cards{position:absolute;left:26px;right:26px;top:0;height:48px}
+.dk-box .cards i{position:absolute;bottom:-8px;width:100%;height:44px;transform:rotate(-1.5deg);background:var(--paper);border-top:2px solid var(--red);box-shadow:0 -1px 0 rgba(0,0,0,.2)}
+.dk-box .cards i:nth-child(2){bottom:-14px;transform:rotate(1deg);background:var(--manila);border-top-color:var(--manila)}
+.dk-box .cards i:nth-child(3){bottom:-20px;transform:none}
+.dk-box .front{position:absolute;left:0;right:0;top:36px;bottom:0;border-radius:4px;padding:20px 20px;display:flex;flex-direction:column;justify-content:center;
+  background:linear-gradient(180deg,#6e5034,#553b25);border:3px solid #34241a;box-shadow:3px 5px 0 rgba(0,0,0,.4),inset 0 2px 0 rgba(255,220,170,.25)}
+.plate{display:inline-block;font:700 19px/30px Oswald;letter-spacing:2px;color:#2a1e0e;padding:0 12px;background:linear-gradient(180deg,#d1b06c,#a2823f);border:1px solid #5e4720;border-radius:2px;box-shadow:inset 0 1px 0 rgba(255,240,200,.6)}
+.dk-box .plate{align-self:flex-start}
+.dk-box .row{margin-top:16px;display:flex;justify-content:space-between;align-items:center;font:600 17px/22px "IBM Plex Sans Condensed";color:#f0e2c6}
+.dk-box .row .key{color:#f0e2c6}
+.dk-box .sub{margin-top:8px;font:500 15px/20px "IBM Plex Sans Condensed";color:#dccbaa}
+/* schedule clipboard */
+.dk-clip{left:356px;top:792px;width:356px;height:260px;padding:30px 18px 14px;border-radius:6px;
+  background:#7a5a3a;border:3px solid #4a3420;box-shadow:3px 5px 0 rgba(0,0,0,.4)}
+.dk-clip::before{content:"";position:absolute;left:50%;top:-10px;width:110px;height:26px;margin-left:-55px;border-radius:4px;background:linear-gradient(180deg,#c8ccd0,#8f969b);border:2px solid #5d6367}
+.dk-clip .sheet{position:absolute;left:12px;right:12px;top:18px;bottom:12px;background:var(--paper);padding:20px 16px 10px;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.dk-clip .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--print);padding-bottom:4px}
+.dk-clip .hd b{font:700 18px/22px Oswald;letter-spacing:1px;color:var(--print);text-transform:uppercase}
+.dk-clip .hd .key{color:var(--print)}
+.hrow{margin-top:8px}
+.hrow .l{display:flex;justify-content:space-between;font:700 16px/20px "IBM Plex Sans Condensed";letter-spacing:.4px;text-transform:uppercase}
+.hrow .l em{font:700 16px/19px "Courier Prime";font-style:normal;letter-spacing:0;text-transform:none;color:var(--ink)}
+.hrow .l em.zero{color:var(--red)}
+.boxes{margin-top:4px;display:flex;gap:3px}
+.bx{width:21px;height:18px;border:1.5px solid var(--print);background:rgba(255,255,255,.4)}
+.bx.pl{background:repeating-linear-gradient(135deg,var(--plan-fill) 0 4px,#c78f2c 4px 7px);border-color:var(--plan)}
+.bx.op{background:repeating-linear-gradient(135deg,var(--op-fill) 0 4px,#2f8580 4px 7px);border-color:var(--op)}
+.dk-clip .foot{margin-top:10px;font:400 16px/20px "Courier Prime";color:var(--ink)}
+/* shortcut objects */
+.dk-sc{width:180px;height:94px;padding:12px 14px;border-radius:3px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:3px 4px 0 rgba(0,0,0,.4)}
+.dk-sc .t{display:flex;align-items:center;gap:10px;font:700 19px/22px Oswald;letter-spacing:.8px;text-transform:uppercase}
+.ic{display:block;flex:none;border-radius:6px}
+.ic16{width:24px;height:24px}.ic28{width:28px;height:28px}.ic36{width:36px;height:36px}
+.dk-ttl{display:flex;align-items:center;gap:10px}
+.fm-it{display:flex;align-items:center;gap:8px}
+.fm-it .nm{overflow:hidden;text-overflow:ellipsis}
+.chipi{display:inline-flex;align-items:center;gap:8px}
+.wl-acc .cell{display:flex;align-items:center;gap:8px}
+.wl-doom-l{display:flex;align-items:center;gap:8px}
+.wl-rep-l{display:inline-flex;align-items:center;gap:8px}
+.fm-sec span{display:inline-flex;align-items:center;gap:8px}
+.ac-top{display:flex;align-items:center;gap:10px;min-width:0}
+.ac-top .ac-name{min-width:0}
+.dk-sc .r{display:flex;justify-content:space-between;align-items:center;font:500 16px/20px "IBM Plex Sans Condensed"}
+.sc-staff{background:var(--manila);color:#2e2312}
+.sc-cat{background:linear-gradient(90deg,#284a68 0 10px,#33608a 10px);color:#eef1f4}
+.sc-led{background:linear-gradient(90deg,#1f3d2e 0 12px,#2f5a43 12px);color:#eae6d2}
+.sc-gd{background:linear-gradient(90deg,#6a1f1a 0 12px,#8a2b23 12px);color:#f4e7dc}
+/* commit stamp */
+.dk-stamp{right:48px;top:856px;width:280px;height:196px;border-radius:6px;padding:14px 16px;text-align:center;
+  background:linear-gradient(180deg,#7a5230,#5b3b1f);border:3px solid #3b2612;box-shadow:3px 5px 0 rgba(0,0,0,.4),inset 0 2px 0 rgba(255,220,170,.3)}
+.dk-face{height:120px;border-radius:3px;background:var(--red);display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;box-shadow:inset 0 0 0 3px #e8c9b8,inset 0 0 0 6px var(--red),inset 0 0 0 8px #e8c9b8}
+.dk-face .t{font:700 26px/30px Oswald;letter-spacing:1.5px;text-align:left;color:#fbf1e6;text-transform:uppercase}
+.dk-face .key{color:#fbf1e6}
+.dk-face .col{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.dk-face{gap:12px!important}
+.dk-face.grey{background:#6a6056;box-shadow:inset 0 0 0 3px #d9cfc0,inset 0 0 0 6px #6a6056,inset 0 0 0 8px #d9cfc0}
+.dk-face .s{font:600 16px/20px "IBM Plex Sans Condensed";color:#f6efe4}
+.dk-note{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font:600 16px/20px "IBM Plex Sans Condensed";color:#f2e2c4}
+.dk-note .key{color:#f2e2c4}
+.kbr{position:absolute;right:14px;bottom:12px}
+.dk-box .front .kbr{color:#f0e2c6}
+.dk-clip .kbr{color:var(--print)}
+
+/* ---------- menu shell ---------- */
+.dim{position:absolute;inset:0;background:rgba(36,24,30,.5);z-index:5}
+.mn{position:absolute;left:48px;top:236px;width:1512px;height:844px;border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;z-index:6;border-radius:6px;padding:18px 22px;
+  background:linear-gradient(180deg,#4b3a2c,#3e3024);border:3px solid #2e2219;box-shadow:0 10px 0 rgba(0,0,0,.35),inset 0 2px 8px rgba(0,0,0,.4)}
+.mn-hd{display:flex;align-items:center;gap:16px;height:44px}
+.mn-chip{font:600 16px/20px "IBM Plex Sans Condensed";color:#ecdcbf;padding:5px 12px;border:1.5px solid rgba(236,220,191,.45);border-radius:3px;white-space:nowrap}
+.mn-chip b{font:700 17px/20px "Courier Prime";color:#fff}
+.mn-chip b.zero,.mn-chip b.neg{color:#ff9a86}
+.mn-x{margin-left:auto;height:40px;padding:0 14px;border-radius:3px;background:var(--paper);font:600 17px/40px "IBM Plex Sans Condensed";display:flex;align-items:center;gap:10px;box-shadow:2px 3px 0 rgba(0,0,0,.35)}
+
+/* action card menu */
+.ac-rows{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.ac-row{display:flex;gap:14px;height:140px}
+.ac-div{width:36px;flex:none;border-radius:3px;background:linear-gradient(90deg,#b9a27a,#a58c62);display:flex;align-items:center;justify-content:center}
+.ac-div span{writing-mode:vertical-rl;transform:rotate(180deg);font:700 16px/1 "IBM Plex Sans Condensed";letter-spacing:2px;color:#2e2416;text-transform:uppercase;white-space:nowrap}
+.ac-slots{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.ac-slot{position:relative;min-width:0}
+.ac-card{width:100%;height:140px;padding:18px 14px 10px;display:flex;flex-direction:column;background:var(--paper);border-radius:2px;box-shadow:1px 2px 0 rgba(0,0,0,.35);
+  background-image:linear-gradient(var(--red) 0 0),repeating-linear-gradient(180deg,transparent 0 23px,var(--paper-line) 23px 24px);background-size:100% 2px,100% 100%;background-position:0 60px,0 62px;background-repeat:no-repeat}
+.ac-card>*{flex-shrink:0}
+.ac-card.folder{background:var(--manila);background-image:none;padding-top:24px;clip-path:polygon(0 0,34% 0,38% 18px,100% 18px,100% 100%,0 100%);box-shadow:none;filter:drop-shadow(1px 2px 0 rgba(0,0,0,.35))}
+.ac-card.folder::before{content:"FOLDER";position:absolute;left:12px;top:0;font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:1px;color:#5c4520}
+.ac-name{font:600 20px/24px "IBM Plex Sans Condensed";color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-cost{margin-top:6px;font:500 17px/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.ac-card.folder .ac-cost{font-weight:700;color:#5c4520}
+.ac-card.off .ac-cost{opacity:.8}
+.ac-st{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
+.stamp{display:inline-block;white-space:nowrap;font:600 16px/19px Oswald;letter-spacing:.2px;text-transform:uppercase;color:var(--red-ink);border:2px solid var(--red-ink);padding:0 4px;border-radius:2px;transform:rotate(-1.5deg);background:rgba(239,230,208,.35)}
+.stamp.grey{color:#6a5d4c;border-color:#6a5d4c}
+.onf{position:absolute;right:6px;top:-4px;z-index:2;font:700 16px/18px "Courier Prime";letter-spacing:-.3px;color:#2f2f2f;padding:0 7px;background:#f6f1e4;border:1.5px solid #5c5c5c;border-radius:10px;white-space:nowrap;box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.ac-slot.active::after{content:"";position:absolute;inset:-6px;border:3px solid var(--amber);border-radius:4px;box-shadow:0 0 10px rgba(246,168,0,.6);pointer-events:none;z-index:3}
+.ac-desc{margin-top:8px;font:400 15px/20px "IBM Plex Sans Condensed";color:var(--ink2)}
+/* folder opened from a card (ABBBCCC) */
+.fd{position:absolute;z-index:7;padding:12px 18px;background:var(--manila);border:2px solid #9c7c40;box-shadow:6px 8px 0 rgba(0,0,0,.4)}
+.fd-h{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #9c7c40;padding-bottom:10px}
+.fd-h .t{font:700 24px/28px Oswald;letter-spacing:1px;color:#2e2312;text-transform:uppercase}
+.fd-h .t small{font:600 16px/20px "IBM Plex Sans Condensed";letter-spacing:1px;margin-left:12px;color:#5c4520;text-transform:none}
+.fd-x{height:36px;padding:0 12px;border:2px solid #5c4520;border-radius:3px;font:600 16px/32px "IBM Plex Sans Condensed";color:#2e2312;display:flex;align-items:center;gap:8px}
+.fd-cards{margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.fd-cards .ac-card{height:190px}
+
+/* schedule menu (the form) */
+.fm{position:absolute;left:48px;top:236px;width:1512px;height:844px;z-index:6;padding:22px 30px;background:var(--paper);
+  background-image:linear-gradient(rgba(239,230,208,.9),rgba(239,230,208,.9)),url(assets/tex_grid_graphpaper_aged_512.png);background-size:auto,512px;
+  box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.2)}
+.fm-top{display:flex;align-items:flex-end;gap:28px;border-bottom:3px double var(--print);padding-bottom:10px}
+.fm-no{font:600 15px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print)}
+.fm-title{font:700 28px/32px Oswald;letter-spacing:1px;color:var(--print);text-transform:uppercase}
+.fm-month{font:700 24px/30px "Courier Prime";border-bottom:1.5px solid var(--print);padding:0 6px}
+.fm-top .mn-x{margin-left:auto;background:#e2d6ba;border:1.5px solid var(--print)}
+.fm-body{display:grid;grid-template-columns:1fr 500px;gap:48px;margin-top:18px}
+.fm-th,.fm-tr{display:grid;grid-template-columns:40px 72px 1fr 100px 96px 40px;align-items:center}
+.fm-th{height:30px;font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:1.5px;color:var(--print);text-transform:uppercase;border-bottom:1.5px solid var(--print)}
+.fm-tr{height:40px;border-bottom:1px solid var(--print-soft)}
+.fm-n{font:600 16px/18px "IBM Plex Sans Condensed";color:var(--print);text-align:center}
+.fm-mv{display:flex;gap:6px;padding-left:6px}
+.fm-mv button{width:28px;height:28px;border:1px solid var(--print-soft);border-radius:2px;font:700 16px/24px "Courier Prime";color:var(--print);text-align:center}
+.fm-it{font:700 17px/20px "Courier Prime";white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px 0 4px}
+.fm-it small{font:500 16px/18px "IBM Plex Sans Condensed";color:var(--ink2);margin-left:6px}
+.fm-h,.fm-c{font:400 16px/20px "Courier Prime";white-space:nowrap}
+.fm-c{text-align:right;padding-right:10px}
+.fm-x{width:30px;height:28px;border:1px solid var(--print-soft);border-radius:2px;font:700 16px/24px "Courier Prime";color:var(--red);text-align:center;justify-self:center}
+.fm-sec{font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print);text-transform:uppercase;border-bottom:1.5px solid var(--print);padding-bottom:4px;margin-bottom:8px;display:flex;justify-content:space-between}
+.fm-side>div+div{margin-top:24px}
+.fm-tot{margin-top:14px;display:flex;justify-content:flex-end;gap:34px;border-top:3px double var(--print);padding-top:8px;font:400 17px/24px "Courier Prime"}
+.fm-tot b{font-weight:700}
+.fm-tot span:first-child{margin-right:auto;font:700 16px/24px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print)}
+.fm-hr{display:flex;align-items:center;height:40px}
+.fm-hl{width:128px;font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.fm-boxes{display:flex;gap:4px}
+.fm-box{width:19px;height:24px;border:1.5px solid var(--print);background:rgba(255,255,255,.4)}
+.fm-box.pl{background:repeating-linear-gradient(135deg,var(--plan-fill) 0 4px,#c78f2c 4px 7px);border-color:var(--plan)}
+.fm-box.op{background:repeating-linear-gradient(135deg,var(--op-fill) 0 4px,#2f8580 4px 7px);border-color:var(--op)}
+.fm-free{margin-left:auto;padding-left:10px;font:700 16px/20px "Courier Prime";white-space:nowrap}
+.fm-free.zero{color:var(--red)}
+.fm-res{display:flex;align-items:center;gap:10px}
+.fm-resbox{width:52px;height:32px;border:1.5px solid var(--print);background:rgba(255,255,255,.5);font:700 18px/29px "Courier Prime";text-align:center}
+.fm-btn{width:34px;height:32px;border:1.5px solid var(--print);border-radius:2px;font:700 18px/28px "Courier Prime";color:var(--print);text-align:center}
+.fm-line{display:flex;justify-content:space-between;font:400 17px/30px "Courier Prime"}
+.fm-line b{font-weight:700}
+.fm-uw{display:grid;grid-template-columns:1fr 196px;row-gap:2px;align-items:center;padding:6px 0;border-bottom:1px solid var(--print-soft)}
+.fm-uw .nm{font:700 16px/20px "Courier Prime"}
+.fm-uw .dt{font:400 16px/20px "Courier Prime";text-align:right}
+.fm-gantt{grid-column:1/3;position:relative;height:14px;margin-top:4px;background:linear-gradient(90deg,var(--print-soft) 1px,transparent 1px) 0 0/25% 100%}
+.fm-bar{position:absolute;left:0;top:2px;height:10px;background:repeating-linear-gradient(90deg,#8d7a5e 0 6px,#a08b6a 6px 8px)}
+.fm-bar::after{content:"";position:absolute;right:-2px;top:-3px;width:4px;height:16px;background:var(--ink)}
+.fm-ruler{display:grid;grid-template-columns:repeat(4,1fr);width:100%;margin-top:6px}
+.fm-ruler span{font:600 14px/18px "IBM Plex Sans Condensed";letter-spacing:1px;color:var(--print);padding-left:4px;border-left:1px solid var(--print-soft)}
+.fm-rq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fm-rq button{height:42px;border:2px solid var(--print-soft);border-radius:3px;font:600 17px/38px Oswald;letter-spacing:1px;color:var(--ink2);text-align:center;text-transform:uppercase}
+.fm-rq button.on{border-color:var(--red);color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.fm-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fm-tools button{height:44px;border-radius:3px;font:600 17px/40px "IBM Plex Sans Condensed";color:#2e2312;display:flex;align-items:center;justify-content:center;gap:10px}
+.t-pencil{background:linear-gradient(180deg,#e5b94a,#c99a2b);border:2px solid #7d5c16}
+.t-eraser{background:linear-gradient(180deg,#e8a7a0,#cf8a83);border:2px solid #84463f}
+
+/* watch */
+.ev{position:absolute;left:640px;top:260px;width:640px;height:420px;z-index:5;background:var(--paper);padding:20px 26px;box-shadow:6px 10px 0 rgba(0,0,0,.4);transform:rotate(.5deg)}
+.ev-clip{position:absolute;left:300px;top:-14px;width:24px;height:64px;border:4px solid #9da3a6;border-radius:12px}
+.ev-h{display:flex;justify-content:space-between;align-items:center;border-bottom:3px double var(--print);padding-bottom:8px}
+.ev-h .from{font:600 16px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print);text-transform:uppercase}
+.ev-h .from b{display:block;font:700 17px/22px "Courier Prime";letter-spacing:0;color:var(--ink);text-transform:none}
+.ev-body{display:grid;grid-template-columns:1fr 120px;gap:20px;margin-top:14px}
+.ev-t{font:700 32px/38px Oswald}
+.ev-d{margin-top:8px;font:400 19px/27px "Courier Prime"}
+.ev-d mark{background:rgba(246,168,0,.45);color:inherit;padding:0 2px}
+.ev-ph{width:120px;height:120px;border:6px solid #fbf6ea;box-shadow:1px 2px 0 rgba(0,0,0,.3);background:url(assets/dossier_people_pleaser_256.png) center/cover;transform:rotate(-3deg)}
+.ev-ask{margin-top:14px;font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print);text-transform:uppercase;border-bottom:1.5px solid var(--print);padding-bottom:3px}
+.ev-ch{display:grid;grid-template-columns:42px 1fr 220px;align-items:center;height:46px;border-bottom:1px solid var(--print-soft);width:100%}
+.ev-ch .n{font:700 17px/22px "Courier Prime";color:var(--print)}
+.ev-ch .nm{font:700 19px/22px "Courier Prime"}
+.ev-ch .c{font:400 16px/20px "Courier Prime";color:var(--ink2);text-align:right}
+.tape{position:absolute;right:120px;top:250px;width:420px;height:300px;z-index:4;padding:16px 18px;background:#ece5cf;box-shadow:4px 6px 0 rgba(0,0,0,.35);
+  background-image:repeating-linear-gradient(180deg,transparent 0 29px,rgba(44,90,77,.14) 29px 30px)}
+.tape-h{font:700 16px/18px "IBM Plex Sans Condensed";letter-spacing:2px;color:var(--print);text-transform:uppercase;margin-bottom:8px}
+.tape-l{font:400 16px/30px "Courier Prime";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tape-l b{display:inline-block;width:68px;color:var(--print)}
+.tape-l.hot{color:var(--red);font-weight:700}
+.tape{transform:rotate(-.4deg)}
+.dk-box.locked .front{filter:saturate(.5) brightness(.8)}
+.spd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.spd button{height:36px;border:2px solid #c9b48c;border-radius:3px;font:600 16px/32px Oswald;color:#ecdcbf;text-align:center}
+.spd button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+var view=(new URLSearchParams(location.search).get('view')||'home');
+var DOOM={20:{c:'#F6A800',wash:'rgba(246,168,0,.07)'},40.2:{c:'#E9752E',wash:'rgba(233,117,46,.15)'}};
+
+/* ---------- state (same fixture as round 1) ---------- */
+var M5ROWS=[
+ ['Go to Meetups','Scouting','1 op','$300'],
+ ['Hire: Safety Researcher','Hire Staff','1 plan','$60,000'],
+ ['Read the Literature','Scouting','1 plan',''],
+ ['Work Your Connections','','2 op','6 rep'],
+ ['Post Online','Scouting','1 plan',''],
+ ['Read the Literature','Scouting','1 plan',''],
+ ['Desperation Lever','Financing','1 plan',''],
+ ['Read the Literature','Scouting','1 plan',''],
+ ['Post Online','Scouting','1 plan',''],
+ ['Read the Literature','Scouting','1 plan',''],
+ ['Post Online','Scouting','1 plan',''],
+ ['Read the Literature','Scouting','1 plan',''],
+ ['Post Online','Scouting','1 plan',''],
+ ['Read the Literature','Scouting','1 plan','']];
+var S={
+ m1:{yr:'2017',mo:'JUL',month:'JULY 2017',money:'$245,000',compute:'100',research:'0',papers:'0',rep:50,doom:20,rising:0,
+     plan:[12,0],op:[8,0],held:20,rows:[],totals:null,uw:[],ruler:['JUL','AUG','SEP','OCT']},
+ m5:{yr:'2017',mo:'NOV',month:'NOVEMBER 2017',money:'$140,000',compute:'65',research:'-12',papers:'0',rep:32,doom:40.2,rising:1,
+     plan:[12,12],op:[8,3],held:5,rows:M5ROWS,totals:['12 plan hr + 3 op hr','$60,300 + 6 rep'],
+     uw:[['Candidate interview','lands mid-Dec 2017',1.5],['Paper submission','decision ~Jan 2018',2.3]],ruler:['NOV','DEC','JAN','FEB']}
+};
+function hrs(h){var m=h.split(' ');return m[0]+' <span class="'+(m[1]=='op'?'o':'p')+'">'+m[1]+' hr</span>';}
+
+/* ---------- Pip's icons (assets/icons, copied from godot/assets/icons) ---------- */
+var I={money:'resource_money_64.png',compute:'resource_compute_small_64.png',research:'resource_research_small_64.png',papers:'resource_papers_small_64.png',
+ rep:'resource_reputation_64.png',doom:'resource_doom_small_64.png',rising:'indicator_doom_rising_64.png',hours:'resource_action_points_64.png',
+ staff:'ui_staff_management_64.png',upgrades:'button_upgrade_normal_64.png',ledger:'ui_budget_finance_64.png',guide:'ui_control_help_64.png',
+ actions:'ui_guide_actions_64.png',schedule:'ui_config_date_64.png',commit:'button_confirm_normal_64.png',pause:'ui_control_pause_64.png',
+ close:'ui_control_cancel_64.png',undo:'ui_control_back_64.png',clear:'ui_control_clear_64.png',
+ 'Fundraising':'ui_guide_resources_64.png','Financing':'action_funding_loan_64.png','Purchase Compute':'action_facility_upgrade_compute_64.png',
+ 'Hire Staff':'button_hire_normal_64.png','Advertise a Role':'new_advertise_notice.svg','Work Your Connections':'action_publicity_network_64.png',
+ 'Onboard New Hires':'employee_status_training_64.png','Safety Research':'resource_safety_small_64.png','Capability Research':'action_research_ml_fundamentals_64.png',
+ 'Publish Safety Paper':'resource_papers_small_64.png','Safety Audit':'employee_role_auditor_64.png','Scouting':'action_research_monitoring_64.png',
+ 'Travel &amp; Conferences':'new_travel_suitcase.svg','Publicity':'new_publicity_megaphone.svg','Operations':'employee_role_engineer_64.png',
+ 'Office':'action_facility_expand_office_64.png','Strategic':'ui_guide_strategy_64.png',
+ 'Go to Meetups':'action_management_team_building_64.png','Read the Literature':'ui_guide_book_64.png','Post Online':'new_post_online_bubble.svg',
+ 'Hire: Safety Researcher':'button_hire_normal_64.png','Desperation Lever':'new_desperation_lever.svg'};
+function ic(k,sz){return I[k]?'<img class="ic ic'+sz+'" src="assets/icons/'+I[k]+'" alt="">':'';}
+
+/* ---------- wall ---------- */
+function wall(st,cal){
+  var d=DOOM[st.doom], lamps='', lit=Math.floor(st.doom/10);
+  for(var i=0;i<10;i++) lamps+='<div class="wl-lamp'+(i<lit?' on':'')+(i==9?' end':'')+'"></div>';
+  var cx=100,cy=80,r=66,ang=Math.PI*(1-st.rep/100);
+  function pt(f,rr){var a=Math.PI*(1-f);return [(cx+Math.cos(a)*rr).toFixed(1),(cy-Math.sin(a)*rr).toFixed(1)];}
+  function arc(a0,a1,col){var p0=pt(a0,r),p1=pt(a1,r);return '<path d="M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 0 1 '+p1[0]+' '+p1[1]+'" stroke="'+col+'" stroke-width="8" fill="none"/>';}
+  var ticks='';for(var t=0;t<=10;t++){var a=pt(t/10,r-12),b=pt(t/10,r+2);ticks+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#4a4238" stroke-width="'+(t%5?1.5:2.5)+'"/>';}
+  var n=[(cx+Math.cos(ang)*(r-8)).toFixed(1),(cy-Math.sin(ang)*(r-8)).toFixed(1)];
+  var svg='<svg width="200" height="104" viewBox="0 0 200 104">'+arc(0,1,'#b9ab8e')+arc(0,.1,'#b02a22')+ticks+
+    '<text x="26" y="100" font-family="IBM Plex Sans Condensed" font-weight="700" font-size="15" fill="#b02a22">0</text>'+
+    '<text x="148" y="100" font-family="IBM Plex Sans Condensed" font-weight="700" font-size="15" fill="#4a4238">100</text>'+
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+n[0]+'" y2="'+n[1]+'" stroke="#24201b" stroke-width="4" stroke-linecap="round"/><circle cx="'+cx+'" cy="'+cy+'" r="7" fill="#24201b"/></svg>';
+  cal=cal||{top:st.yr,mid:st.mo,sub:'Plan'};
+  var neg=st.research.charAt(0)=='-';
+  return '<div class="art" style="--doomwash:'+d.wash+'"></div>'+
+   '<div class="wl-cal"><div class="wl-cal-pin"></div><div class="wl-cal-yr">'+cal.top+'</div><div class="wl-cal-mo">'+cal.mid+'</div><div class="wl-cal-sub">'+cal.sub+'</div></div>'+
+   '<div class="wl-acc"><span class="cell">'+ic('money',16)+'<span>Money<b>'+st.money+'</b></span></span><span class="cell">'+ic('compute',16)+'<span>Compute<b>'+st.compute+'</b></span></span><span class="cell">'+ic('research',16)+'<span>Research<b class="'+(neg?'neg':'')+'">'+st.research+(neg?' [!]':'')+'</b></span></span><span class="cell">'+ic('papers',16)+'<span>Papers<b>'+st.papers+'</b></span></span></div>'+
+   '<div class="wl-doom" style="--doomc:'+d.c+'"><div class="wl-doom-l">'+ic('doom',28)+'P(DOOM)</div><div class="wl-doom-scr"><span class="wl-doom-v">'+st.doom.toFixed(1)+'%</span>'+(st.rising?'<span class="wl-doom-r">RISING</span>':'')+'</div><div class="wl-lamps">'+lamps+'</div></div>'+
+   '<div class="wl-rep"><div class="wl-rep-top"><span class="wl-rep-l">'+ic('rep',28)+'Reputation</span><span class="wl-rep-v">'+Math.round(st.rep)+'</span></div>'+svg+'</div>';
+}
+/* ---------- desk ---------- */
+function desk(st,opt){
+  opt=opt||{};
+  var pf=st.plan[0]-st.plan[1], of=st.op[0]-st.op[1];
+  // Rule 1: filled box = hour LEFT, empty box = hour spent
+  function boxes(tot,left,cls){var b='';for(var i=0;i<tot;i++)b+='<i class="bx'+(i<left?' '+cls:'')+'"></i>';return b;}
+  var h='<div class="dk"></div>';
+  h+='<button class="dk-obj dk-box'+(opt.watch?' locked':'')+'"><div class="cards"><i></i><i></i><i></i></div><div class="front"><span class="dk-ttl">'+ic('actions',36)+'<span class="plate">ACTION CARDS</span></span>'+
+     '<div class="row"><span>'+(opt.watch?'Closed this month':cardsFor(st).reduce(function(a,r){return a+r[1].length;},0)+' on file')+'</span></div>'+
+     '<div class="sub">'+(opt.watch?'Opens again at month end':'Cards, folders, costs')+'</div>'+(opt.watch?'':'<span class="key kbr">A</span>')+'</div></button>';
+  var body;
+  if(opt.watch){
+    body='<div class="hrow"><div class="l"><span class="p">Planning</span><em>'+st.plan[1]+' hr spent</em></div></div>'+
+         '<div class="hrow"><div class="l"><span class="o">Operating</span><em>'+st.op[1]+' hr spent</em></div></div>'+
+         '<div class="hrow"><div class="l"><span style="color:var(--ink2)">Held for events</span><em>'+st.held+' hr</em></div></div>'+
+         '<div class="foot">14 of 14 done, 2 under way</div>';
+  } else {
+    body='<div class="hrow"><div class="l"><span class="p">Planning</span><em class="'+(pf==0?'zero':'')+'">'+pf+' of 12 left</em></div><div class="boxes">'+boxes(12,pf,'pl')+'</div></div>'+
+         '<div class="hrow"><div class="l"><span class="o">Operating</span><em>'+of+' of 8 left</em></div><div class="boxes">'+boxes(8,of,'op')+'</div></div>'+
+         '<div class="foot">'+(st.rows.length?(st.rows.length+' items, '+st.totals[1]+'<br>'+st.uw.length+' under way'):'Form blank<br>Nothing under way')+'</div>';
+  }
+  h+='<button class="dk-obj dk-clip"><div class="sheet"><div class="hd"><span class="dk-ttl">'+ic('schedule',36)+'<b>Schedule'+(opt.watch?' -- committed':'')+'</b></span></div>'+body+'<span class="key kbr">P</span></div></button>';
+  var sc=[['sc-staff','Staff file','S',st===S.m1?'Founder only':'Founder + 1','staff'],['sc-cat','Upgrades','U','7 items','upgrades'],['sc-led','Ledger','L','Liabilities','ledger'],['sc-gd','Guide','G','Handbook','guide']];
+  sc.forEach(function(x,i){
+    h+='<button class="dk-obj dk-sc '+x[0]+'" style="left:'+(1180+(i%2)*200)+'px;top:'+(856+Math.floor(i/2)*102)+'px"><span class="t">'+ic(x[4],36)+x[1]+'</span><span class="r"><span>'+x[3]+'</span><span class="key">'+x[2]+'</span></span></button>';
+  });
+  if(opt.watch){
+    h+='<div class="dk-obj dk-stamp"><div class="dk-face grey">'+ic('pause',36)+'<span class="col"><span class="t">Paused</span><span class="s">awaiting your reply</span></span></div>'+
+       '<div class="spd"><button>&gt; 1x</button><button class="on">&gt;&gt; 2x</button><button>&gt;&gt;&gt; 4x</button></div></div>';
+  } else {
+    // Rule 2: while a menu is open the stamp is under it and shows no Enter
+    h+='<button class="dk-obj dk-stamp"><div class="dk-face">'+ic('commit',36)+'<span class="t">Commit the<br>month</span></div><div class="dk-note"><span>Held for events: '+st.held+' hr</span>'+(opt.menu?'':'<span class="key">Enter</span>')+'</div></button>';
+  }
+  return h;
+}
+
+/* ---------- action card menu ---------- */
+function cardsFor(st){
+  var m5=(st===S.m5), NP='No planning hrs';
+  return [
+   ['Funds',[
+     {n:'Fundraising',c:'4 choices &gt;',folder:1},
+     {n:'Financing',c:'7 choices &gt;',folder:1,onf:m5?1:0},
+     {n:'Purchase Compute',c:'$50,000, no hours'}]],
+   ['People',[
+     {n:'Hire Staff',c:'7 roles, 1 <span class="p">plan hr</span> each &gt;',folder:1,st:m5?[NP]:[],onf:m5?1:0},
+     {n:'Advertise a Role',c:'',st:['Coming soon'],grey:1},
+     {n:'Work Your Connections',c:'2 <span class="o">op hr</span>, 6 rep',onf:m5?1:0},
+     {n:'Onboard New Hires',c:'<span class="o">op hr</span> + money, varies by step',st:m5?[]:['Nobody hired']}]],
+   ['Research',[
+     {n:'Safety Research',c:'1 <span class="p">plan hr</span>, 10 research',st:m5?['Needs 10 research',NP]:['Needs 10 research']},
+     {n:'Capability Research',c:'1 <span class="p">plan hr</span>, 10 research',st:m5?['Needs 10 research',NP]:['Needs 10 research']},
+     {n:'Publish Safety Paper',c:'1 <span class="p">plan hr</span>, 20 research',st:m5?['Needs 20 research',NP]:['Needs 20 research']}]
+     .concat(m5?[{n:'Safety Audit',c:'2 <span class="o">op hr</span>, $40,000'}]:[])],
+   ['Outreach',[
+     {n:'Scouting',c:'3 choices &gt;',folder:1,onf:m5?11:0,id:'scouting'},
+     {n:'Travel &amp; Conferences',c:'4 choices &gt;',folder:1},
+     {n:'Publicity',c:'5 choices &gt;',folder:1}]],
+   ['The lab',[
+     {n:'Operations',c:'3 choices &gt;',folder:1},
+     {n:'Office',c:'4 choices &gt;',folder:1}]
+     .concat(m5?[{n:'Strategic',c:'4 choices, 1 open now &gt;',folder:1}]:[])]
+  ];
+}
+function card(c,active){
+  var off=(c.st&&c.st.length)?' off':'';
+  return '<div class="ac-slot'+(active?' active':'')+'"><button class="ac-card'+(c.folder?' folder':'')+off+'"><div class="ac-top">'+ic(c.n,36)+'<div class="ac-name">'+c.n+'</div></div>'+
+    (c.c?'<div class="ac-cost">'+c.c+'</div>':'')+(c.d?'<div class="ac-desc">'+c.d+'</div>':'')+
+    '<div class="ac-st">'+(c.st||[]).map(function(s){return '<span class="stamp'+(c.grey?' grey':'')+'">'+s+'</span>';}).join('')+'</div></button>'+
+    (c.onf?'<span class="onf">on form '+c.onf+'</span>':'')+'</div>';
+}
+function chips(st){
+  var pf=st.plan[0]-st.plan[1], of=st.op[0]-st.op[1], neg=st.research.charAt(0)=='-';
+  return '<span class="mn-chip chipi">'+ic('hours',16)+'<span>Planning <b class="'+(pf==0?'zero':'')+'">'+pf+' of 12</b> left</span></span><span class="mn-chip chipi">'+ic('hours',16)+'<span>Operating <b>'+of+' of 8</b> left</span></span>'+
+    '<span class="mn-chip chipi">'+ic('money',16)+'<span>Money <b>'+st.money+'</b></span></span><span class="mn-chip chipi">'+ic('research',16)+'<span>Research <b class="'+(neg?'neg':'')+'">'+st.research+'</b></span></span>';
+}
+function actionsMenu(st,activeId){
+  var h='<div class="dim"></div><section class="mn"><div class="mn-hd"><span class="dk-ttl">'+ic('actions',36)+'<span class="plate">ACTION CARDS</span></span>'+chips(st)+'<button class="mn-x">'+ic('close',16)+'Close'+(activeId?'':' <span class="key">Esc</span>')+'</button></div><div class="ac-rows">';
+  cardsFor(st).forEach(function(r){
+    h+='<div class="ac-row"><div class="ac-div"><span>'+r[0]+'</span></div><div class="ac-slots">';
+    r[1].forEach(function(c){h+=card(c,activeId&&c.id==activeId);});
+    h+='</div></div>';
+  });
+  return h+'</div></section>';
+}
+function scoutingFolder(){
+  var NP='No planning hrs';
+  var sub=[{n:'Go to Meetups',c:'1 <span class="o">op hr</span>, $300',onf:1,d:'Drinks, badges, a talk you half-listen to.'},
+           {n:'Read the Literature',c:'1 <span class="p">plan hr</span>',onf:6,st:[NP],d:'Sit down with the arxiv firehose.'},
+           {n:'Post Online',c:'1 <span class="p">plan hr</span>',onf:4,st:[NP],d:'Be loud. Hype is not respect.'}];
+  // opens out to the right of the Scouting card (Outreach row, first slot), over rows 4-5
+  return '<div class="fd" style="left:486px;top:758px;width:1052px;height:298px"><div class="fd-h"><span class="t dk-ttl">'+ic('Scouting',36)+'<span>Scouting<small>3 choices</small></span></span><button class="fd-x">'+ic('close',16)+'Close folder <span class="key">Esc</span></button></div>'+
+    '<div class="fd-cards">'+sub.map(function(c){return card(c);}).join('')+'</div></div>';
+}
+
+/* ---------- schedule menu ---------- */
+function scheduleMenu(st){
+  var pf=st.plan[0]-st.plan[1], of=st.op[0]-st.op[1];
+  function boxes(tot,used,cls){var b='';for(var i=0;i<tot;i++)b+='<div class="fm-box'+(i<used?' '+cls:'')+'"></div>';return b;}
+  var h='<div class="dim"></div><section class="fm"><div class="fm-top"><div><div class="fm-no">FORM A-20 / FOUNDER\'S OFFICE</div><div class="fm-title dk-ttl">'+ic('schedule',36)+'Schedule of the month</div></div>'+
+    '<div class="fm-month">'+st.month+'</div><button class="mn-x">'+ic('close',16)+'Close <span class="key">Esc</span></button></div><div class="fm-body"><div>'+
+    '<div class="fm-th"><span style="text-align:center">No.</span><span style="padding-left:6px">Order</span><span style="padding-left:4px">Item</span><span>Hours</span><span style="text-align:right;padding-right:10px">Cost</span><span></span></div>';
+  st.rows.forEach(function(L,i){
+    h+='<div class="fm-tr"><span class="fm-n">'+(i+1)+'</span><span class="fm-mv"><button>^</button><button>v</button></span><span class="fm-it">'+ic(L[0],16)+'<span class="nm">'+L[0]+(L[1]?'<small>'+L[1]+'</small>':'')+'</span></span><span class="fm-h">'+hrs(L[2])+'</span><span class="fm-c">'+L[3]+'</span><button class="fm-x">x</button></div>';
+  });
+  h+='<div class="fm-tot"><span>TOTALS</span><span><b>'+st.totals[0]+'</b></span><span><b>'+st.totals[1]+'</b></span><span>Held for events <b>'+st.held+' hr</b></span></div>';
+  h+='</div><div class="fm-side">'+
+   '<div><div class="fm-sec"><span>'+ic('hours',16)+'Founder\'s hours</span></div>'+
+     '<div class="fm-hr"><span class="fm-hl p">Planning</span><div class="fm-boxes">'+boxes(12,pf,'pl')+'</div><span class="fm-free'+(pf==0?' zero':'')+'">'+pf+' left</span></div>'+
+     '<div class="fm-hr"><span class="fm-hl o">Operating</span><div class="fm-boxes">'+boxes(8,of,'op')+'</div><span class="fm-free">'+of+' left</span></div>'+
+     '<div class="fm-hr"><span class="fm-hl" style="color:var(--ink2)">Reserve</span><div class="fm-res"><div class="fm-resbox">0</div><button class="fm-btn">-</button><button class="fm-btn">+</button></div><span class="fm-free">hr set aside</span></div></div>'+
+   '<div><div class="fm-sec"><span>Under way</span></div>';
+  st.uw.forEach(function(u){h+='<div class="fm-uw"><span class="nm">'+u[0]+'</span><span class="dt">'+u[1]+'</span><div class="fm-gantt"><div class="fm-bar" style="width:'+(u[2]*25)+'%"></div></div></div>';});
+  h+='<div class="fm-ruler">'+st.ruler.map(function(m){return '<span>'+m+'</span>';}).join('')+'</div></div>'+
+   '<div><div class="fm-sec"><span>Research quality</span></div><div class="fm-rq"><button>Rushed</button><button class="on">Standard</button><button>Thorough</button></div></div>'+
+   '<div class="fm-tools"><button class="t-pencil">'+ic('undo',16)+'Undo <span class="key">Z</span></button><button class="t-eraser">'+ic('clear',16)+'Clear form <span class="key">C</span></button></div>'+
+  '</div></div></section>';
+  return h;
+}
+
+/* ---------- watch ---------- */
+function watch(){
+  // Fixture: the committed batch runs before playback (council r1 facts). From the m5 state:
+  // -$60,300; Read x6 +18 research; rep 32 +1.5 -6 -4 = 23.5 (shown 24).
+  var st=Object.assign({},S.m5,{money:'$79,700',research:'6',rep:23.5});
+  var h=wall(st,{top:'NOV 2017',mid:'9',sub:'day of 30'})+desk(st,{watch:1});
+  h+='<div class="ev"><div class="ev-clip"></div><div class="ev-h"><div class="from">Memo<b>9 Nov 2017</b></div><span class="stamp" style="font-size:17px;line-height:22px">Needs answer</span></div>'+
+     '<div class="ev-body"><div><div class="ev-t">Talent Opportunity</div><div class="ev-d">A brilliant researcher wants to join your lab at <mark>reduced cost</mark>!</div></div><div class="ev-ph"></div></div>'+
+     '<div class="ev-ask">Tick one</div>'+
+     '<button class="ev-ch"><span class="n">[1]</span><span class="nm">Fast-Track Hiring</span><span class="c">$25,000 + 1 held hr</span></button>'+
+     '<button class="ev-ch"><span class="n">[2]</span><span class="nm">Standard Hiring</span><span class="c">$25,000 + 1 held hr</span></button>'+
+     '<button class="ev-ch"><span class="n">[3]</span><span class="nm">Decline Offer</span><span class="c">free</span></button></div>';
+  h+='<div class="tape"><div class="tape-h">Teleprinter</div>'+
+     ['<b>01 Nov</b>Go to Meetups: +1.5 reputation','<b>01 Nov</b>Safety Researcher hired','<b>01 Nov</b>Connections: -6 rep (favour)','<b>01 Nov</b>Read x6: +18 research','<b>01 Nov</b>Post Online x4: -4 rep','<b>01 Nov</b>Desperation Lever pulled','<b>01 Nov</b>Held for events: 5 hr'].map(function(l){return '<div class="tape-l">'+l+'</div>';}).join('')+
+     '<div class="tape-l hot"><b>09 Nov</b>MEMO: Talent Opportunity</div></div>';
+  return h;
+}
+
+var stage=document.getElementById('stage');
+var m5=S.m5;
+if(view=='home-m1') stage.innerHTML=wall(S.m1)+desk(S.m1);
+else if(view=='actions') stage.innerHTML=wall(m5)+desk(m5,{menu:1})+actionsMenu(m5);
+else if(view=='door') stage.innerHTML=wall(m5)+desk(m5,{menu:1})+actionsMenu(m5,'scouting')+scoutingFolder();
+else if(view=='plan') stage.innerHTML=wall(m5)+desk(m5,{menu:1})+scheduleMenu(m5);
+else if(view=='watch') stage.innerHTML=watch();
+else stage.innerHTML=wall(m5)+desk(m5);
+})();
+</script>
+</body>
+</html>

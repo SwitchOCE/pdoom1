@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rooms and Stations</title>
+<meta name="viewport" content="width=1920">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+:root{
+  --ink:#2a1d12; --ink-soft:#5a4632; --paper:#ece2c8; --paper-dim:#c9bea3; --manila:#d9bf86; --manila-dk:#b99b5c;
+  --amber:#F6A800; --amber-crt:#F2B24C; --amber-dim:#B98436;
+  --plan:#E8A33D; --ops:#86B6D2; --teal:#1EC3B3;
+  --off:#E9F2F2; --warn:#9a2c17;
+  --doom1:#F6A800; --doom2:#E9752E; --doom3:#E24A3B; --doom4:#B31217;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#2b221a}
+body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#2b221a}
+
+/* ---------- the room (art is the screen) ---------- */
+.sc-bg{position:absolute;inset:0;background:url(assets/desk_bg.jpg) center/cover;filter:brightness(.9) saturate(.95)}
+.sc-tint{position:absolute;left:0;top:0;width:1920px;height:640px;pointer-events:none}
+.uneasy .sc-tint{background:radial-gradient(ellipse 1200px 360px at 50% 250px,rgba(233,117,46,.18),rgba(233,117,46,0) 75%)}
+.sc-vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 1250px 760px at 50% 48%,rgba(0,0,0,0) 58%,rgba(24,10,16,.5) 100%)}
+.sc-dim{position:absolute;inset:0;background:rgba(30,20,16,.55);pointer-events:none}
+
+/* ---------- glance frame: calendar, P(Doom), reputation ---------- */
+.cal{position:absolute;left:48px;top:28px;width:164px;height:96px;background:var(--paper);color:var(--ink);border-radius:3px;
+  box-shadow:0 3px 0 #a8987a,0 8px 16px rgba(0,0,0,.45);overflow:hidden;text-align:center;z-index:30}
+.cal-band{height:24px;background:#8d2b1d;color:#f3e6d0;font:600 17px/24px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.cal-mon{font:700 40px/46px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.cal-no{font:700 16px/20px "Courier Prime",monospace;color:var(--ink-soft)}
+
+.dm{position:absolute;left:784px;top:0;width:352px;height:136px;border-radius:0 0 10px 10px;z-index:30;
+  background:radial-gradient(ellipse 220px 120px at 50% 100%,#4a2a50,#2c1733 70%);
+  border:3px solid #6a5a44;border-top:none;box-shadow:0 8px 18px rgba(0,0,0,.55),inset 0 0 0 2px #1d0f22}
+.dm-lab{position:absolute;left:0;width:100%;top:4px;display:flex;justify-content:center;align-items:center;gap:6px;font:600 17px/18px "Barlow Condensed",sans-serif;letter-spacing:4px;color:#d9c7dc}
+.dm-rise{position:absolute;right:10px;top:4px;display:flex;align-items:center;gap:4px;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#ffb07a}
+.dm-svg{position:absolute;left:26px;top:16px;width:300px;height:116px}
+.dm-val{position:absolute;left:0;width:100%;top:78px;text-align:center;font:600 44px/48px "IBM Plex Mono",monospace;text-shadow:0 0 12px rgba(246,168,0,.35)}
+
+.rp{position:absolute;left:1628px;top:28px;width:244px;height:96px;background:var(--paper);color:var(--ink);border-radius:3px;
+  box-shadow:0 3px 0 #a8987a,0 8px 16px rgba(0,0,0,.45);z-index:30}
+.rp-lab{position:absolute;left:12px;top:5px;display:flex;align-items:center;gap:6px;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#8d2b1d}
+.rp-val{position:absolute;left:14px;top:34px;font:700 40px/48px "IBM Plex Mono",monospace}
+.rp-svg{position:absolute;right:10px;top:8px;width:132px;height:80px}
+
+/* ---------- Pip's icons ---------- */
+.ic{display:inline-block;flex:none;vertical-align:middle;border-radius:6px;background:#1f2624;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.ac.off .ic, .slip.off .ic{opacity:.55;filter:saturate(.6)}
+
+/* ---------- home: station shortcuts (left-bound) ---------- */
+.dock{position:absolute;left:48px;top:330px;width:410px;display:flex;flex-direction:column;gap:18px;z-index:20}
+.st{position:relative;height:78px;border-radius:6px;background:linear-gradient(180deg,rgba(74,67,54,.94),rgba(58,52,43,.94));
+  border:2px solid #8b7656;box-shadow:inset 0 0 0 2px #2a251e,0 6px 14px rgba(0,0,0,.45);padding:12px 14px 0 138px;color:#efe5cf}
+.st .ic{position:absolute;left:74px;top:13px;width:48px;height:48px}
+.st .key{position:absolute;left:16px;top:18px;width:46px;height:40px;border-radius:4px;background:#e6dcc6;color:var(--ink);
+  font:700 20px/40px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74}
+.st .nm{font:700 25px/28px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.st .sb{font:500 16px/22px "IBM Plex Mono",monospace;color:#d8c9a8}
+.st.on{border-color:var(--amber);background:linear-gradient(180deg,rgba(107,86,54,.96),rgba(77,61,39,.96));box-shadow:inset 0 0 0 2px #2a251e,0 0 16px rgba(246,168,0,.4)}
+.st.locked{opacity:.55}
+
+/* ---------- home: this month card ---------- */
+.mc{position:absolute;left:1500px;top:178px;width:372px;background:var(--paper);color:var(--ink);border-radius:3px;z-index:20;
+  box-shadow:0 4px 0 #a8987a,0 12px 24px rgba(0,0,0,.5);padding:46px 22px 18px;transform:rotate(.6deg)}
+.mc::before{content:"";position:absolute;left:50%;top:-14px;width:120px;height:34px;margin-left:-60px;border-radius:5px;
+  background:linear-gradient(180deg,#bfc4c6,#8f9496);box-shadow:0 3px 0 #5f6365}
+.mc-h{display:flex;align-items:center;gap:10px;font:700 22px/26px "Barlow Condensed",sans-serif;letter-spacing:3px;color:#8d2b1d;border-bottom:2px solid #8d2b1d;padding-bottom:6px}
+.mc-at{margin-top:14px;display:grid;grid-template-columns:58px 1fr 78px;column-gap:10px;row-gap:10px;align-items:center}
+.mc-at .l{font:700 17px/22px "Courier Prime",monospace}
+.mc-at .v{font:700 17px/22px "Courier Prime",monospace;text-align:right;white-space:nowrap}
+.bar{height:14px;border-radius:2px;background:#f6efdc;border:2px solid #7a6a55;overflow:hidden;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0}
+.bar.plan i{background:var(--plan)} .bar.ops i{background:var(--ops)}
+.mc-q{margin-top:16px;border-top:1px dashed #a8987a;padding-top:10px}
+.mc-q .r{display:grid;grid-template-columns:42px 1fr;font:700 17px/28px "Courier Prime",monospace;white-space:nowrap}
+.mc-q .r span:last-child{overflow:hidden;text-overflow:ellipsis}
+.mc-q .n{color:#8a7658}
+.mc-q .more{font:400 16px/26px "Courier Prime",monospace;color:#5a4632;margin-top:2px}
+.mc-btn{margin-top:12px;display:flex;align-items:center;gap:10px;height:42px;border-radius:4px;background:#e6dcc6;border:2px solid #9d8f74;padding:0 10px;font:700 17px/38px "Courier Prime",monospace}
+.mc-btn .k{width:30px;height:28px;border-radius:3px;background:var(--ink);color:var(--paper);font:700 16px/28px "IBM Plex Mono",monospace;text-align:center}
+.mc-held{margin-top:14px;display:flex;align-items:center;gap:10px;font:700 18px/24px "Courier Prime",monospace}
+
+/* ---------- commit (fixed, every view) ---------- */
+.cm{position:absolute;left:1500px;top:972px;width:372px;height:76px;border-radius:6px;z-index:40;
+  background:linear-gradient(180deg,#1fd0bf,#11998c);border:3px solid #0a5e56;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 5px 0 #08443e,0 0 22px rgba(30,195,179,.35);
+  color:#06211e;display:flex;align-items:center;justify-content:center;gap:12px}
+.cm-txt{font:700 26px/34px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.cm-key{height:34px;padding:0 10px;border-radius:4px;background:#e9fffb;font:700 16px/34px "IBM Plex Mono",monospace;box-shadow:0 3px 0 #0a5e56}
+.pb{position:absolute;left:1500px;top:972px;width:372px;height:76px;border-radius:6px;z-index:40;background:linear-gradient(180deg,#3d3a33,#2d2a24);
+  border:3px solid #8b7656;display:flex;align-items:center;gap:8px;padding:0 10px}
+.pb-st{width:84px;font:700 18px/22px "Barlow Condensed",sans-serif;letter-spacing:2px;color:var(--amber)}
+.pb-b{height:52px;flex:1;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 18px/52px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74}
+.pb-b.on{background:var(--amber);box-shadow:0 3px 0 #8a5d00}
+
+/* ---------- shared bits ---------- */
+.chip{display:inline-block;height:22px;border-radius:3px;padding:0 7px;font:600 16px/22px "IBM Plex Mono",monospace;white-space:nowrap}
+.chip.plan{background:var(--plan);color:#2a1700}
+.chip.ops{background:var(--ops);color:#0d2330}
+.chip.res{border:1.5px solid #7a6a55;line-height:19px;color:#3b2d1e;background:rgba(255,255,255,.25)}
+.chip.ghost{border:1.5px dashed #8a7a64;line-height:19px;color:#5d5141}
+.chip.held{border:1.5px solid #2a1d12;line-height:19px;color:#2a1d12;background:#f6efdc}
+.why{font:700 17px/22px "Barlow Condensed",sans-serif;letter-spacing:.5px;color:var(--warn);white-space:nowrap}
+.dim-txt{font:400 16px/22px "Courier Prime",monospace;color:#4f4233}
+.back{position:absolute;height:40px;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 17px/40px "IBM Plex Mono",monospace;padding:0 14px;box-shadow:0 3px 0 #9d8f74;white-space:nowrap}
+.plate{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(180deg,#c9a764,#a7843f);color:#2a1d12;border-radius:3px;padding:0 14px;font:700 22px/36px "Barlow Condensed",sans-serif;letter-spacing:3px;box-shadow:0 2px 0 #6e5233}
+
+/* ---------- actions menu: the card file, opened ---------- */
+.rk{position:absolute;left:48px;top:150px;width:1080px;height:800px;border-radius:8px;z-index:25;
+  background:linear-gradient(180deg,rgba(64,46,30,.96),rgba(52,37,24,.97)),url(assets/plywood.jpg);background-size:auto,300px;
+  border:3px solid #6e5233;box-shadow:0 16px 36px rgba(0,0,0,.6),inset 0 0 0 2px #2e2014;padding:18px 22px}
+.rk .back{right:22px;top:18px}
+.rk-res{margin-top:16px;display:flex;gap:12px;align-items:stretch}
+.rs{display:flex;align-items:center;gap:10px;background:#efe6d0;color:var(--ink);border-radius:3px;padding:4px 12px 4px 8px;min-width:120px;box-shadow:inset 0 2px 4px rgba(0,0,0,.25)}
+.rs .k{font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#6a5236;white-space:nowrap}
+.rs .v{font:600 22px/28px "IBM Plex Mono",monospace}
+.rs.neg{background:#f3d2c4}.rs.neg .v{color:#8a1f10}
+.rs.rs-hrs{margin-left:auto}
+.rk-grid{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+.rk-col{display:flex;flex-direction:column;gap:10px}
+.ac{position:relative;height:60px;border-radius:4px;padding:5px 74px 0 60px;color:var(--ink);background:var(--paper);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.ac .l1{display:flex;align-items:baseline;justify-content:space-between;gap:10px;height:25px;white-space:nowrap}
+.ac .nm{font:700 19px/26px "Courier Prime",monospace;overflow:hidden;text-overflow:ellipsis}
+.ac .l2{display:flex;gap:6px;align-items:center;height:25px;white-space:nowrap}
+.ac.door{background:linear-gradient(90deg,var(--manila),#e2cd9a)}
+.ac.off{background:var(--paper-dim)} .ac.off .nm{color:#5d5141}
+.ac.open{outline:3px solid var(--amber);outline-offset:-1px;box-shadow:0 0 14px rgba(246,168,0,.5)}
+.ac > .ic{position:absolute;left:10px;top:10px;width:40px;height:40px}
+.ac .tab{position:absolute;right:6px;top:7px;height:46px;width:58px;border-radius:4px;text-align:center;font:700 20px/46px "IBM Plex Mono",monospace;color:#2a1d12}
+.ac .tab.go{background:var(--manila-dk)}
+.ac .tab.add{background:#cfc3a5;border:2px solid #9d8f74;line-height:42px;font-size:24px}
+.ac.off .tab.add{opacity:.4}
+.ac .tab.open{background:var(--amber);font-size:16px}
+.ac .new{margin-left:auto;font:700 16px/20px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#fff;background:#8d2b1d;border-radius:2px;padding:0 6px}
+
+/* door folder, opened beside the card file (A -> B) */
+.fd{position:absolute;left:1150px;top:150px;width:520px;z-index:26}
+.fd-tab{height:44px;width:300px;border-radius:8px 8px 0 0;background:var(--amber);color:var(--ink);font:700 22px/44px "Barlow Condensed",sans-serif;letter-spacing:3px;padding-left:16px}
+.fd-body{border-radius:0 8px 8px 8px;background:linear-gradient(180deg,#e2c993,var(--manila));padding:18px;
+  box-shadow:0 16px 36px rgba(0,0,0,.6),inset 0 0 0 2px #b0924f,0 0 0 3px var(--amber)}
+.fd .back{right:0;top:0}
+.slip{position:relative;background:var(--paper);color:var(--ink);border-radius:2px;padding:12px 16px 14px;margin-bottom:14px;box-shadow:0 3px 6px rgba(0,0,0,.3)}
+.slip:last-child{margin-bottom:0}
+.slip .nm{display:flex;align-items:center;gap:10px;font:700 20px/32px "Courier Prime",monospace}
+.slip .cost{display:flex;gap:8px;align-items:center;margin-top:8px}
+.slip .ds{font:400 16px/22px "Courier Prime",monospace;color:#4a3a28;margin-top:10px}
+.slip.off{background:var(--paper-dim)} .slip.off .nm{color:#5d5141}
+.slip .add{margin-left:auto;height:36px;border-radius:4px;background:#cfc3a5;border:2px solid #9d8f74;color:#2a1d12;font:700 17px/32px "IBM Plex Mono",monospace;padding:0 12px;white-space:nowrap}
+.slip .add.dis{opacity:.4}
+.slip.focus{outline:3px solid var(--amber);outline-offset:2px;box-shadow:0 0 16px rgba(246,168,0,.55)}
+.slip.focus .add{background:var(--amber);border-color:#8a5d00}
+.slip .qd{position:absolute;right:14px;top:12px;font:700 16px/22px "Courier Prime",monospace;color:#2d5770;border:2px solid #2d5770;border-radius:3px;padding:0 6px;transform:rotate(-4deg)}
+
+/* ---------- plan menu: the CRT, brought forward ---------- */
+.crt{position:absolute;left:420px;top:150px;width:1060px;height:870px;border-radius:28px 28px 20px 20px;z-index:25;
+  background:linear-gradient(180deg,#d4c9ab,#b9ab88 70%,#a49572);box-shadow:0 20px 40px rgba(0,0,0,.65),inset 0 -6px 0 #8f815f,inset 0 3px 0 #e8dfc6}
+.crt-scr{position:absolute;left:28px;top:26px;width:1004px;height:782px;border-radius:18px;overflow:hidden;
+  background:radial-gradient(ellipse 680px 460px at 50% 45%,#3a2611,#2c1c0d 70%,#22160a);box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 0 4px #6f6448}
+.crt-scr::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px)}
+.crt-chin{position:absolute;left:0;bottom:10px;width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 44px}
+.crt-brand{font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:4px;color:#6f6448}
+.crt-led{width:12px;height:12px;border-radius:50%;background:#5ce38a;box-shadow:0 0 8px #5ce38a}
+.crt-in{position:absolute;inset:0;padding:24px 32px;color:var(--amber-crt);text-shadow:0 0 6px rgba(242,178,76,.35)}
+.crt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--amber-dim);padding-bottom:8px}
+.crt-h .t{display:inline-flex;align-items:center;gap:12px;font:600 26px/34px "IBM Plex Mono",monospace;letter-spacing:2px}
+.crt-h .s{font:600 17px/34px "IBM Plex Mono",monospace;color:#1a1208;background:#e6dcc6;border-radius:3px;padding:0 10px;text-shadow:none}
+.att{margin-top:18px;display:grid;grid-template-columns:70px auto 96px 1fr;column-gap:14px;row-gap:10px;align-items:center}
+.att .l{font:600 18px/24px "IBM Plex Mono",monospace}
+.att .v{font:500 18px/24px "IBM Plex Mono",monospace;color:#f7d79c}
+.bx{display:flex;gap:5px}
+.bx i{width:22px;height:22px;border-radius:2px;border:2px solid currentColor;display:block}
+.bx.plan{color:var(--plan)} .bx.ops{color:var(--ops)}
+.bx i.u{background:currentColor}
+.rsv{grid-column:4;grid-row:1 / span 2;align-self:start;justify-self:end;display:flex;align-items:center;gap:10px;font:600 18px/24px "IBM Plex Mono",monospace}
+.rsv .b{width:36px;height:36px;border:2px solid var(--amber-dim);border-radius:4px;text-align:center;font:600 20px/32px "IBM Plex Mono",monospace;color:#e9c27f}
+.q-head,.q-row{display:grid;grid-template-columns:64px 1fr 118px 120px 120px;align-items:center;column-gap:10px}
+.q-head{margin-top:20px;height:32px;padding-right:22px;font:500 16px/32px "IBM Plex Mono",monospace;color:#c99a52;border-bottom:1px solid rgba(185,132,54,.45)}
+.q-row{height:40px;font:500 19px/40px "IBM Plex Mono",monospace;border-bottom:1px dotted rgba(185,132,54,.3)}
+.q-row .n{color:#c99a52}
+.q-row .qn{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.mult{color:#ffd690;font-weight:600}
+.q-row .ctl{display:flex;gap:8px;justify-content:flex-end}
+.q-btn{width:32px;height:30px;border:1.5px solid var(--amber-dim);border-radius:3px;font:600 17px/27px "IBM Plex Mono",monospace;text-align:center;color:#e9c27f}
+.crt .chip.plan{background:transparent;border:1.5px solid var(--plan);color:var(--plan);line-height:19px}
+.crt .chip.ops{background:transparent;border:1.5px solid var(--ops);color:var(--ops);line-height:19px}
+.tot{margin-top:12px;display:flex;gap:12px;align-items:center}
+.crt-k{height:34px;border:1.5px solid var(--amber-dim);border-radius:3px;padding:0 12px;font:600 16px/31px "IBM Plex Mono",monospace;color:#e9c27f}
+/* the queue is bounded: it scrolls inside the CRT so totals and Under Way never move */
+.q-box{position:relative;height:306px}
+.q-scroll{height:306px;overflow-y:auto;padding-right:22px;scrollbar-width:none}
+.q-scroll::-webkit-scrollbar{display:none}
+.q-track{position:absolute;right:0;top:0;width:10px;height:306px;border-radius:5px;background:rgba(185,132,54,.18);display:none}
+.q-track i{position:absolute;left:0;width:10px;border-radius:5px;background:var(--amber-crt)}
+.q-row.sub{height:34px;font-size:18px;line-height:34px;color:#e9c27f}
+.q-row.sub .n{padding-left:8px}
+.q-tg{display:inline-block;margin-left:12px;height:28px;border:1.5px solid var(--amber-dim);border-radius:3px;padding:0 8px;font:600 16px/25px "IBM Plex Mono",monospace;color:#e9c27f;vertical-align:middle}
+.held-c{grid-column:4;justify-self:end;font:600 18px/24px "IBM Plex Mono",monospace;color:#f7d79c}
+.tot .sum{margin-left:auto;font:500 17px/34px "IBM Plex Mono",monospace;color:#f7d79c}
+.uw{margin-top:22px}
+.uw-h{font:600 19px/30px "IBM Plex Mono",monospace;letter-spacing:2px;border-bottom:2px solid var(--amber-dim)}
+.uw-axis{display:grid;grid-template-columns:270px repeat(4,1fr);height:30px;font:500 16px/30px "IBM Plex Mono",monospace;color:#c99a52}
+.uw-axis div{border-left:1px solid rgba(185,132,54,.45);padding-left:8px}
+.uw-axis div:first-child{border-left:none;padding-left:0}
+.uw-row{display:grid;grid-template-columns:270px 1fr;height:38px;align-items:center;font:500 18px/38px "IBM Plex Mono",monospace}
+.uw-track{position:relative;height:38px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),rgba(185,132,54,.35) calc(25% - 1px),rgba(185,132,54,.35) 25%)}
+.uw-bar{position:absolute;top:10px;height:18px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--amber-crt) 0 10px,#d9962f 10px 12px)}
+.uw-bar.fuzzy{-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+.uw-end{position:absolute;top:4px;font:600 17px/30px "IBM Plex Mono",monospace;color:#f7d79c;white-space:nowrap;background:#2e1e0e;padding:0 6px}
+
+/* ---------- watch: memo across the desk ---------- */
+.ev{position:absolute;left:1040px;top:170px;width:420px;z-index:22;transform:rotate(-1.2deg)}
+.ev-paper{position:relative;background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 18px 40px rgba(0,0,0,.6);padding:20px 22px 22px}
+.ev-hd{display:flex;justify-content:space-between;font:700 16px/20px "Courier Prime",monospace;color:#8d2b1d;border-bottom:2px solid #8d2b1d;padding-bottom:6px}
+.ev-img{margin-top:14px;height:190px;border-radius:2px;background:url(assets/event_keynote.jpg) center/cover;filter:sepia(.25);box-shadow:inset 0 0 0 2px #8b7656}
+.ev-t{font:700 26px/32px "Courier Prime",monospace;margin-top:14px}
+.ev-tx{font:400 17px/24px "Courier Prime",monospace;margin:8px 0 6px;color:#3a2b1c}
+.ev-cash{display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:6px 10px;border:1.5px solid #7a6a55;border-radius:3px;background:#f6efdc;font:700 18px/24px "Courier Prime",monospace}
+.ev-opt{display:grid;grid-template-columns:30px 1fr;grid-template-rows:24px 24px;column-gap:12px;row-gap:4px;align-items:center;margin-top:10px;border:2px solid #7a6a55;border-radius:4px;background:#f6efdc;padding:6px 12px}
+.ev-opt .k{grid-row:span 2;width:30px;height:30px;border-radius:3px;background:var(--ink);color:var(--paper);font:700 16px/30px "IBM Plex Mono",monospace;text-align:center}
+.ev-opt .o{display:flex;align-items:center;gap:8px;font:700 18px/24px "Courier Prime",monospace}
+.ev-opt .cs{display:flex;gap:6px}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var view = q.get("view") || "home";
+  var VIEWS = ["home","home-m1","actions","plan","door","watch"];
+  if (VIEWS.indexOf(view) < 0) view = "home";
+
+  // ---------- fixtures (brief.md states; round-1 council facts) ----------
+  var ST = {
+    m1: {no:1, mon:"JUL", year:"2017", full:"JULY 2017", money:"$245,000", compute:"100", research:"0", papers:"0", rep:50, doom:20.0,
+         planUsed:0, opsUsed:0, reserve:0, staff:0, onboardEligible:0, queued:0},
+    m5: {no:5, mon:"NOV", year:"2017", full:"NOVEMBER 2017", money:"$140,000", compute:"65", research:"-12", papers:"0", rep:32, doom:40.2,
+         planUsed:12, opsUsed:3, reserve:0, staff:1, onboardEligible:0, queued:14},
+    // WATCH day 9: the committed batch ran on 01 Nov. $140,000 - $60,300; rep 32 - 6 + 1.5 - 3 = 24.5 -> "25".
+    watch: {no:5, mon:"NOV", year:"2017", full:"NOVEMBER 2017", money:"$79,700", compute:"65", research:"12", papers:"0", rep:25, doom:40.2,
+         planUsed:12, opsUsed:3, reserve:0, held:5, staff:2, onboardEligible:1, queued:14}
+  };
+  var S = view === "home-m1" ? ST.m1 : (view === "watch" ? ST.watch : ST.m5);
+
+  // Pip's icons (assets/icons, copied from godot/assets/icons). new_*.svg = drawn in the same style, needs art.
+  var ICON = {
+    fundraise:"ui_guide_resources_64.png", hire_staff:"button_hire_normal_64.png", advertise:"new_advertise.svg",
+    use_connections:"network_64.png", onboard_next:"employee_status_training_64.png",
+    safety_research:"action_research_robustness_64.png", capability_research:"action_research_ml_fundamentals_64.png",
+    publish_paper:"paper.png", audit_safety:"action_policy_audit_requirement_64.png",
+    travel:"new_travel.svg", buy_compute:"action_facility_upgrade_compute_64.png",
+    operations:"ui_system_settings_64.png", office:"action_facility_expand_office_64.png", publicity:"new_publicity.svg",
+    financing:"action_funding_loan_64.png", scouting:"employee_status_investigating_64.png", strategic:"ui_guide_strategy_64.png",
+    scout_read:"ui_guide_book_64.png", scout_meetups:"action_management_team_building_64.png", scout_post:"new_post_online.svg",
+    money:"money.png", compute:"compute.png", research:"research.png", papers:"paper.png", reputation:"reputation.png",
+    doom:"doom.png", rising:"indicator_doom_rising_64.png", hours:"resource_action_points_64.png",
+    st_actions:"ui_guide_actions_64.png", st_plan:"ui_config_date_64.png", st_floor:"ui_staff_management_64.png",
+    st_proc:"button_upgrade_normal_64.png", st_records:"ui_save_archive_64.png",
+    commit:"ui_control_confirm_64.png", decline:"ui_control_cancel_64.png"
+  };
+  function ic(key, size){ return '<img class="ic" src="assets/icons/'+ICON[key]+'" width="'+size+'" height="'+size+'" alt="">'; }
+  var QICON = {"Hire: Safety Researcher":"hire_staff","Work Your Connections":"use_connections","Go to Meetups":"scout_meetups","Read the Literature":"scout_read","Post Online":"scout_post"};
+
+  function chip(k,t){ return '<span class="chip '+k+'">'+t+'</span>'; }
+  function P(n){ return chip("plan", n+"h PLAN"); }
+  function O(n){ return chip("ops", n+"h OPS"); }
+  function R(t){ return chip("res", t); }
+
+  // PLAN 1 + 8 + 3 = 12; OPS 2 + 1 = 3. Repeats of one action share a row.
+  var queue = view === "home-m1" ? [] : [
+    ["Hire: Safety Researcher", P(1), "$60,000"],
+    ["Work Your Connections", O(2), "6 rep"],
+    ["Go to Meetups", O(1), "$300"],
+    ["Read the Literature", P(8), "", 8],
+    ["Post Online", P(3), "", 3]
+  ];
+  function qName(r){ return r[0] + (r[3] ? ' <span class="mult">x'+r[3]+'</span>' : ''); }
+
+  // ---------- the 17 top-level actions ----------
+  var noPlan = S.planUsed >= 12;
+  function A(id,nm,o){ o.id=id; o.nm=nm; return o; }
+  var colA = [
+    A("fundraise","Fundraising",{door:4, unit:"choices"}),
+    A("hire_staff","Hire Staff",{door:7, unit:"roles", each:true, note: noPlan ? "no planning hours" : ""}),
+    A("advertise","Advertise a Role",{off:"coming soon", cost:['<span class="dim-txt">cost not listed yet</span>']}),
+    A("use_connections","Work Your Connections",{cost:[O(2),R("6 rep")]}),
+    A("onboard_next","Onboard New Hires",{cost:[chip("ops","OPS hrs"),R("money"),'<span class="dim-txt">varies by step</span>'],
+       off: S.staff === 0 ? "nobody hired" : (S.onboardEligible ? "" : "no hires to onboard")}),
+    A("safety_research","Safety Research",{need:10, cost:[P(1),R("10 research")], off: noPlan ? "no planning hours" : "needs 10 research"}),
+    A("capability_research","Capability Research",{need:10, cost:[P(1),R("10 research")], off: noPlan ? "no planning hours" : "needs 10 research"}),
+    A("publish_paper","Publish Safety Paper",{need:20, cost:[P(1),R("20 research")], off: noPlan ? "no planning hours" : "needs 20 research"}),
+    A("audit_safety","Safety Audit",{cost:[O(2),R("$40,000")], isNew:true})
+  ];
+  var colB = [
+    A("travel","Travel & Conferences",{door:4, unit:"choices"}),
+    A("buy_compute","Purchase Compute",{cost:[R("$50,000"),chip("ghost","no hours")]}),
+    A("operations","Operations",{door:3, unit:"choices"}),
+    A("office","Office",{door:4, unit:"choices"}),
+    A("publicity","Publicity",{door:5, unit:"choices"}),
+    A("financing","Financing",{door:7, unit:"choices"}),
+    A("scouting","Scouting",{door:3, unit:"choices"}),
+    A("strategic","Strategic",{door:4, unit:"choices", isNew:true})
+  ];
+  var openDoor = view === "door" ? "scouting" : "";
+
+  function card(a){
+    var isOpen = a.door && a.id === openDoor;
+    var why = a.off || a.note || "";
+    var h = '<div class="ac'+(a.door?' door':'')+(a.off?' off':'')+(isOpen?' open':'')+'">'+ic(a.id,40)+'<div class="l1"><span class="nm">'+a.nm+'</span>'+
+            (why ? '<span class="why">&times; '+why+'</span>' : '')+'</div><div class="l2">';
+    if (a.door) h += '<span class="dim-txt">door &middot; '+a.door+' '+a.unit+(a.each?' &middot;':'')+'</span>'+(a.each ? P(1)+'<span class="dim-txt">each</span>' : '');
+    else h += a.cost.join("");
+    // second blocker: research short of the cost (shown with the hours blocker, not instead of it)
+    var have = parseFloat(S.research);
+    if (a.need && noPlan && have < a.need) h += '<span class="why">&times; '+(a.need-have)+' research short</span>';
+    if (a.isNew) h += '<span class="new">NEW</span>';
+    h += '</div><div class="tab '+(isOpen?'open':(a.door?'go':'add'))+'">'+(isOpen?'OPEN':(a.door?'&gt;':'+'))+'</div></div>';
+    return h;
+  }
+  function actionsHTML(){
+    var neg = S.research.charAt(0) === "-";
+    // Only the topmost layer shows Esc: with a door open, the card file's back button loses its key.
+    var h = '<div class="rk"><span class="plate">'+ic("st_actions",28)+'ACTIONS</span><span class="back">'+(view==="door" ? 'Back to desk' : '[Esc] Back to desk')+'</span>'+
+      '<div class="rk-res">'+
+        '<div class="rs">'+ic("money",36)+'<div><div class="k">MONEY</div><div class="v">'+S.money+'</div></div></div>'+
+        '<div class="rs">'+ic("compute",36)+'<div><div class="k">COMPUTE</div><div class="v">'+S.compute+'</div></div></div>'+
+        '<div class="rs'+(neg?' neg':'')+'">'+ic("research",36)+'<div><div class="k">RESEARCH</div><div class="v">'+S.research+(neg?' [!]':'')+'</div></div></div>'+
+        '<div class="rs">'+ic("papers",36)+'<div><div class="k">PAPERS</div><div class="v">'+S.papers+'</div></div></div>'+
+        '<div class="rs rs-hrs">'+ic("hours",36)+'<div><div class="k">HOURS LEFT</div><div class="v">'+chip("plan",(12-S.planUsed)+" PLAN")+' '+chip("ops",(8-S.opsUsed)+" OPS")+'</div></div></div>'+
+      '</div><div class="rk-grid"><div class="rk-col">'+colA.map(card).join("")+'</div><div class="rk-col">'+colB.map(card).join("")+'</div></div></div>';
+    return h;
+  }
+  function doorHTML(){
+    var slips = [
+      {nm:"Read the Literature", icon:"scout_read", cost:[P(1)], off:"no planning hours", queued:"8 queued", ds:"Sit down with the arxiv firehose. Slow, free, and the only scouting that makes you better at the actual work."},
+      {nm:"Go to Meetups", icon:"scout_meetups", cost:[O(1),R("$300")], queued:"1 queued", focus:true, ds:"Drinks, badges, a talk you half-listen to. People remember you, and sometimes one of them is looking for a job."},
+      {nm:"Post Online", icon:"scout_post", cost:[P(1)], off:"no planning hours", queued:"3 queued", ds:"Be loud. Hype is not respect -- it buys you attention from people who fund things and costs you standing with people who read things."}
+    ];
+    var h = '<div class="fd"><div class="fd-tab">OPEN: SCOUTING</div><span class="back">[Esc] Close</span><div class="fd-body">';
+    slips.forEach(function(s){
+      h += '<div class="slip'+(s.off?' off':'')+(s.focus?' focus':'')+'"><div class="nm">'+ic(s.icon,32)+s.nm+'</div><div class="cost">'+s.cost.join("")+(s.off?'<span class="why">&times; '+s.off+'</span>':'')+
+           '<span class="add'+(s.off?' dis':'')+'">'+(s.focus?'[Enter] Add':'+ Add')+'</span></div><div class="ds">'+s.ds+'</div><span class="qd">'+s.queued+'</span></div>';
+    });
+    return h + '</div></div>';
+  }
+
+  // ---------- plan menu ----------
+  // filled = hours left, empty = spent (same rule as the home card bars)
+  function boxes(n,u){ var h=''; for (var i=0;i<n;i++) h += '<i'+(i<n-u?' class="u"':'')+'></i>'; return h; }
+  function planHTML(){
+    var h = '<div class="crt"><div class="crt-scr"><div class="crt-in">'+
+      '<div class="crt-h"><span class="t">'+ic("st_plan",34)+'THE MONTH AHEAD &middot; '+S.full+'</span><span class="s">[Esc] Back to desk</span></div>'+
+      '<div class="att">'+
+        '<span class="l">PLAN</span><span class="bx plan">'+boxes(12,S.planUsed)+'</span><span class="v">'+(12-S.planUsed)+' left</span>'+
+        '<span class="rsv">RESERVE <span class="b">-</span><span>'+S.reserve+'h</span><span class="b">+</span></span>'+
+        '<span class="l">OPS</span><span class="bx ops">'+boxes(8,S.opsUsed)+'</span><span class="v">'+(8-S.opsUsed)+' left</span>'+
+        '<span class="held-c">Held for events at Commit: '+((12-S.planUsed)+(8-S.opsUsed)+S.reserve)+'h</span>'+
+      '</div>'+
+      '<div class="q-head"><span>#</span><span>ACTION, IN ORDER</span><span>HOURS</span><span>COST</span><span style="text-align:right">ORDER</span></div>';
+    var ctl3 = '<span class="ctl"><span class="q-btn">^</span><span class="q-btn">v</span><span class="q-btn">x</span></span>';
+    var ctl2 = '<span class="ctl"><span class="q-btn">^</span><span class="q-btn">v</span><span class="q-btn" style="visibility:hidden">x</span></span>';
+    // Repeated plays are a group: collapsed it moves as one; expanded, every play has its own row and controls.
+    // ?open=x8 draws Read the Literature expanded instead (used to check the bounded queue).
+    var expanded = q.get("open") === "x8" ? "Read the Literature" : "Post Online";
+    h += '<div class="q-box"><div class="q-scroll" id="qs">';
+    queue.forEach(function(r,i){
+      var n = '0'+(i+1);
+      if (!r[3]){
+        h += '<div class="q-row"><span class="n">'+n+'</span><span class="qn">'+ic(QICON[r[0]],26)+r[0]+'</span><span>'+r[1]+'</span><span>'+(r[2]||"&mdash;")+'</span>'+ctl3+'</div>';
+        return;
+      }
+      var open = r[0] === expanded;
+      h += '<div class="q-row"><span class="n">'+n+'</span><span class="qn">'+ic(QICON[r[0]],26)+qName(r)+'<span class="q-tg">'+(open?'[-] hide':'[+] '+r[3]+' plays')+'</span></span><span>'+r[1]+'</span><span>'+(r[2]||"&mdash;")+'</span>'+ctl2+'</div>';
+      if (open) for (var k=1;k<=r[3];k++)
+        h += '<div class="q-row sub"><span class="n">'+n+'.'+k+'</span><span class="qn">'+ic(QICON[r[0]],26)+r[0]+'</span><span>'+P(1)+'</span><span>&mdash;</span>'+ctl3+'</div>';
+    });
+    h += '</div><div class="q-track"><i id="qthumb"></i></div></div>';
+    h += '<div class="tot"><span class="crt-k">[Z] Undo</span><span class="crt-k">[C] Clear</span><span class="sum">Queued cost: $60,300 + 6 rep &middot; 14 plays</span></div>';
+    h += '<div class="uw"><div class="uw-h">UNDER WAY</div><div class="uw-axis"><div></div><div>NOV 17</div><div>DEC 17</div><div>JAN 18</div><div>FEB 18</div></div>'+
+      '<div class="uw-row"><span>Candidate interview</span><div class="uw-track"><div class="uw-bar" style="left:0;width:37%"></div><div class="uw-end" style="left:calc(37% + 10px)">results mid-Dec</div></div></div>'+
+      '<div class="uw-row"><span>Paper submission</span><div class="uw-track"><div class="uw-bar fuzzy" style="left:0;width:64%"></div><div class="uw-end" style="left:calc(64% + 10px)">decision ~Jan</div></div></div></div>';
+    return h + '</div></div><div class="crt-chin"><span class="crt-brand">LABTERM 90</span><span class="crt-led"></span></div></div>';
+  }
+
+  // ---------- home pieces ----------
+  function dockHTML(){
+    var watch = view === "watch";
+    var items = [["A","ACTIONS","card file","st_actions"],["P","PLAN","the month ahead","st_plan"],["F","LAB FLOOR","staff, research quality","st_floor"],["U","PROCUREMENT","upgrades","st_proc"],["L","RECORDS","ledger, guide","st_records"]];
+    return '<div class="dock">'+items.map(function(t,i){
+      return '<div class="st'+(watch && i<2?' locked':'')+'"><span class="key">'+t[0]+'</span>'+ic(t[3],48)+'<div class="nm">'+t[1]+'</div><div class="sb">'+t[2]+'</div></div>';
+    }).join("")+'</div>';
+  }
+  function bar(kind,total,left){ return '<span class="bar '+kind+'"><i style="width:'+(100*left/total)+'%"></i></span>'; }
+  function monthCardHTML(){
+    var watch = view === "watch";
+    var h = '<div class="mc"><div class="mc-h">'+ic("st_plan",28)+(watch ? S.full+' &middot; DAY 9' : 'THIS MONTH')+'</div>';
+    if (watch){
+      h += '<div class="mc-held">'+ic("hours",26)+'<span>Held for events</span><span style="margin-left:auto">'+S.held+'h</span></div>';
+      h += '<div class="mc-q"><div class="r"><span class="n">[x]</span><span>14 plays (5 rows) done</span></div>'+
+           '<div class="r"><span class="n">&gt;</span><span>Memo on the desk</span></div>'+
+           '<div class="mc-btn"><span class="k">O</span>01 Nov outcomes</div></div>';
+    } else {
+      h += '<div class="mc-at"><span class="l">PLAN</span>'+bar("plan",12,12-S.planUsed)+'<span class="v">'+(12-S.planUsed)+' left</span>'+
+           '<span class="l">OPS</span>'+bar("ops",8,8-S.opsUsed)+'<span class="v">'+(8-S.opsUsed)+' left</span></div>';
+      h += '<div class="mc-q">';
+      if (!queue.length) h += '<div class="r"><span class="n">--</span><span>Nothing queued</span></div>';
+      queue.slice(0,3).forEach(function(r,i){ h += '<div class="r"><span class="n">'+(i+1)+'</span><span>'+qName(r)+'</span></div>'; });
+      if (queue.length > 3) h += '<div class="more">+ '+(queue.length-3)+' more rows &middot; [P] Plan</div>';
+      h += '</div>';
+    }
+    return h + '</div>';
+  }
+  function eventHTML(){
+    var held = chip("held","+1 held hr");
+    return '<div class="ev"><div class="ev-paper"><div class="ev-hd"><span>ACROSS YOUR DESK</span><span>9 NOV 2017</span></div>'+
+      '<div class="ev-img"></div><div class="ev-t">Talent Opportunity</div>'+
+      '<div class="ev-tx">A brilliant researcher wants to join your lab at reduced cost!</div>'+
+      '<div class="ev-cash">'+ic("money",26)+'<span>Cash in hand</span><span style="margin-left:auto">'+S.money+'</span></div>'+
+      '<div class="ev-opt"><span class="k">1</span><span class="o">'+ic("hire_staff",26)+'Fast-Track Hiring</span><span class="cs">'+R("$25,000")+held+'</span></div>'+
+      '<div class="ev-opt"><span class="k">2</span><span class="o">'+ic("hire_staff",26)+'Standard Hiring</span><span class="cs">'+R("$25,000")+held+'</span></div>'+
+      '<div class="ev-opt"><span class="k">3</span><span class="o">'+ic("decline",26)+'Decline Offer</span><span class="cs">'+chip("ghost","free")+'</span></div></div></div>';
+  }
+
+  // ---------- frame ----------
+  function arc(cx,cy,r,a0,a1){
+    function pt(a){ var t=Math.PI*(1-a); return [cx+r*Math.cos(t), cy-r*Math.sin(t)]; }
+    var p0=pt(a0), p1=pt(a1);
+    return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1);
+  }
+  function doomHTML(){
+    var d=S.doom, cx=150, cy=112, r=84;
+    var col = d < 30 ? "var(--doom1)" : d < 55 ? "var(--doom2)" : d < 80 ? "var(--doom3)" : "var(--doom4)";
+    var svg = '<svg class="dm-svg" viewBox="0 0 300 116">';
+    [[0,.3,"#F6A800"],[.3,.55,"#E9752E"],[.55,.8,"#E24A3B"],[.8,1,"#B31217"]].forEach(function(b){
+      svg += '<path d="'+arc(cx,cy,r,b[0]+.004,b[1]-.004)+'" stroke="'+b[2]+'" stroke-width="10" fill="none" opacity=".85"/>'; });
+    for (var i=0;i<=10;i++){ var t=Math.PI*(1-i/10);
+      svg += '<line x1="'+(cx+(r+6)*Math.cos(t)).toFixed(1)+'" y1="'+(cy-(r+6)*Math.sin(t)).toFixed(1)+'" x2="'+(cx+(r+(i%5?9:11))*Math.cos(t)).toFixed(1)+'" y2="'+(cy-(r+(i%5?9:11))*Math.sin(t)).toFixed(1)+'" stroke="#d9c7dc" stroke-width="'+(i%5?1.5:2.5)+'"/>'; }
+    svg += '<path d="'+arc(cx,cy,r+14,0,d/100)+'" stroke="#fff1d6" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    svg += '<text x="'+(cx-r-22)+'" y="'+(cy-4)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="16" text-anchor="end">0</text>';
+    svg += '<text x="'+(cx+r+22)+'" y="'+(cy-4)+'" fill="#ffb3a6" font-family="IBM Plex Mono" font-size="16">100</text></svg>';
+    return '<div class="dm"><div class="dm-lab">'+ic("doom",22)+'P(DOOM)</div>'+(S.no>=5?'<div class="dm-rise">'+ic("rising",20)+'RISING</div>':'')+svg+'<div class="dm-val" style="color:'+col+'">'+d.toFixed(1)+'%</div></div>';
+  }
+  function repHTML(){
+    var v=S.rep, cx=66, cy=60, r=50, t=Math.PI*(1-v/100);
+    var svg = '<svg class="rp-svg" viewBox="0 0 132 80">'+
+      '<path d="'+arc(cx,cy,r,0,.1)+'" stroke="#8a1f10" stroke-width="9" fill="none"/>'+
+      '<path d="'+arc(cx,cy,r,.1,1)+'" stroke="#7a6a55" stroke-width="9" fill="none" opacity=".55"/>'+
+      '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+(r-2)*Math.cos(t)).toFixed(1)+'" y2="'+(cy-(r-2)*Math.sin(t)).toFixed(1)+'" stroke="#2a1d12" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#2a1d12"/>'+
+      '<text x="'+(cx-r)+'" y="'+(cy+19)+'" fill="#8a1f10" font-family="IBM Plex Mono" font-size="16" font-weight="600" text-anchor="middle">0</text>'+
+      '<text x="'+(cx+r)+'" y="'+(cy+19)+'" fill="#4a3a28" font-family="IBM Plex Mono" font-size="16" font-weight="600" text-anchor="middle">100</text></svg>';
+    return '<div class="rp"><div class="rp-lab">'+ic("reputation",22)+'REPUTATION</div><div class="rp-val">'+v+'</div>'+svg+'</div>';
+  }
+  function frameHTML(){
+    return '<div class="cal"><div class="cal-band">'+S.year+'</div><div class="cal-mon">'+S.mon+'</div><div class="cal-no">MONTH '+S.no+'</div></div>'+doomHTML()+repHTML()+
+      (view === "watch"
+        ? '<div class="pb"><div class="pb-st">PAUSED</div><span class="pb-b on">||</span><span class="pb-b">1x</span><span class="pb-b">2x</span><span class="pb-b">4x</span></div>'
+        : '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span>'+(view==="door" ? '' : '<span class="cm-key">Enter</span>')+'</div>');
+  }
+  // ---------- assemble ----------
+  var stage = document.getElementById("stage");
+  if (S.doom >= 30) stage.classList.add("uneasy");
+  var menu = view === "actions" || view === "door" || view === "plan";
+  var h = '<div class="sc-bg"></div><div class="sc-tint"></div><div class="sc-vign"></div>';
+  if (menu) h += '<div class="sc-dim"></div>';
+  if (!menu) h += dockHTML() + monthCardHTML();
+  if (view === "watch") h += eventHTML();
+  if (view === "actions" || view === "door") h += actionsHTML();
+  if (view === "door") h += doorHTML();
+  if (view === "plan") h += planHTML();
+  h += frameHTML();
+  stage.innerHTML = h;
+  var qs = document.getElementById("qs");
+  if (qs && qs.scrollHeight > qs.clientHeight + 1){
+    var track = qs.parentNode.querySelector(".q-track"), th = document.getElementById("qthumb");
+    track.style.display = "block";
+    th.style.height = Math.round(306 * qs.clientHeight / qs.scrollHeight) + "px";
+    th.style.top = "0px";
+  }
+})();
+</script>
+</body>
+</html>

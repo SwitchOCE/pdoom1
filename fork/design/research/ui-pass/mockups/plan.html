@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PLAN screen mock-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Palette from godot/UI_STYLE_GUIDE.md */
+  :root {
+    --graphite: #0E1318; --steel: #1C2730; --deep: #0F171D; --line: #2A3946;
+    --teal: #1EC3B3; --teal-dim: #0FA5A0; --amber: #F6A800; --orange: #E9752E;
+    --red: #E24A3B; --deep-red: #B31217; --text: #E9F2F2; --chrome: #8A9AA9; --mute: #5F7080;
+    --plan: #F6A800; --oper: #4FB3E8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--graphite); }
+  body { width: 1920px; height: 1080px; overflow: hidden; color: var(--text);
+         font: 19px/1.3 "Noto Sans", sans-serif; position: relative; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .label { font: 600 14px/1 "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--chrome); }
+
+  /* Top strip */
+  .strip { position: absolute; left: 0; top: 0; width: 1920px; height: 64px; background: var(--deep);
+           border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 24px; gap: 36px; }
+  .mode { font: 700 22px/1 "JetBrains Mono", monospace; color: var(--amber); letter-spacing: .06em; }
+  .mode small { color: var(--text); font-weight: 600; letter-spacing: 0; margin-left: 12px; font-size: 21px; }
+  .res { display: flex; flex-direction: column; gap: 4px; }
+  .res b { font: 700 21px/1 "JetBrains Mono", monospace; }
+  .res.neg b { color: var(--red); }
+  .res.neg b::after { content: " !"; }
+  .spacer { flex: 1; }
+
+  /* Right column */
+  .right { position: absolute; left: 1540px; top: 64px; width: 380px; height: 1016px; background: var(--deep);
+           border-left: 1px solid var(--line); padding: 24px; display: flex; flex-direction: column; gap: 22px; }
+  .doom .val { font: 700 48px/1 "JetBrains Mono", monospace; color: var(--amber); }
+  .doom .band { font: 600 18px/1 "Noto Sans"; color: var(--chrome); margin-left: 10px; }
+  .meter { height: 18px; background: #1a232b; border: 1px solid var(--line); position: relative; margin-top: 12px; }
+  .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--amber), var(--orange)); }
+  .meter .ticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 41px, rgba(14,19,24,.9) 41px 43px); }
+  .lose { font-size: 16px; color: var(--chrome); margin-top: 8px; }
+  .spark { margin-top: 10px; height: 46px; }
+  .rep .val { font: 700 30px/1 "JetBrains Mono", monospace; }
+  .rep .meter i { background: var(--teal-dim); }
+  .doors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .door { border: 1px solid var(--line); background: var(--steel); padding: 12px 14px; font-weight: 600; font-size: 18px;
+          display: flex; justify-content: space-between; align-items: center; }
+  .door span { color: var(--mute); font: 600 14px "JetBrains Mono"; }
+  .door.on { border-color: var(--teal); color: var(--teal); }
+  .staff .row { display: flex; justify-content: space-between; font-size: 17px; padding: 6px 0; border-bottom: 1px solid #1d2832; }
+  .staff .row em { color: var(--chrome); font-style: normal; }
+  .rq { display: flex; align-items: center; justify-content: space-between; font-size: 17px; }
+  .rq .seg { display: flex; border: 1px solid var(--line); }
+  .rq .seg div { padding: 6px 10px; font: 600 14px "JetBrains Mono"; color: var(--mute); }
+  .rq .seg div.on { background: var(--steel); color: var(--text); }
+  .feedback { position: absolute; left: 24px; top: 820px; font: 13px "JetBrains Mono"; color: var(--mute); }
+
+  /* Month ahead */
+  .main { position: absolute; left: 0; top: 64px; width: 1540px; height: 556px; padding: 24px 32px; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; }
+  .title { font: 700 26px/1 "JetBrains Mono", monospace; letter-spacing: .04em; }
+  .gauge { margin-top: 14px; display: flex; gap: 40px; align-items: flex-end; }
+  .pool .pips { display: flex; gap: 6px; margin-top: 10px; }
+  .pip { width: 26px; height: 26px; border: 2px solid currentColor; }
+  .pip.full { background: currentColor; }
+  .pip.held { background: repeating-linear-gradient(45deg, currentColor 0 3px, transparent 3px 7px); }
+  .pool.plan { color: var(--plan); } .pool.oper { color: var(--oper); }
+  .pool .label { color: inherit; }
+  .pool .count { font: 600 16px "JetBrains Mono"; color: var(--text); margin-top: 8px; }
+  .reserve { margin-left: 30px; padding-left: 30px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .stepper { display: flex; align-items: center; gap: 10px; font: 600 18px "JetBrains Mono"; }
+  .stepper button, .btn { background: var(--steel); border: 1px solid var(--line); color: var(--text);
+           font: 600 16px "JetBrains Mono"; padding: 8px 14px; }
+  .queue { margin-top: 22px; border: 1px solid var(--line); background: var(--deep); height: 318px; overflow: hidden; }
+  .qrow { display: grid; grid-template-columns: 44px 44px 340px 300px 90px; align-items: center; height: 48px;
+          border-bottom: 1px solid #1d2832; padding: 0 16px; }
+  .qrow .n { font: 700 20px "JetBrains Mono"; color: var(--chrome); }
+  .qrow img { width: 34px; height: 34px; }
+  .qrow .nm { font-weight: 600; } .qrow .nm small { color: var(--chrome); font-weight: 400; margin-left: 8px; }
+  .qrow .cost { font: 15px "JetBrains Mono"; color: var(--chrome); }
+  .qrow .x { text-align: right; font: 14px "JetBrains Mono"; color: var(--mute); }
+  .empty { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--mute); font-size: 20px; }
+  .qfoot { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
+  .info { position: absolute; left: 300px; top: 640px; right: 400px; padding: 3px 12px !important; font-size: 15px !important; border: 1px solid var(--teal-dim); background: #0f1c1f; padding: 8px 14px; font-size: 16px; }
+  .info b { color: var(--teal); }
+  .card.focus { outline: 3px solid var(--teal); outline-offset: 2px; }
+  .commit { position: absolute; left: 1564px; width: 332px; top: 930px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; z-index: 5; }
+  .commit .go { background: var(--teal); color: #04110f; font: 700 22px "JetBrains Mono"; padding: 18px 16px; border: 0; letter-spacing: .03em; }
+  .commit .go kbd { font: 600 15px "JetBrains Mono"; background: rgba(0,0,0,.18); padding: 3px 7px; margin-left: 12px; }
+  .commit .why { font-size: 15px; color: var(--chrome); text-align: right; }
+
+  /* Hand */
+  .hand { position: absolute; left: 0; top: 620px; width: 1540px; height: 460px; border-top: 1px solid var(--line);
+          padding: 16px 32px 20px; background: #0c1116; }
+  .groups { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 8px; }
+  .group .label { margin-bottom: 8px; display: block; }
+  .cards { display: flex; gap: 6px; }
+  .card { width: 124px; height: 170px; background: var(--steel); border: 1px solid var(--line); padding: 10px;
+          display: flex; flex-direction: column; position: relative; }
+  .card .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .card img { width: 40px; height: 40px; }
+  .card .key { font: 700 14px "JetBrains Mono"; color: var(--chrome); border: 1px solid var(--line); padding: 1px 6px; }
+  .card .nm { font-weight: 700; font-size: 15px; line-height: 1.15; margin-top: 6px; }
+  .card .c { margin-top: auto; font: 12px/1.3 "JetBrains Mono"; color: var(--chrome); white-space: pre-line; }
+  .card .c .h-plan { color: var(--plan); } .card .c .h-oper { color: var(--oper); }
+  .card.door { border-style: dashed; }
+  .card.door .nm::after { content: " >"; color: var(--chrome); }
+  .card.no { border-style: dotted; }
+  .card.no img { opacity: .35; }
+  .card.no .nm { color: var(--chrome); }
+  .card .why { font: 12px "JetBrains Mono"; color: #FF8A7A; }
+  .card.soon .key { color: var(--amber); border-color: var(--amber); }
+  .card.queued { border-color: var(--teal); }
+  .card.queued .key { display: none; }
+  .card.queued::after { content: "QUEUED"; position: absolute; right: 8px; top: 10px; font: 700 11px "JetBrains Mono"; color: var(--teal); }
+
+  /* Teaching marker (first-month view only) */
+  .marker { position: absolute; border: 3px solid var(--amber); box-shadow: 0 0 0 6px rgba(246,168,0,.18); pointer-events: none; }
+  .marker-tag { position: absolute; background: var(--amber); color: #120d00; font: 700 15px "JetBrains Mono"; padding: 4px 10px; }
+
+  /* Drawer (month 5 view) */
+  .drawer { position: absolute; left: 1010px; top: 300px; width: 530px; height: 320px; background: #121a21;
+            border-left: 2px solid var(--teal); box-shadow: -20px 0 40px rgba(0,0,0,.5); padding: 24px; }
+  .drawer .urow { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1d2832; font-size: 18px; }
+  .drawer .urow em { font: 15px "JetBrains Mono"; color: var(--chrome); font-style: normal; }
+  .drawer .urow.no { opacity: .45; }
+  .viewtag { position: absolute; left: 32px; bottom: 8px; font: 12px "JetBrains Mono"; color: #3b4a57; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const view = new URLSearchParams(location.search).get("view") || "returning";
+const m5 = view === "m5";
+
+// Month 5 numbers (money, compute, research, reputation, doom) come from a real scripted run
+// (scratchpad shots/m5_plan_queued.png); queue, staff and in-flight work are illustrations.
+// Attention: 20 a month split 12 planning / 8 operating (balance planning_share 0.6).
+// Rule (month_plan.gd:182-193): operating work may spill into planning hours; planning work may not use operating hours.
+// Reserve is untyped (month_plan.gd:234-242). At commit, every unspent hour is held for events (game_manager.gd:734-735).
+const S = m5
+  ? { month: "November 2017", money: "$140,000", compute: 65, research: -12, papers: 0, rep: 32, doom: 40.2, band: "rising",
+      plan: 12, oper: 8, used: {plan: 12, oper: 3}, reserve: 0 }
+  : { month: "July 2017", money: "$245,000", compute: 100, research: 0, papers: 0, rep: 50, doom: 20.0, band: "steady",
+      plan: 12, oper: 8, used: {plan: 0, oper: 0}, reserve: 0 };
+const freePlan = S.plan - S.used.plan, freeOper = S.oper - S.used.oper;
+const freeTotal = freePlan + freeOper - S.reserve;
+
+// Today's top-level actions in the game's category order (action_bar_renderer.gd).
+// Costs: data/actions/*.json and hiring_pipeline.gd defaults. Hours: approvals = planning, doors/audits = operating,
+// "hr" alone = untyped Attention. kind: act | door | soon.  need: {res: n} or {plan: n} for the block check.
+const groups = [
+  ["Funding", [["fundraise","Fundraising","door","4 choices"]]],
+  ["People", [["hire_staff","Hire Staff","door","7 roles", {plan: 1}],
+              ["advertise","Advertise a Role","soon","coming soon"],
+              ["use_connections","Work Your Connections","act","2 hr\n6 Rep"],
+              ["onboard_next","Onboard New Hires","act","1 hr + money", {nobody: true}]]],
+  ["Research", [["safety_research","Safety Research","act","1 plan hr\n10 Research", {res: 10, plan: 1}],
+                ["capability_research","Capability Research","act","1 plan hr\n10 Research", {res: 10, plan: 1}],
+                ["publish_paper","Publish Safety Paper","act","1 plan hr\n20 Research", {res: 20, plan: 1}],
+                ["travel","Travel & Conferences","door","4 choices"],
+                ["buy_compute","Purchase Compute","act","$50,000\nno hours"]]],
+  ["Operations", [["operations","Operations","door","3 choices"],["office","Office","door","4 choices"]]],
+  ["Influence", [["publicity","Publicity","door","5 choices"],["financing","Financing","door","7 choices"],
+                 ["scouting","Scouting","door","3 choices"]]],
+];
+// Month 5: the hand grows with prior state. Safety Audit unlocks after turn 5; Strategic at turn 10 with reputation 30+.
+if (m5) {
+  groups[2][1].push(["audit_safety","Safety Audit","act","2 op hr\n$40,000"]);
+  groups.push(["Strategic", [["strategic","Strategic","door","4 choices"]]]);
+}
+function costHtml(c) {
+  return c.replace(/(\d+(-\d+)? plan hr)/, '<span class="h-plan">$1</span>').replace(/(\d+(-\d+)? op hr)/, '<span class="h-oper">$1</span>');
+}
+const queuedIds = m5 ? ["scouting","hire_staff","financing"] : [];
+let k = 0;
+const handHtml = groups.map(([g, cards]) => `
+  <div class="group"><span class="label">${g}</span><div class="cards">${cards.map(([id,nm,kind,cost,need]) => {
+    k++;
+    need = need || {};
+    let why = "";
+    if (kind === "soon") why = "";
+    else if (need.nobody) why = "nobody hired yet";
+    else if (need.res && S.research < need.res) why = `needs ${need.res} Research`;
+    else if (need.plan && freePlan < need.plan) why = "no planning hours left";
+    const no = kind === "soon" || why !== "";
+    const cls = [kind === "door" ? "door" : "", kind === "soon" ? "soon" : "", no ? "no" : "",
+                 queuedIds.includes(id) ? "queued" : "", (m5 && id === "audit_safety") ? "focus" : ""].join(" ");
+    const key = kind === "soon" ? `<span class="key">SOON</span>` : (k <= 9 ? `<span class="key">${k}</span>` : "");
+    return `<div class="card ${cls}" id="card-${id}">
+      <div class="top"><img src="icons/${id}.png" alt="">${key}</div>
+      <div class="nm">${nm}</div>
+      <div class="c">${kind === "soon" ? "" : costHtml(cost)}${why ? `<div class="why">${why}</div>` : ""}</div></div>`;
+  }).join("")}</div></div>`).join("");
+
+function pips(n, used) {
+  let h = "";
+  for (let i = 0; i < n; i++) h += `<div class="pip ${i < used ? "full" : ""}"></div>`;
+  return h;
+}
+
+// Queue rows sum to the gauge: planning 1 + 1 + 10 = 12; operating 1 + 2 = 3.
+const qrows = m5 ? [
+  ["scouting","Go to Meetups","Scouting","1 op hr · $300"],
+  ["hire_staff","Hire: Safety Researcher","Hire Staff","1 plan hr · $60,000"],
+  ["scouting","Read the Literature","Scouting","1 plan hr"],
+] : [];
+const more = m5 ? `<div class="qrow" style="height:44px"><span class="n">+</span><span></span><span class="nm" style="font-weight:400;color:var(--chrome)">8 more queued (scroll)</span><span class="cost">${costHtml("10 plan hr · 2 op hr")}</span><span></span></div>` : "";
+// In-flight work the player already committed (QueueGantt in the proposed layout): ETA as a date, never a turn number.
+const flight = m5 ? [["advertise","Hiring: candidate interview","Hire Staff","lands ~mid-Dec 2017"],
+                     ["travel","Paper submission","Travel","decision ~Jan 2018"]] : [];
+const queueHtml = (qrows.length ? qrows.map(([id,nm,from,cost],i) => `
+  <div class="qrow"><span class="n">${i+1}</span><img src="icons/${id}.png" alt=""><span class="nm">${nm}<small>${from}</small></span>
+  <span class="cost">${costHtml(cost)}</span><span class="x">remove</span></div>`).join("") + more
+  : `<div class="empty">Nothing planned yet. Actions you play from your hand line up here.</div>`)
+  + (flight.length ? `<div class="qrow" style="height:30px;background:#0c1116"><span></span><span></span><span class="label">Already under way</span><span></span><span></span></div>`
+     + flight.map(([id,nm,from,eta]) => `<div class="qrow" style="height:42px"><span></span><img src="icons/${id}.png" alt="" style="opacity:.7">
+       <span class="nm" style="font-weight:400">${nm}<small>${from}</small></span><span class="cost">${eta}</span><span></span></div>`).join("") : "");
+
+const staff = m5 ? `<div class="staff"><span class="label">Staff</span>
+   <div class="row"><span>Founder (you)</span><em>planning</em></div>
+   <div class="row"><span>R. Okafor, safety</span><em>interp research</em></div></div>` : "";
+
+const drawer = m5 ? `<div class="drawer"><div class="head"><span class="title" style="font-size:20px">UPGRADES</span><span class="btn">[X] Close  Esc</span></div>
+   <div style="margin-top:10px">
+   <div class="urow"><span>Buy Comfy Office Chairs</span><em>$0</em></div>
+   <div class="urow"><span>Accounting Software</span><em>$0</em></div>
+   <div class="urow"><span>Supply Management System</span><em>$25,000</em></div>
+   <div class="urow no"><span>Secure Cloud Provider</span><em>$160,000 · need $20,000 more</em></div>
+   <div class="urow no"><span>Upgrade Computer System</span><em>$200,000</em></div>
+   <div class="urow no"><span>Research Automation Suite</span><em>$600,000</em></div>
+   <div class="urow no"><span>HPC Cluster</span><em>$800,000</em></div></div></div>` : "";
+
+const info = m5 ? `<div class="info"><b>Safety Audit</b> &nbsp;Comprehensive safety review. &nbsp;<span class="mono" style="font-size:14px">2 op hr · $40,000 · Tab: next card · Enter: play</span></div>` : "";
+
+document.getElementById("app").innerHTML = `
+<div class="strip">
+  <div class="mode">PLAN<small>${S.month}</small></div>
+  <div class="res"><span class="label">Money</span><b>${S.money}</b></div>
+  <div class="res"><span class="label">Compute</span><b>${S.compute}</b></div>
+  <div class="res ${S.research<0?"neg":""}"><span class="label">Research</span><b>${S.research}</b></div>
+  <div class="res"><span class="label">Papers</span><b>${S.papers}</b></div>
+  <div class="spacer"></div>
+</div>
+
+<div class="main">
+  <div class="head"><span class="title">THE MONTH AHEAD</span></div>
+  <div class="gauge">
+    <div class="pool plan"><span class="label">Planning hours</span><div class="pips">${pips(S.plan, S.used.plan)}</div>
+      <div class="count">${freePlan} of ${S.plan} free</div></div>
+    <div class="pool oper"><span class="label">Operating hours</span><div class="pips">${pips(S.oper, S.used.oper)}</div>
+      <div class="count">${freeOper} of ${S.oper} free</div></div>
+    <div class="reserve"><span class="label">Set aside now</span>
+      <div class="stepper"><span>${S.reserve}</span><button>+1 Reserve</button></div>
+      <div class="count" style="font:600 14px 'JetBrains Mono';color:var(--chrome)">${freeTotal} hours free in all</div></div>
+  </div>
+  <div class="queue">${queueHtml}</div>
+  <div class="qfoot"><span class="btn">Undo  Z</span><span class="btn">Clear  C</span><span class="btn" style="color:var(--chrome)">Do Nothing</span></div>
+</div>
+
+<div class="hand"><span class="label">Your hand · ${k} actions</span><div class="groups">${handHtml}</div></div>
+
+<div class="right">
+  <div class="doom"><span class="label">P(Doom)</span>
+    <div style="margin-top:10px"><span class="val">${S.doom.toFixed(1)}%</span><span class="band">${S.band}</span></div>
+    <div class="meter"><i style="width:${S.doom}%"></i><div class="ticks"></div></div>
+    ${m5 ? `<svg class="spark" viewBox="0 0 330 46" width="330" height="46"><polyline fill="none" stroke="#E9752E" stroke-width="2" points="0,40 66,37 132,33 198,25 264,16 330,8"/></svg>` : ""}
+    <div class="lose">You lose at 100%. You can't win; you can only buy time.</div></div>
+  <div class="rep"><span class="label">Reputation</span>
+    <div style="margin-top:8px"><span class="val">${S.rep}</span></div>
+    <div class="meter"><i style="width:${S.rep}%"></i></div><div class="lose">You lose at 0.</div></div>
+  ${staff}
+  <div class="doors">
+    <div class="door ${m5?"on":""}">Upgrades</div><div class="door">Employees</div>
+    <div class="door">Ledger <span>L</span></div><div class="door">Guide</div>
+  </div>
+  <div class="rq"><span>Research quality</span><div class="seg"><div>Rushed</div><div class="on">Standard</div><div>Thorough</div></div></div>
+  <div class="feedback">Send feedback  N</div>
+</div>
+${drawer}${info}<div class="commit"><button class="go">COMMIT THE MONTH<kbd>Enter</kbd></button>
+    <span class="why">${qrows.length ? `${qrows.length + 8} actions · the ${freeTotal} hours left are held for events` : "Nothing queued: all 20 hours are held for events"}</span></div>
+`;
+
+if (view === "first") {
+  const r = document.getElementById("card-scouting").getBoundingClientRect();
+  const mk = document.createElement("div"); mk.className = "marker";
+  Object.assign(mk.style, {left: (r.left-6)+"px", top: (r.top-6)+"px", width: (r.width+12)+"px", height: (r.height+12)+"px"});
+  const tag = document.createElement("div"); tag.className = "marker-tag"; tag.textContent = "Start here";
+  Object.assign(tag.style, {left: (r.left-6)+"px", top: (r.top-38)+"px"});
+  document.body.append(mk, tag);
+}
+</script>
+</body>
+</html>

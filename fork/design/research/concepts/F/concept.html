@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lab Terminal</title>
+<meta name="viewport" content="width=1920">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bezel:#3a2b20; --bezel-hi:#4a382a;
+  --screen:#251912; --pane:#2d1f16; --pane-hi:#382719;
+  --amb:#F5B041; --amb-hi:#FFD58A; --dim:#D09A5C; --faint:#BC8A55;
+  --rule:#7A5532; --rule-hi:#A4743F;
+  --grn:#A3DB7E; --red:#FF8366; --ink:#2a1a10;
+  --doom:#F6B23C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 40%,var(--bezel-hi),var(--bezel) 70%);font-family:"IBM Plex Mono",Consolas,monospace;color:var(--amb);font-size:16px;line-height:1.3}
+.scr{position:absolute;left:8px;top:8px;width:1904px;height:1064px;border-radius:20px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 45%,#2b1d15 0%,var(--screen) 65%,#21160f 100%);
+  box-shadow:inset 0 0 0 2px #16100b,inset 0 0 60px rgba(0,0,0,.45)}
+/* scanlines live only on backgrounds: drawn under text, never over it */
+.scan{background-image:repeating-linear-gradient(0deg,rgba(255,180,80,.035) 0 1px,transparent 1px 3px)}
+.box{position:absolute}
+
+/* ---------- pane: DOS-style double rule with title on the border ---------- */
+.pn{position:absolute;border:3px double var(--rule);background-color:var(--pane);border-radius:2px}
+.pn-t{position:absolute;top:-13px;left:14px;padding:0 8px;background:var(--screen);font-weight:600;font-size:16px;letter-spacing:.08em;color:var(--amb-hi);line-height:22px}
+.pn-k{position:absolute;top:-13px;right:14px;padding:0 8px;background:var(--screen);font-size:14px;color:var(--faint);line-height:22px;letter-spacing:.04em}
+.pn-k b{color:var(--amb);font-weight:600}
+
+/* ---------- status bar ---------- */
+.st{position:absolute;left:12px;top:12px;width:1880px;height:44px;display:flex;align-items:stretch;border:2px solid var(--rule);background:var(--pane-hi)}
+.st-sys{background:var(--amb);color:var(--ink);font-weight:700;padding:0 16px;display:flex;align-items:center;font-size:18px;letter-spacing:.1em}
+.st-date{padding:0 22px;display:flex;align-items:center;font-family:VT323,monospace;font-size:34px;color:var(--amb-hi);border-right:2px solid var(--rule)}
+.st-r{display:flex;align-items:center;gap:8px;padding:0 20px;border-right:1px solid var(--rule)}
+.st-r i{font-style:normal;font-size:14px;color:var(--faint);letter-spacing:.08em}
+.st-r b{font-family:VT323,monospace;font-weight:400;font-size:30px;color:var(--amb-hi)}
+.st-r b.neg{color:var(--red)}
+.st-flag{font-size:14px;font-weight:700;color:var(--ink);background:var(--red);padding:0 6px;line-height:20px}
+.st-sp{flex:1}
+.st-play{display:flex;align-items:center;gap:6px;padding:0 14px;border-left:1px solid var(--rule)}
+.st-play span{font-size:16px;font-weight:600;padding:3px 10px;border:1px solid var(--rule-hi);color:var(--amb-hi)}
+.st-play span.on{background:var(--red);color:var(--ink);border-color:var(--red)}
+.st-play em{font-style:normal;font-size:14px;color:var(--faint);margin-left:4px}
+.st-mode{display:flex;align-items:center;gap:0;padding:0 10px}
+.st-mode span{font-size:16px;font-weight:600;padding:4px 14px;letter-spacing:.1em;border:1px solid var(--rule)}
+.st-mode span.on{background:var(--amb);color:var(--ink);border-color:var(--amb)}
+.st-mode span.off{color:var(--faint)}
+
+/* ---------- actions (directory listing) ---------- */
+.ac-head,.ac-row{display:grid;grid-template-columns:42px 206px 140px 1fr;column-gap:8px;align-items:center;padding:0 12px}
+.ac-head{height:28px;font-size:14px;color:var(--faint);letter-spacing:.08em;border-bottom:1px solid var(--rule)}
+.ac-grp{height:26px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:14px;color:var(--faint);letter-spacing:.1em}
+.ac-grp:after{content:"";flex:1;border-top:1px dashed var(--rule)}
+.ac-row{height:38px;font-size:16px;cursor:pointer}
+.ac-row:hover{background:var(--pane-hi)}
+.ac-key{color:var(--ink);background:var(--dim);font-weight:700;width:26px;height:22px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.ac-nm{color:var(--amb-hi);font-weight:500;white-space:nowrap}
+.ac-dir{color:var(--amb-hi);font-weight:600}
+.ac-cost{color:var(--dim);white-space:nowrap}
+.ac-st{white-space:nowrap;color:var(--dim)}
+.ac-st.go{color:var(--grn)}
+.ac-st.dir{color:var(--amb)}
+.ac-st.no{color:var(--red)}
+.ac-row.off .ac-nm{color:var(--dim)}
+.ac-row.off .ac-key{background:var(--rule)}
+.ac-row.sel{background:var(--amb)}
+.ac-row.sel *{color:var(--ink)!important}
+.ac-row.sel .ac-key{background:var(--ink);color:var(--amb)!important}
+.ac-foot{position:absolute;left:12px;right:12px;bottom:12px;height:30px;display:flex;align-items:center;gap:22px;font-size:14px;color:var(--faint);border-top:1px solid var(--rule);padding-top:8px}
+.ac-foot b{color:var(--amb);font-weight:600}
+.hp{color:var(--amb)} .ho{color:var(--grn)}
+
+/* ---------- attention gauge ---------- */
+.at-row{display:grid;grid-template-columns:132px 1fr 150px;align-items:center;height:36px;padding:0 16px}
+.at-lb{font-size:16px;font-weight:600;letter-spacing:.08em}
+.at-cells{display:flex;gap:5px}
+.at-c{width:30px;height:22px;flex:none;border:2px solid currentColor}
+.at-c.used{background:currentColor}
+.at-c.used:after{content:"";display:block;height:100%;background:repeating-linear-gradient(90deg,transparent 0 3px,rgba(42,26,16,.35) 3px 4px)}
+.at-v{font-size:16px;text-align:right;white-space:nowrap}
+.at-v b{font-family:VT323,monospace;font-size:28px;font-weight:400;vertical-align:-3px}
+.at-res{display:flex;align-items:center;gap:10px}
+.at-btn{border:1px solid var(--rule-hi);color:var(--amb-hi);font-size:16px;font-weight:600;padding:1px 9px;background:var(--pane-hi);cursor:pointer}
+.at-sum{font-size:14px;color:var(--faint)}
+
+/* ---------- month plan ---------- */
+.pl-head,.pl-row{display:grid;grid-template-columns:46px 280px 150px 104px 1fr 36px;align-items:center;padding:0 14px}
+.pl-head{height:30px;font-size:14px;color:var(--faint);letter-spacing:.08em;border-bottom:1px solid var(--rule);margin-top:10px}
+.pl-row{height:38px;font-size:16px;border-bottom:1px dotted rgba(122,85,50,.6)}
+.pl-n{font-family:VT323,monospace;font-size:26px;color:var(--amb)}
+.pl-nm{color:var(--amb-hi);font-weight:500;white-space:nowrap}
+.pl-fr{color:var(--dim);white-space:nowrap}
+.pl-c{color:var(--dim);white-space:nowrap}
+.pl-x{color:var(--dim);font-size:16px;font-weight:600;border:1px solid var(--rule);text-align:center;cursor:pointer;line-height:22px}
+.pl-row.empty .pl-n{color:var(--rule-hi)}
+.pl-row.empty .pl-nm{color:var(--faint);font-weight:400;letter-spacing:.3em}
+.pl-foot{position:absolute;left:14px;right:14px;bottom:12px;height:44px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--rule);padding-top:8px}
+.pl-btn{border:1px solid var(--rule-hi);background:var(--pane-hi);color:var(--amb-hi);padding:5px 12px;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap}
+.pl-btn i{font-style:normal;color:var(--faint);font-size:14px;margin-left:8px}
+.pl-btn.dis{color:var(--faint);border-color:var(--rule)}
+.pl-tot{margin-left:auto;font-size:16px;color:var(--dim);white-space:nowrap}
+.pl-tot b{color:var(--amb-hi);font-weight:600}
+
+/* ---------- flyout (door opened: A -> B -> C) ---------- */
+.fo{position:absolute;z-index:10;border:3px double var(--amb);background-color:var(--pane-hi);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.fo-t{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--amb);color:var(--ink);font-weight:700;letter-spacing:.08em}
+.fo-t span{font-weight:500;font-size:14px;letter-spacing:.02em}
+.fo-row{display:grid;grid-template-columns:34px 1fr 140px;align-items:center;height:40px;padding:0 12px;border-bottom:1px dotted var(--rule);font-size:16px}
+.fo-row .k{color:var(--ink);background:var(--dim);font-weight:700;width:24px;height:22px;display:flex;align-items:center;justify-content:center}
+.fo-row .n{color:var(--amb-hi);font-weight:500}
+.fo-row .c{text-align:right;white-space:nowrap}
+.fo-row.off .n{color:var(--dim)} .fo-row.off .k{background:var(--rule)}
+.fo-row .why{grid-column:2/4;font-size:14px;color:var(--red);margin-top:-6px}
+.fo-row.tall{height:58px;align-content:center}
+.fo-row.hi{background:rgba(245,176,65,.16);outline:1px solid var(--amb);outline-offset:-1px}
+.fo-c{padding:12px 14px;font-size:16px;color:var(--amb-hi)}
+.fo-c p{margin-bottom:10px}
+.fo-c .m{color:var(--dim);font-size:14px;letter-spacing:.06em;margin-bottom:4px}
+.fo-c .btn{display:inline-block;margin-top:4px;background:var(--amb);color:var(--ink);font-weight:700;padding:6px 14px}
+
+/* ---------- P(Doom) + reputation instruments ---------- */
+.dm-blk{padding:14px 18px 0}
+.dm-lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--faint);letter-spacing:.1em}
+.dm-num{font-family:VT323,monospace;font-size:96px;line-height:.9;color:var(--doom);display:flex;align-items:baseline;gap:14px}
+.dm-num small{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;letter-spacing:.1em;color:var(--ink);background:var(--doom);padding:1px 8px;position:relative;top:-14px}
+.dm-g{display:flex;gap:3px;margin-top:6px}
+.dm-g span{flex:1;height:16px;border:1px solid var(--rule-hi)}
+.dm-g span.f{background:var(--doom);border-color:var(--doom)}
+.dm-ends{display:flex;justify-content:space-between;font-size:14px;color:var(--faint);margin-top:4px}
+.rp-row{display:flex;align-items:center;gap:16px;padding:10px 18px 0;border-top:1px solid var(--rule);margin-top:12px}
+.rp-num{font-family:VT323,monospace;font-size:60px;line-height:.9;color:var(--amb-hi);width:72px}
+.rp-r{flex:1}
+.rp-g{display:flex;gap:3px;margin:4px 0}
+.rp-g span{flex:1;height:12px;border:1px solid var(--rule-hi)}
+.rp-g span.f{background:var(--amb-hi);border-color:var(--amb-hi)}
+
+/* ---------- under way (gantt) ---------- */
+.uw-ruler{display:grid;grid-template-columns:repeat(4,1fr);margin:16px 18px 0;border-bottom:1px solid var(--rule-hi);font-size:14px;color:var(--faint);letter-spacing:.08em}
+.uw-ruler span{border-left:1px solid var(--rule);padding:0 0 3px 6px}
+.uw-ruler span.now{color:var(--amb-hi);border-left:2px solid var(--amb-hi)}
+.uw-item{margin:12px 18px 0;position:relative;height:46px}
+.uw-nm{font-size:16px;color:var(--amb-hi);display:flex;justify-content:space-between;white-space:nowrap}
+.uw-nm i{font-style:normal;color:var(--dim)}
+.uw-bar{position:absolute;left:0;bottom:2px;height:14px;background:repeating-linear-gradient(90deg,var(--amb) 0 10px,rgba(245,176,65,.55) 10px 12px)}
+.uw-bar:after{content:"";position:absolute;right:-7px;top:-3px;width:0;height:0;border-left:7px solid var(--amb-hi);border-top:10px solid transparent;border-bottom:10px solid transparent}
+.uw-none{margin:18px 18px 0;font-size:16px;color:var(--faint)}
+
+/* ---------- cameras ---------- */
+.cm-feed{position:absolute;left:10px;right:10px;top:14px;bottom:10px;overflow:hidden;border:1px solid var(--rule)}
+.cm-feed img{width:100%;height:100%;object-fit:cover;filter:sepia(1) saturate(1.6) hue-rotate(-8deg) brightness(.95) contrast(1.1)}
+.cm-feed:before{content:"";position:absolute;inset:0;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.cm-feed:after{content:"";position:absolute;inset:0;z-index:3;background:radial-gradient(ellipse at center,transparent 55%,rgba(20,10,6,.55) 100%)}
+.cm-tint{position:absolute;inset:0;z-index:1;mix-blend-mode:multiply}
+
+/* ---------- staff ---------- */
+.sf-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;height:36px;padding:0 18px;font-size:16px}
+.sf-row:first-child{margin-top:12px}
+.sf-row b{color:var(--amb-hi);font-weight:500}
+.sf-row i{font-style:normal;color:var(--dim)}
+.sf-d{width:10px;height:10px;background:var(--grn)}
+
+/* ---------- key bar + commit ---------- */
+.kb{position:absolute;left:12px;top:998px;width:1376px;height:54px;display:flex;gap:10px;align-items:stretch}
+.kb-k{display:flex;align-items:center;border:1px solid var(--rule-hi);background:var(--pane-hi);cursor:pointer}
+.kb-k b{background:var(--dim);color:var(--ink);font-weight:700;height:100%;display:flex;align-items:center;padding:0 10px;font-size:16px}
+.kb-k span{padding:0 14px;font-size:16px;font-weight:600;letter-spacing:.06em;color:var(--amb-hi);white-space:nowrap}
+.kb-k span em{font-style:normal;color:var(--dim);font-weight:400}
+.kb-sp{flex:1}
+.cmt{position:absolute;left:1404px;top:998px;width:488px;height:54px;background:var(--amb);color:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 18px;cursor:pointer;box-shadow:0 0 0 2px var(--amb-hi),0 0 22px rgba(245,176,65,.35)}
+.cmt b{font-size:22px;font-weight:700;letter-spacing:.12em}
+.cmt span{font-size:14px;font-weight:600;border:2px solid var(--ink);padding:2px 8px}
+.cmt.wait{background:var(--pane-hi);color:var(--amb-hi);box-shadow:0 0 0 2px var(--rule-hi)}
+.cmt.wait span{border-color:var(--rule-hi);color:var(--amb-hi)}
+.cmt-sub{position:absolute;left:1404px;top:984px;width:488px;text-align:center;font-size:14px;color:var(--faint);line-height:14px;display:none}
+
+/* ---------- watch: feed, in-flight, event ---------- */
+.fd-row{display:grid;grid-template-columns:86px 1fr;padding:6px 16px;font-size:16px;line-height:1.35;border-bottom:1px dotted rgba(122,85,50,.6)}
+.fd-row i{font-style:normal;color:var(--dim)}
+.fd-row span{color:var(--amb-hi)}
+.fd-row.al span{color:var(--red);font-weight:600}
+.fd-row.al i{color:var(--red)}
+.fd-cur{padding:8px 16px;font-size:16px;color:var(--amb)}
+.fd-cur:after{content:"";display:inline-block;width:10px;height:18px;background:var(--amb);vertical-align:-3px;margin-left:4px}
+.if-row{display:grid;grid-template-columns:40px 1fr 110px;align-items:center;height:40px;padding:0 16px;font-size:16px;border-bottom:1px dotted rgba(122,85,50,.6)}
+.if-row .n{font-family:VT323,monospace;font-size:26px}
+.if-row .nm{color:var(--amb-hi)}
+.if-row .s{text-align:right;font-weight:600;font-size:14px;letter-spacing:.08em}
+.s-done{color:var(--grn)} .s-run{color:var(--amb-hi)} .s-wait{color:var(--faint)}
+.ev{position:absolute;z-index:10;border:3px double var(--amb-hi);background-color:var(--pane-hi);box-shadow:0 0 0 6px rgba(37,25,18,.85),0 20px 40px rgba(0,0,0,.5)}
+.ev-t{background:var(--red);color:var(--ink);font-weight:700;letter-spacing:.12em;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+.ev-t span{font-weight:600;letter-spacing:.04em}
+.ev-b{display:grid;grid-template-columns:200px 1fr;gap:18px;padding:18px}
+.ev-ph{width:200px;height:170px;border:1px solid var(--rule-hi);overflow:hidden;position:relative}
+.ev-ph img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) sepia(1) saturate(1.4) contrast(1.15) brightness(.9)}
+.ev-ph:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
+.ev-h{font-family:VT323,monospace;font-size:40px;line-height:1;color:var(--amb-hi);margin-bottom:10px}
+.ev-p{font-size:16px;line-height:1.45;color:var(--amb-hi)}
+.ev-o{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:46px;margin:0 18px;border-top:1px dotted var(--rule);font-size:17px;cursor:pointer}
+.ev-o .k{background:var(--amb);color:var(--ink);font-weight:700;width:28px;height:26px;display:flex;align-items:center;justify-content:center}
+.ev-o .n{color:var(--amb-hi);font-weight:500}
+.ev-o .c{color:var(--dim)}
+.ev-f{display:flex;justify-content:space-between;padding:10px 18px 14px;font-size:14px;color:var(--faint);border-top:1px solid var(--rule);margin-top:6px}
+
+/* ---------- upgrades program ---------- */
+.up-head,.up-row{display:grid;grid-template-columns:46px 470px 150px 1fr;column-gap:16px;align-items:center;padding:0 16px}
+.up-head{height:30px;font-size:14px;color:var(--faint);letter-spacing:.08em;border-bottom:1px solid var(--rule);margin-top:12px}
+.up-row{height:114px;align-content:center;font-size:16px;border-bottom:1px dotted rgba(122,85,50,.6);cursor:pointer}
+.up-row .k{color:var(--ink);background:var(--dim);font-weight:700;width:26px;height:22px;display:flex;align-items:center;justify-content:center}
+.up-row .n{color:var(--amb-hi);font-weight:500}
+.up-row .d{display:block;font-size:14px;color:var(--dim);font-weight:400;margin-top:4px;line-height:1.35;white-space:normal}
+.up-row .c{color:var(--amb-hi);font-family:VT323,monospace;font-size:26px}
+.up-row.off .n,.up-row.off .c{color:var(--dim)} .up-row.off .k{background:var(--rule)}
+.up-row.sel{background:var(--amb)} .up-row.sel *{color:var(--ink)!important} .up-row.sel .k{background:var(--ink);color:var(--amb)!important}
+.up-det{padding:16px 20px;font-size:16px;color:var(--amb-hi);line-height:1.45}
+.up-det h3{font-family:VT323,monospace;font-weight:400;font-size:40px;line-height:1;margin-bottom:12px}
+.up-det .m{font-size:14px;color:var(--faint);letter-spacing:.08em;margin:14px 0 4px}
+.up-det .btn{display:inline-block;margin-top:18px;background:var(--amb);color:var(--ink);font-weight:700;padding:8px 18px;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="scr" id="scr"></div>
+<script>
+(function(){
+var view=(new URLSearchParams(location.search).get('view')||'m1');
+var M5=(view==='m5'||view==='place2');
+var S=document.getElementById('scr');
+function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
+function pane(x,y,w,h,title,keys,inner,extra){
+  return '<div class="pn scan" style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+(extra||'')+'">'+
+   '<div class="pn-t">'+title+'</div>'+(keys?'<div class="pn-k">'+keys+'</div>':'')+inner+'</div>';
+}
+var doomPct=M5?40.2:20.0, rep=M5?32:50;
+if(M5){document.documentElement.style.setProperty('--doom','#FF9A4D');}
+
+/* ---------------- state ---------------- */
+var st=M5?{date:'NOV 2017',money:'$140,000',compute:'65',research:'-12',papers:'0',staff:'2'}
+         :{date:'JUL 2017',money:'$245,000',compute:'100',research:'0',papers:'0',staff:'1'};
+if(view==='watch'){st.date='JUL 2017';}
+
+/* status bar */
+function statusBar(mode){
+  var h='<div class="st"><div class="st-sys">LAB.SYS</div><div class="st-date">'+st.date+(view==='watch'?'&nbsp;&nbsp;DAY 12/31':'')+'</div>'+
+   '<div class="st-r"><i>MONEY</i><b>'+st.money+'</b></div>'+
+   '<div class="st-r"><i>COMPUTE</i><b>'+st.compute+'</b></div>'+
+   '<div class="st-r"><i>RESEARCH</i><b class="'+(st.research.charAt(0)==='-'?'neg':'')+'">'+st.research+'</b>'+(st.research.charAt(0)==='-'?'<span class="st-flag">[!] BELOW 0</span>':'')+'</div>'+
+   '<div class="st-r"><i>PAPERS</i><b>'+st.papers+'</b></div>'+
+   '<div class="st-r"><i>STAFF</i><b>'+st.staff+'</b></div>'+
+   '<div class="st-sp"></div>'+(mode==='watch'?'<div class="st-play"><span class="on">|| PAUSED</span><span>&gt; 1x</span><span>&gt;&gt; 2x</span><em>SPACE</em></div>':'')+
+   '<div class="st-mode"><span class="'+(mode==='plan'?'on':'off')+'">PLAN</span><span class="'+(mode==='watch'?'on':'off')+'">WATCH</span></div></div>';
+  S.appendChild(el(h));
+}
+
+/* ---------------- actions listing ---------------- */
+function actionsPane(selKey){
+  var P='<span class="hp">plan</span>', O='<span class="ho">op</span>';
+  var groups=[
+   ['FUNDING',[
+     ['Fundraising/','4 choices','dir','DIR &gt;'],
+     ['Financing/','7 choices','dir','DIR &gt;']]],
+   ['PEOPLE',[
+     ['Hire Staff/','7 roles', M5?'no':'dir', M5?'no plan hrs left':'DIR &gt;'],
+     ['Advertise a Role','--','no','coming soon'],
+     ['Work Your Connections','2 hr, 6 rep','go','ready'],
+     ['Onboard New Hires','1 hr + money', M5?'go':'no', M5?'ready':'nobody hired']]],
+   ['RESEARCH',[
+     ['Safety Research','1 '+P+', 10 res','no', M5?'no plan hrs left':'need 10 research'],
+     ['Capability Research','1 '+P+', 10 res','no', M5?'no plan hrs left':'need 10 research'],
+     ['Publish Safety Paper','1 '+P+', 20 res','no', M5?'no plan hrs left':'need 20 research']]
+     .concat(M5?[['Safety Audit','2 '+O+', $40,000','go','ready']]:[])
+     .concat([['Purchase Compute','$50,000, 0 hr','go','ready']])],
+   ['OUTREACH',[
+     ['Travel &amp; Conferences/','4 choices','dir','DIR &gt;'],
+     ['Publicity/','5 choices','dir','DIR &gt;'],
+     ['Scouting/','3 choices','dir','DIR &gt;']]],
+   ['RUNNING THE LAB',[
+     ['Operations/','3 choices','dir','DIR &gt;'],
+     ['Office/','4 choices','dir','DIR &gt;']].concat(M5?[['Strategic/','4 choices','dir','DIR &gt;']]:[])]
+  ];
+  var keys='ABCDEFGHIJKLMNOPQRS', ki=0, rows='', n=0;
+  groups.forEach(function(g){
+    rows+='<div class="ac-grp">'+g[0]+'</div>';
+    g[1].forEach(function(a){
+      var k=keys.charAt(ki++); n++;
+      var isDir=/\/$/.test(a[0]);
+      var nm=isDir?'<span class="ac-dir">'+a[0]+'</span>':a[0];
+      var cls='ac-row'+(a[2]==='no'?' off':'')+(selKey&&a[0]===selKey?' sel':'');
+      rows+='<div class="'+cls+'"><span class="ac-key">'+k+'</span><span class="ac-nm">'+nm+'</span><span class="ac-cost">'+a[1]+'</span><span class="ac-st '+a[2]+'">'+(a[2]==='no'?'[-] ':'')+a[3]+'</span></div>';
+    });
+  });
+  var inner='<div style="margin-top:12px"><div class="ac-head"><span>KEY</span><span>ACTION</span><span>COST (hrs)</span><span>STATUS</span></div>'+rows+'</div>'+
+   '<div class="ac-foot"><span><b>A-'+keys.charAt(ki-1)+'</b> queue / open</span><span><b>/</b> = directory</span><span><span class="hp">plan</span> / <span class="ho">op</span> = hour type</span></div>';
+  S.appendChild(el(pane(12,72,640,912,'ACTIONS',n+' items',inner)));
+}
+
+/* ---------------- attention ---------------- */
+function cells(n,used,col){var s='<div class="at-cells" style="color:'+col+'">';for(var i=0;i<n;i++)s+='<span class="at-c'+(i<used?' used':'')+'"></span>';return s+'</div>';}
+function attentionPane(){
+  var pu=M5?12:0, ou=M5?1:0, free=(12-pu)+(8-ou);
+  var inner='<div style="margin-top:16px">'+
+   '<div class="at-row"><span class="at-lb hp">PLANNING</span>'+cells(12,pu,'var(--amb)')+'<span class="at-v hp"><b>'+(12-pu)+'</b> of 12 free</span></div>'+
+   '<div class="at-row"><span class="at-lb ho">OPERATING</span>'+cells(8,ou,'var(--grn)')+'<span class="at-v ho"><b>'+(8-ou)+'</b> of 8 free</span></div>'+
+   '<div class="at-row" style="border-top:1px solid var(--rule);margin:6px 16px 0;padding:0;height:40px"><span class="at-lb" style="color:var(--amb-hi)">RESERVE</span>'+
+     '<span class="at-res"><span class="at-btn">-</span><span style="font-family:VT323,monospace;font-size:28px;color:var(--amb-hi)">0</span><span class="at-btn">+</span><span class="at-sum">set aside now</span></span>'+
+     '<span class="at-v" style="color:var(--dim)"><b style="color:var(--amb-hi)">'+free+'</b> hrs free</span></div>'+
+   '</div>';
+  S.appendChild(el(pane(668,72,720,150,'ATTENTION','founder, 20 hrs / month',inner)));
+}
+
+/* ---------------- month plan ---------------- */
+function planPane(){
+  var P='<span class="hp">',O='<span class="ho">',E='</span>';
+  var q=M5?[
+    ['Go to Meetups','Scouting/',O+'1 op'+E,'$300'],
+    ['Hire: Safety Researcher','Hire Staff/',P+'1 plan'+E,'$60,000'],
+    ['Read the Literature','Scouting/',P+'1 plan'+E,'--'],
+    ['Post Online','Scouting/',P+'1 plan'+E,'--'],
+    ['Emergency Pivot','Strategic/',P+'2 plan'+E,'$50,000'],
+    ['Public Warning','Publicity/',P+'2 plan'+E,'15 rep'],
+    ['Sign: Walk-up office','Office/',P+'1 plan'+E,'--'],
+    ['Accept Offer','Financing/',P+'1 plan'+E,'--'],
+    ['Pay the Bill','Financing/',P+'1 plan'+E,'--'],
+    ['Desperation Lever','Financing/',P+'1 plan'+E,'--'],
+    ['Send Delegation','Travel/',P+'1 plan'+E,'--']
+  ]:[];
+  var rows='';
+  q.forEach(function(r,i){rows+='<div class="pl-row"><span class="pl-n">'+(i<9?'0':'')+(i+1)+'</span><span class="pl-nm">'+r[0]+'</span><span class="pl-fr">'+r[1]+'</span><span>'+r[2]+'</span><span class="pl-c">'+r[3]+'</span><span class="pl-x">x</span></div>';});
+  if(!M5){for(var i=0;i<16;i++)rows+='<div class="pl-row empty"><span class="pl-n">'+(i<9?'0':'')+(i+1)+'</span><span class="pl-nm">'+(i===0?'- empty -':'')+'</span><span></span><span></span><span></span><span></span></div>';}
+  var inner='<div class="pl-head"><span>#</span><span>ACTION</span><span>FROM</span><span>HOURS</span><span>COST</span><span></span></div>'+rows+
+   '<div class="pl-foot"><span class="pl-btn'+(M5?'':' dis')+'">Undo<i>BKSP</i></span><span class="pl-btn'+(M5?'':' dis')+'">Clear<i>DEL</i></span><span class="pl-btn">Do Nothing<i>.</i></span>'+
+   '<span class="pl-tot">'+(M5?'<b>11</b> queued &nbsp;|&nbsp; <b>$110,300</b> to spend':'<b>0</b> queued')+'</span></div>';
+  S.appendChild(el(pane(668,238,720,746,'THE MONTH AHEAD','runs top to bottom',inner)));
+}
+
+/* ---------------- door flyout (m5): Scouting/ opened ---------------- */
+function flyout(){
+  var b='<div class="fo" style="left:652px;top:704px;width:396px">'+
+    '<div class="fo-t">SCOUTING/<span>ESC close</span></div>'+
+    '<div class="fo-row tall off"><span class="k">1</span><span class="n">Read the Literature</span><span class="c hp">1 plan hr</span><span class="why">[-] no plan hrs left</span></div>'+
+    '<div class="fo-row hi"><span class="k">2</span><span class="n">Go to Meetups</span><span class="c"><span class="ho">1 op hr</span>, $300</span></div>'+
+    '<div class="fo-row tall off"><span class="k">3</span><span class="n">Post Online</span><span class="c hp">1 plan hr</span><span class="why">[-] no plan hrs left</span></div>'+
+   '</div>';
+  var c='<div class="fo" style="left:1056px;top:704px;width:332px;height:198px;border-color:var(--rule-hi)">'+
+    '<div class="fo-t" style="background:var(--dim)">GO TO MEETUPS</div>'+
+    '<div class="fo-c"><div class="m">COST</div><p><span class="ho">1 op hr</span>, $300</p>'+
+    '<div class="m">QUEUED THIS MONTH</div><p>1 already (#01)</p>'+
+    '<span class="btn">QUEUE &nbsp;[2]</span></div></div>';
+  S.appendChild(el(b));S.appendChild(el(c));
+}
+
+/* ---------------- right column ---------------- */
+function doomPane(){
+  var cellsD='';for(var i=0;i<25;i++)cellsD+='<span class="'+(i<Math.round(doomPct/4)?'f':'')+'"></span>';
+  var cellsR='';for(var j=0;j<20;j++)cellsR+='<span class="'+(j<Math.round(rep/5)?'f':'')+'"></span>';
+  var inner='<div class="dm-blk"><div class="dm-lbl"><span>P(DOOM)</span><span>only rises</span></div>'+
+   '<div class="dm-num">'+doomPct.toFixed(1)+'%'+(M5?'<small>RISING</small>':'')+'</div>'+
+   '<div class="dm-g">'+cellsD+'</div><div class="dm-ends"><span>0</span><span>100% = end</span></div></div>'+
+   '<div class="rp-row"><span class="rp-num">'+rep+'</span><div class="rp-r"><div class="dm-lbl"><span>REPUTATION</span><span>0 = end</span></div><div class="rp-g">'+cellsR+'</div></div></div>';
+  S.appendChild(el(pane(1404,72,488,262,'THREAT BOARD','',inner)));
+}
+function underWayPane(){
+  var inner;
+  if(M5||view==='watch'&&false){
+    inner='<div class="uw-ruler"><span class="now">NOV</span><span>DEC</span><span>JAN 18</span><span>FEB</span></div>'+
+     '<div class="uw-item"><div class="uw-nm">Candidate interview <i>lands ~mid-Dec 2017</i></div><div class="uw-bar" style="width:36%"></div></div>'+
+     '<div class="uw-item"><div class="uw-nm">Paper submission <i>decision ~Jan 2018</i></div><div class="uw-bar" style="width:62%"></div></div>';
+  } else {
+    inner='<div class="uw-ruler"><span class="now">JUL</span><span>AUG</span><span>SEP</span><span>OCT</span></div><div class="uw-none">- nothing under way -</div>';
+  }
+  S.appendChild(el(pane(1404,350,488,196,'UNDER WAY','dates',inner)));
+}
+function camPane(y,h,title,src,tint){
+  var inner='<div class="cm-feed"><img src="assets/'+src+'" alt=""><div class="cm-tint" style="background:'+tint+'"></div></div>';
+  S.appendChild(el(pane(1404,y,488,h,title,'<b>LIVE</b>',inner)));
+}
+function staffPane(){
+  var rows='<div class="sf-row"><span class="sf-d"></span><b>Founder (you)</b><i>planning</i></div>'+
+   (M5?'<div class="sf-row"><span class="sf-d"></span><b>R. Okafor</b><i>safety researcher</i></div>'
+      :'<div class="sf-row"><span class="sf-d" style="background:transparent;border:1px solid var(--rule-hi)"></span><b style="color:var(--faint);font-weight:400">open desk</b><i></i></div>');
+  S.appendChild(el(pane(1404,846,488,138,'STAFF','<b>F2</b> open',rows)));
+}
+function keyBar(commitHtml){
+  var h='<div class="kb">'+
+   '<div class="kb-k"><b>F1</b><span>GUIDE</span></div>'+
+   '<div class="kb-k"><b>F2</b><span>STAFF</span></div>'+
+   '<div class="kb-k"><b>F3</b><span>UPGRADES</span></div>'+
+   '<div class="kb-k"><b>F4</b><span>LEDGER</span></div>'+
+   '<div class="kb-k"><b>F5</b><span>QUALITY <em>Standard</em></span></div>'+
+   '<div class="kb-sp"></div>'+
+   '<div class="kb-k"><b>ESC</b><span>MENU</span></div></div>';
+  S.appendChild(el(h));
+  S.appendChild(el(commitHtml));
+}
+var COMMIT='<div class="cmt"><b>COMMIT THE MONTH</b><span>F10 / ENTER</span></div>';
+
+/* ---------------- views ---------------- */
+if(view==='m1'||view==='m5'){
+  statusBar('plan');
+  actionsPane(M5?'Scouting/':null);
+  attentionPane();planPane();
+  doomPane();underWayPane();
+  camPane(562,268,'CAM-01 OFFICE FLOOR',M5?'office_wide_dawn.webp':'office_wide_day.webp',M5?'rgba(255,120,70,.55)':'rgba(255,200,120,.25)');
+  staffPane();keyBar(COMMIT);
+  if(M5)flyout();
+}
+
+if(view==='place2'){
+  statusBar('plan');
+  var ups=[
+    ['Buy Comfy Office Chairs','$0','Nicer office chairs.',true],
+    ['Accounting Software','$0','Basic bookkeeping tooling.',true],
+    ['Supply Management System','$25,000','Auto-orders supplies when low (keeps stationery stocked without Attention).',true],
+    ['Secure Cloud Provider','$160,000','Dampens player-frontier growth from capability breakthroughs.',false,'need $20,000 more'],
+    ['Upgrade Computer System','$200,000','Boosts research effectiveness (+1 research per action).',false,'need $60,000 more'],
+    ['Research Automation Suite','$600,000','AI-assisted research tools (research actions more effective with compute).',false,'need $460,000 more'],
+    ['High-Performance Computing Cluster','$800,000','Advanced compute infrastructure (+20 compute, research effectiveness +25%).',false,'need $660,000 more']];
+  var rows='';
+  ups.forEach(function(u,i){rows+='<div class="up-row'+(u[3]?'':' off')+(i===2?' sel':'')+'"><span class="k">'+(i+1)+'</span><span class="n">'+u[0]+'<span class="d">'+u[2]+'</span></span><span class="c">'+u[1]+'</span><span style="color:'+(u[3]?'var(--grn)':'var(--red)')+'">'+(u[3]?'can buy':'[-] '+u[4])+'</span></div>';});
+  var inner='<div class="up-head"><span>#</span><span>UPGRADE</span><span>PRICE</span><span>STATUS</span></div>'+rows;
+  S.appendChild(el(pane(12,72,1028,912,'PROCUREMENT / UPGRADES','<b>ESC</b> back to plan',inner)));
+  var det='<div class="up-det"><h3>Supply Management System</h3><p>Auto-orders supplies when low (keeps stationery stocked without Attention).</p>'+
+    '<div class="m">PRICE</div><p style="font-family:VT323,monospace;font-size:34px;line-height:1">$25,000</p>'+
+    '<div class="m">PAID</div><p>once, at purchase</p>'+
+    
+    '<span class="btn" style="position:absolute;left:20px;bottom:20px">BUY &nbsp;[ENTER]</span></div>';
+  S.appendChild(el(pane(1056,72,332,628,'SELECTED','',det)));
+  S.appendChild(el(pane(1056,716,332,268,'OWNED','0 of 7','<div class="up-det"><p style="color:var(--faint)">- nothing bought yet -</p><div class="m">CASH ON HAND</div><p style="font-family:VT323,monospace;font-size:34px;line-height:1">$140,000</p><div class="m">QUEUED THIS MONTH</div><p>$110,300</p></div>')));
+  doomPane();underWayPane();
+  camPane(562,268,'CAM-01 OFFICE FLOOR','office_wide_dawn.webp','rgba(255,120,70,.55)');
+  staffPane();keyBar(COMMIT);
+  document.querySelectorAll('.kb-k')[2].style.background='var(--amb)';
+  document.querySelectorAll('.kb-k span')[2].style.color='var(--ink)';
+}
+
+if(view==='watch'){
+  statusBar('watch');
+  /* in flight, committed order */
+  var fl=[['Work Your Connections','DONE','s-done'],['Read the Literature','RUNNING','s-run'],['Go to Meetups','QUEUED','s-wait'],['Hire: Safety Researcher','QUEUED','s-wait']];
+  var r='<div style="margin-top:14px">';fl.forEach(function(f,i){r+='<div class="if-row"><span class="n">0'+(i+1)+'</span><span class="nm">'+f[0]+'</span><span class="s '+f[2]+'">'+(f[1]==='DONE'?'[x] ':f[1]==='RUNNING'?'[&gt;] ':'[ ] ')+f[1]+'</span></div>';});r+='</div>';
+  S.appendChild(el(pane(12,72,640,214,'IN FLIGHT','committed order',r)));
+  var held='<div style="margin-top:16px"><div class="at-row" style="grid-template-columns:150px 1fr 120px"><span class="at-lb" style="color:var(--amb-hi)">15 of 20</span>'+'<div class="at-cells" style="color:var(--amb-hi);gap:4px">'+Array(16).join('<span class="at-c" style="width:18px"></span>')+'</div>'+'<span class="at-v" style="color:var(--amb-hi)"><b>15</b> hrs</span></div></div>';
+  S.appendChild(el(pane(12,302,640,92,'HELD FOR EVENTS','unspent hours',held)));
+  var feed=[['Jul 01','Month committed. 4 queued, 15 hrs held for events.'],
+            ['Jul 03','[01] Work Your Connections started.'],
+            ['Jul 03','Reached out through your network -- a pre-vetted lead may surface shortly.'],
+            ['Jul 06','[01] Work Your Connections done.'],
+            ['Jul 07','[02] Read the Literature started.'],
+            ['Jul 12','[!] Something has wandered into the lab.','al']];
+  var fr='<div style="margin-top:12px">';feed.forEach(function(f){fr+='<div class="fd-row'+(f[2]?' al':'')+'"><i>'+f[0]+'</i><span>'+f[1]+'</span></div>';});fr+='<div class="fd-cur">_ paused, Jul 12</div></div>';
+  S.appendChild(el(pane(12,410,640,574,'FEED','dated',fr)));
+  /* founder desk camera: the operator, silhouetted */
+  var desk='<div class="cm-feed" style="top:16px"><img src="assets/office_wide_dawn.webp" alt="" style="object-position:62% 50%">'+
+    '<div class="cm-tint" style="background:rgba(255,190,110,.3)"></div>'+
+    '<svg viewBox="0 0 700 700" preserveAspectRatio="xMidYMax meet" style="position:absolute;inset:0;width:100%;height:100%;z-index:1">'+
+      '<path d="M190 700 L205 470 Q212 420 262 412 L438 412 Q488 420 495 470 L510 700 Z" fill="#160d08"/>'+
+      '<path d="M215 700 Q220 560 285 532 Q318 518 350 518 Q382 518 415 532 Q480 560 485 700 Z" fill="#0f0906" stroke="#F5B041" stroke-opacity=".35" stroke-width="2"/>'+
+      '<rect x="324" y="500" width="52" height="40" fill="#0f0906"/>'+
+      '<ellipse cx="350" cy="462" rx="54" ry="66" fill="#0f0906" stroke="#F5B041" stroke-opacity=".35" stroke-width="2"/>'+
+    '</svg></div>';
+  S.appendChild(el(pane(668,72,720,912,'CAM-00 FOUNDER DESK','<b>LIVE</b>',desk)));
+  var ev='<div class="ev" style="left:700px;top:118px;width:656px">'+
+    '<div class="ev-t">INCOMING<span>Jul 12, 2017</span></div>'+
+    '<div class="ev-b"><div class="ev-ph"><img src="assets/web-arwen.jpg" alt=""></div>'+
+      '<div><div class="ev-h">A Stray Cat Appears!</div><div class="ev-p">A friendly stray cat has wandered into your lab. It seems to enjoy watching the researchers work and occasionally walks across keyboards. Adopt it?</div></div></div>'+
+    '<div class="ev-o"><span class="k">1</span><span class="n">Adopt the Cat</span><span class="c">$500</span></div>'+
+    '<div class="ev-o"><span class="k">2</span><span class="n">Feed It and Let It Go</span><span class="c">$100</span></div>'+
+    '<div class="ev-o"><span class="k">3</span><span class="n">Shoo It Away</span><span class="c">free</span></div>'+
+    '<div class="ev-f"><span>auto-paused</span><span>15 hrs held for events</span></div></div>';
+  doomPane();underWayPane();
+  camPane(562,268,'CAM-01 OFFICE FLOOR','office_wide_day.webp','rgba(255,200,120,.25)');
+  staffPane();
+  keyBar('<div class="cmt wait"><b>CHOOSE 1 - 3</b><span>SPACE resumes after</span></div>');
+  S.appendChild(el(ev));
+}
+})();
+</script>
+</body>
+</html>

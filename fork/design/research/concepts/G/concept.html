@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P(Doom)1 G Modernised</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --steel:#1C2730; --steel2:#24323d; --ink:#241016; --aub:#2A1630; --aub2:#351c3c;
+  --warm:#2B221A; --warm2:#35291e; --line:#5A4632; --line-cool:#3c5160;
+  --amber:#F6A800; --amber-soft:#E8A33D; --text:#EEE8DC; --muted:#BDB2A0; --dim:#8E8576;
+  --teal:#1EC3B3; --orange:#E9752E; --red:#E24A3B; --green:#3F8A5C;
+  --mono:'IBM Plex Mono',Consolas,monospace; --sans:'IBM Plex Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#20141c;color:var(--text);font-family:var(--sans)}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden}
+.art{position:absolute;inset:0;background:url(assets/office_wide_day.jpg) center 38%/cover no-repeat;filter:brightness(.82) saturate(.95)}
+.vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(23,10,28,0) 45%,rgba(23,10,28,.55) 100%)}
+.abs{position:absolute}
+
+/* ---- top resource bar (TopBar) ---- */
+.topbar{left:0;top:0;width:1920px;height:52px;background:linear-gradient(#24323d,#1C2730);border-bottom:1px solid var(--line-cool);display:flex;align-items:center;padding:0 24px;gap:0}
+.tb-month{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--amber);letter-spacing:.04em;width:236px}
+.tb-res{display:flex;align-items:baseline;gap:8px;padding:0 22px;border-left:1px solid var(--line-cool);height:28px;align-items:center}
+.tb-res .k{font-size:16px;color:var(--muted)}
+.ico{display:inline-block;flex:none;vertical-align:middle;border-radius:4px}
+.i24{width:24px;height:24px}.i28{width:28px;height:28px}.i32{width:32px;height:32px}.i40{width:40px;height:40px}
+.rb .i28{margin-right:12px}
+.ph .t{display:flex;align-items:center;gap:10px}
+.sh{display:flex;align-items:center;gap:8px}
+.tb-res .v{font-size:19px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.tb-res .v.neg{color:var(--red)}
+.flag{font-family:var(--mono);font-size:16px;font-weight:600;color:#fff;background:var(--red);border-radius:3px;padding:1px 6px;margin-left:2px}
+.tb-sp{flex:1}
+.tb-menu{font-size:16px;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+/* ---- mode banner ---- */
+.banner{left:0;top:52px;width:1920px;height:52px;background:linear-gradient(rgba(36,16,22,.9),rgba(36,16,22,.82)),url(assets/tex_amber_scanlines_512.png);border-bottom:1px solid rgba(246,168,0,.35);display:flex;align-items:center;padding:0 24px}
+.banner .mode{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--amber);letter-spacing:.06em}
+.banner .sub{font-family:var(--mono);font-size:16px;color:var(--amber-soft);margin-left:28px;opacity:.9}
+.play{display:flex;gap:6px;margin-left:28px}
+.play span{font-family:var(--mono);font-size:16px;color:var(--amber-soft);border:1px solid rgba(246,168,0,.4);border-radius:3px;padding:3px 10px}
+.play span.on{background:rgba(246,168,0,.18);color:var(--amber)}
+.switch{margin-left:auto;display:flex;align-items:center;gap:10px}
+.vlab{font-size:16px;color:var(--amber-soft)}
+.switch.dim{opacity:.45}
+.seg{display:flex;border:1px solid rgba(246,168,0,.55);border-radius:4px;overflow:hidden}
+.seg span{font-family:var(--mono);font-size:16px;padding:5px 16px;color:var(--amber-soft)}
+.seg span.on{background:var(--amber);color:#2a1a08;font-weight:600}
+
+.key{display:inline-block;font-family:var(--mono);font-size:16px;font-weight:600;line-height:20px;min-width:24px;text-align:center;padding:0 5px;border:1px solid rgba(238,232,220,.45);border-bottom-width:2px;border-radius:3px;color:var(--muted)}
+.key.amb{border-color:rgba(246,168,0,.6);color:var(--amber)}
+.key.dark{border-color:rgba(42,26,8,.6);color:#2a1a08}
+
+/* ---- left rail (shortcut buttons) ---- */
+.rail{left:24px;top:128px;width:200px;display:flex;flex-direction:column;gap:10px}
+.rb{height:52px;display:flex;align-items:center;padding:0 14px;background:rgba(42,22,48,.9);border:1px solid #5b3a63;border-left:4px solid #7a4f84;border-radius:4px;font-size:18px;font-weight:500;color:var(--text)}
+.rb .lbl{flex:1}
+.rb .cnt{font-family:var(--mono);font-size:16px;color:var(--muted);margin-right:10px}
+.rb.on{background:rgba(246,168,0,.16);border-color:rgba(246,168,0,.6);border-left-color:var(--amber);color:#fff}
+.rb.off{opacity:.5}
+.rb.gap{margin-top:18px}
+
+/* ---- panels ---- */
+.panel{border-radius:6px;box-shadow:0 10px 32px rgba(10,4,12,.45)}
+.p-warm{background:rgba(43,34,26,.93);border:1px solid var(--line)}
+.p-steel{background:rgba(28,39,48,.92);border:1px solid var(--line-cool)}
+.p-aub{background:rgba(42,22,48,.94);border:1px solid #5b3a63}
+.ph{display:flex;align-items:center;height:48px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.ph .t{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.08em;color:var(--amber)}
+.ph .r{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:16px;color:var(--muted)}
+.xbtn{font-family:var(--mono);font-size:16px;color:var(--muted);border:1px solid rgba(238,232,220,.3);border-radius:3px;padding:1px 8px}
+
+/* ---- doom instrument ---- */
+.doom{left:1480px;top:128px;width:416px;height:252px}
+.doom .body{display:flex;align-items:center;gap:22px;padding:14px 22px}
+.ring{position:relative;width:164px;height:164px;flex:none}
+.ring svg{position:absolute;inset:0}
+.ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .pct b{font-family:var(--mono);font-size:36px;font-weight:600}
+.dside{display:flex;flex-direction:column;gap:12px;flex:1}
+.trend{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.06em;padding:3px 10px;border-radius:3px;align-self:flex-start}
+.dlab{font-size:16px;color:var(--muted)}
+
+/* ---- plan card (right) ---- */
+.plan{left:1480px;width:416px}
+.sec{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sec:last-child{border-bottom:none}
+.sh{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.06em;color:var(--muted);margin-bottom:10px}
+.att{display:grid;grid-template-columns:100px 1fr 64px;align-items:center;row-gap:10px;column-gap:12px}
+.att .n{font-size:16px;color:var(--text)}
+.att .left{font-size:16px;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.att .left.zero{color:var(--orange)}
+.pips{display:flex;gap:3px}
+.pip{width:11px;height:16px;border-radius:2px;border:1px solid}
+.pip.pl{border-color:#d9a54a}.pip.pl.used{background:#d9a54a}
+.pip.op{border-color:#5fb3a6}.pip.op.used{background:#5fb3a6}
+.pip.rs{border-color:#b39ac0}.pip.rs.used{background:#b39ac0}
+.qn{display:flex;align-items:center;gap:8px}
+.qrow{display:grid;grid-template-columns:26px 1fr auto;align-items:center;column-gap:8px;font-size:16px;padding:4px 0}
+.qrow .no{font-family:var(--mono);color:var(--dim)}
+.qrow .h{font-family:var(--mono);font-size:16px;color:var(--muted)}
+.more{font-size:16px;color:var(--muted);padding-top:4px}
+.qrow.tot{border-top:1px solid rgba(255,255,255,.1);margin-top:8px;padding-top:8px;font-weight:600}
+.qrow.tot .h{color:var(--text)}
+.uw{display:grid;grid-template-columns:1fr auto;font-size:16px;padding:4px 0;column-gap:10px}
+.uw .d{font-family:var(--mono);font-size:16px;color:var(--amber-soft)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;height:44px;border-radius:4px;font-size:17px;font-weight:500}
+.btn.ghost{border:1px solid rgba(246,168,0,.55);color:var(--amber);background:rgba(246,168,0,.06)}
+.empty{font-size:16px;color:var(--muted)}
+
+/* ---- bottom command bar ---- */
+.bottombar{left:0;top:1016px;width:1920px;height:64px;background:linear-gradient(#1f2c36,#18222a);border-top:1px solid var(--line-cool);display:flex;align-items:center;padding:0 24px}
+.bb-q{font-size:16px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.commit{position:absolute;left:1480px;top:1024px;width:416px;height:48px;border-radius:5px;background:linear-gradient(#ffbe2e,#F6A800);color:#2a1a08;font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;gap:14px;box-shadow:0 0 18px rgba(246,168,0,.35)}
+.commit.idle{background:#3a4650;color:#b8c2c9;box-shadow:none}
+
+/* ---- action menu (A list) ---- */
+.amenu{left:236px;top:128px;width:620px;height:876px}
+.arow{position:relative;display:grid;grid-template-columns:40px 1fr auto auto;column-gap:12px;align-items:center;height:46px;padding:0 12px 0 10px;border-radius:4px}
+.arow .ic{width:40px;height:40px;border-radius:4px;overflow:hidden}
+.arow .ic.has{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.07)}
+.arow .ic img{width:100%;height:100%;display:block}
+.arow .tx{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.arow .nm{font-size:18px;line-height:22px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.arow .ct{font-size:16px;line-height:20px;color:var(--muted);white-space:nowrap}
+.arow .ct .why{color:var(--orange)}
+.arow .gl{font-family:var(--mono);font-size:20px;font-weight:600;width:30px;text-align:center;color:var(--amber)}
+.arow .gl.add{color:var(--teal)}
+.arow.blk .nm{color:#b5aa98}
+.arow.blk .ic{opacity:.45}
+.arow.sel{background:rgba(246,168,0,.14);outline:1px solid rgba(246,168,0,.55)}
+.chip{font-family:var(--mono);font-size:16px;font-weight:600;color:#2a1a08;background:var(--amber-soft);border-radius:3px;padding:0 6px;line-height:20px}
+.chip.soon{background:#5b5248;color:#e4dccd}
+.agrp{height:10px}
+.alist{padding:8px 8px}
+.ahk{display:none}
+
+/* ---- door (B) and detail (C) ---- */
+.door{width:470px}
+.orow{display:grid;grid-template-columns:32px 1fr auto;column-gap:12px;align-items:center;min-height:62px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.orow:last-child{border-bottom:none}
+.orow .nm{font-size:18px;font-weight:500}
+.orow .ct{font-size:16px;color:var(--muted)}
+.orow .ct .why{color:var(--orange)}
+.orow.blk .nm{color:#b5aa98}
+.orow.blk .ico{opacity:.45}
+.orow.sel{background:rgba(30,195,179,.12);outline:1px solid rgba(30,195,179,.55)}
+.detail{width:470px;padding:16px 18px}
+.detail .t{font-size:20px;font-weight:600;margin-bottom:6px}
+.detail .c{font-family:var(--mono);font-size:16px;color:var(--amber-soft);margin-bottom:12px}
+.detail p{font-size:16px;line-height:24px;color:var(--text)}
+.detail .acts{display:flex;gap:10px;margin-top:16px}
+.detail .acts .btn{flex:1}
+.btn.teal{background:rgba(30,195,179,.18);border:1px solid rgba(30,195,179,.7);color:#bff3ec}
+.conn{position:absolute;height:2px;background:rgba(246,168,0,.7)}
+
+/* ---- plan menu ---- */
+.pmenu{left:700px;top:128px;width:768px;height:876px;display:flex;flex-direction:column}
+.ptable{padding:6px 10px 0}
+.pmenu > *:not(.pscroll){flex-shrink:0}
+.pscroll{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 10px}
+/* the native scrollbar is hidden on every scrolling list; the orange .prail is the only bar, so the gutter maths is the same in every browser */
+.pscroll{scrollbar-width:none;-ms-overflow-style:none}
+.pscroll::-webkit-scrollbar{display:none;width:0;height:0}
+.pmenu.over .ptable,.pmenu.over .ptot{padding-right:24px}
+.pscroll.over{padding-right:24px;box-shadow:inset 0 -14px 12px -10px rgba(10,4,12,.6)}
+.prail{position:absolute;width:6px;border-radius:3px;background:rgba(238,232,220,.12)}
+.prail i{position:absolute;left:0;width:6px;border-radius:3px;background:rgba(246,168,0,.7)}
+.ptot{padding:0 10px}
+.prow{display:grid;grid-template-columns:40px minmax(0,1fr) 132px 92px 112px;column-gap:10px;align-items:center;height:44px;padding:0 8px;border-bottom:1px solid rgba(255,255,255,.06);font-size:17px}
+.prow .no{font-family:var(--mono);font-size:16px;color:var(--dim)}
+.prow .hr{font-family:var(--mono);font-size:16px;color:var(--muted)}
+.prow .hr.pl{color:#e2b866}.prow .hr.op{color:#7fcabd}
+.prow .mo{font-family:var(--mono);font-size:16px;color:var(--muted);text-align:right}
+.ctl{display:flex;gap:6px;justify-content:flex-end}
+.ctl span{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;color:var(--muted);border:1px solid rgba(238,232,220,.25);border-radius:3px}
+.ctl span.x{color:#f0a493;border-color:rgba(226,74,59,.45)}
+.ctl span.dis{opacity:.3}
+.prow.head{height:34px;font-family:var(--mono);font-size:16px;color:var(--dim);letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.12)}
+.prow.tot{border-bottom:none;font-weight:600}
+.prow.sub{background:rgba(0,0,0,.14)}
+.prow.sub .nmc{padding-left:38px;color:#d9d1c3}
+.nmc{display:flex;align-items:center;gap:8px;white-space:nowrap;min-width:0;overflow:hidden;padding-right:12px}
+.exp{width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;color:var(--amber-soft);border:1px solid rgba(246,168,0,.45);border-radius:3px}
+.rq.inline{display:flex;align-items:center;gap:8px}
+.rq.inline .sh{margin:0 10px 0 0}
+.prow.tot .hr,.prow.tot .mo{color:var(--text)}
+.x6{font-family:var(--mono);font-size:16px;color:var(--amber-soft);margin-left:8px}
+.rq{display:flex;align-items:center;gap:8px}
+.rq .opt{font-size:16px;padding:6px 14px;border:1px solid rgba(238,232,220,.25);border-radius:3px;color:var(--muted)}
+.rq .opt.on{border-color:var(--amber);color:var(--amber);background:rgba(246,168,0,.1)}
+.gantt{position:relative;margin-top:4px}
+.gcols{display:grid;grid-template-columns:200px repeat(4,1fr);font-family:var(--mono);font-size:16px;color:var(--dim);height:24px;align-items:end}
+.gcols span{border-left:1px solid rgba(255,255,255,.12);padding-left:6px}
+.grow{display:grid;grid-template-columns:200px 1fr;height:44px;align-items:center;font-size:16px}
+.gtrack{position:relative;height:44px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,transparent 1px 25%)}
+.gdate{position:absolute;top:11px;font-family:var(--mono);font-size:16px;color:var(--amber-soft);white-space:nowrap}
+.gbar{position:absolute;top:13px;height:18px;border-radius:3px;background:rgba(232,163,61,.55);border:1px solid var(--amber-soft)}
+.gbar.est{background:repeating-linear-gradient(45deg,rgba(232,163,61,.45) 0 6px,rgba(232,163,61,.2) 6px 12px)}
+.pfoot{margin-top:auto;display:flex;gap:10px;padding:14px 18px;border-top:1px solid rgba(255,255,255,.08)}
+.pfoot .btn{flex:1}
+.btn.plain{border:1px solid rgba(238,232,220,.3);color:var(--text)}
+
+/* ---- upgrades ---- */
+.umenu{left:236px;top:128px;width:620px}
+.urow{display:grid;grid-template-columns:1fr 120px 112px;column-gap:14px;align-items:center;min-height:72px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+.urow .nm{font-size:18px;font-weight:500}
+.urow .ds{font-size:16px;color:var(--muted);margin-top:2px;line-height:20px}
+.urow .pr{font-family:var(--mono);font-size:16px;text-align:right}
+.urow .st{display:flex;justify-content:flex-end}
+.ubtn{width:104px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:16px}
+.ubtn.buy{background:rgba(30,195,179,.18);border:1px solid rgba(30,195,179,.7);color:#bff3ec}
+.ubtn.no{border:1px solid rgba(238,232,220,.3);color:var(--muted);font-size:16px}
+.urow.blk .nm{color:#b5aa98}
+.urow.blk .pr{color:var(--muted)}
+
+/* ---- watch ---- */
+.feed{left:24px;width:640px}
+.fl{display:grid;grid-template-columns:104px 1fr;column-gap:12px;font-size:16px;padding:6px 18px;line-height:22px}
+.fl .d{font-family:var(--mono);font-size:16px;color:var(--amber-soft)}
+.slip{left:700px;top:250px;width:560px}
+.slip .art2{height:150px;background:#3a2b22 url(assets/event_cat.jpg) 32px center/136px 136px no-repeat;border-bottom:1px solid var(--line);position:relative}
+.slip .art2 .tag{position:absolute;right:16px;top:14px;font-family:var(--mono);font-size:16px;color:var(--amber);border:1px solid rgba(246,168,0,.6);border-radius:3px;padding:2px 8px}
+.slip .art2 .ttl{position:absolute;left:200px;top:52px;font-size:26px;font-weight:600;color:var(--text)}
+.slip .art2 .dt{position:absolute;left:200px;top:92px;font-family:var(--mono);font-size:16px;color:var(--amber-soft)}
+.slip .body{padding:16px 20px 18px}
+.slip .body p{font-size:17px;line-height:26px;margin-bottom:14px}
+.opt{display:grid;grid-template-columns:36px 1fr auto;align-items:center;column-gap:12px;height:52px;padding:0 14px;border:1px solid rgba(238,232,220,.22);border-radius:4px;margin-top:8px;font-size:17px}
+.opt .c{font-family:var(--mono);font-size:16px;color:var(--amber-soft)}
+.opt .c.free{color:#9fd1a8}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+var VIEW = (new URLSearchParams(location.search).get('view')) || 'home';
+var M1 = (VIEW === 'home-m1' || VIEW === 'watch');
+var LAYER = (VIEW==='actions'||VIEW==='plan'||VIEW==='upgrades'); /* a menu is the topmost layer */
+var EVENT = (VIEW==='watch');  /* an event awaits a reply and owns the keys */
+
+var S = M1 ? {
+  month:'JULY 2017', money:'$245,000', compute:'100', research:'0', neg:false, papers:'0', rep:'50',
+  doom: VIEW==='watch' ? 20.5 : 20.0, rising: VIEW==='watch', color:'#F6A800', staff:0
+} : {
+  month:'NOVEMBER 2017', money:'$140,000', compute:'65', research:'-12', neg:true, papers:'0', rep:'32',
+  doom:40.2, rising:true, color:'#E9752E', staff:1
+};
+
+/* month-5 plan: adjacent repeats stack (order unchanged). 12 planning hr, 3 operating hr. */
+var QUEUE = [
+  {n:'Hire: Safety Researcher', k:'hire', x:1, hr:'1 plan', t:'pl', mo:'$60,000'},
+  {n:'Go to Meetups', k:'meetups', x:1, hr:'1 op', t:'op', mo:'$300'},
+  {n:'Read the Literature', k:'read', x:6, hr:'6 plan', t:'pl', mo:'--'},
+  {n:'Post Online', k:'post', x:2, hr:'2 plan', t:'pl', mo:'--'},
+  {n:'Hire: Compute Engineer', k:'hire', x:1, hr:'1 plan', t:'pl', mo:'$50,000'},
+  {n:'Read the Literature', k:'read', x:2, hr:'2 plan', t:'pl', mo:'--'},
+  {n:'Work Your Connections', k:'connections', x:1, hr:'2 op', t:'op', mo:'6 rep'}
+];
+
+var IC = {
+  money:'money.png', compute:'compute.png', research:'research.png', papers:'paper.png', reputation:'reputation.png',
+  doom:'doom.png', rising:'indicator_doom_rising_64.png', attention:'resource_action_points_64.png',
+  actions:'ui_guide_actions_64.png', upgrades:'button_upgrade_normal_64.png', staff:'ui_staff_management_64.png',
+  ledger:'ui_budget_finance_64.png', guide:'ui_guide_book_64.png', feedback:'ui_control_bug_64.png', menu:'ui_system_settings_64.png',
+  undo:'ui_control_back_64.png', clear:'ui_control_clear_64.png',
+  fundraise:'resource_money_64.png', financing:'action_funding_loan_64.png', hire:'button_hire_normal_64.png',
+  advertise:'new_advertise_64.png', connections:'action_publicity_network_64.png', onboard:'employee_status_training_64.png',
+  safety:'action_research_alignment_64.png', capability:'action_research_ml_fundamentals_64.png', publish:'paper.png',
+  buycompute:'action_facility_upgrade_compute_64.png', audit:'employee_role_auditor_64.png', operations:'employee_role_engineer_64.png',
+  office:'action_facility_expand_office_64.png', scouting:'action_research_monitoring_64.png', travel:'new_travel_64.png',
+  publicity:'new_publicity_64.png', strategic:'ui_guide_strategy_64.png',
+  read:'resource_papers_small_64.png', meetups:'new_meetups_64.png', post:'new_post_online_64.png'
+};
+function ic(k,sz){return '<img class="ico i'+sz+'" src="assets/icons/'+IC[k]+'" alt="">';}
+function el(html){var d=document.createElement('div');d.innerHTML=html.trim();return d.firstChild;}
+function add(html){var n=el(html);document.getElementById('stage').appendChild(n);return n;}
+function pips(n,left,cls){var s='';for(var i=0;i<n;i++)s+='<span class="pip '+cls+(i<left?' used':'')+'"></span>';return '<div class="pips">'+s+'</div>';}
+
+add('<div class="art"></div>');
+add('<div class="vig"></div>');
+
+/* top bar */
+add('<div class="abs topbar">'+
+  '<div class="tb-month">'+S.month+'</div>'+
+  '<div class="tb-res">'+ic('money',28)+'<span class="k">Money</span><span class="v">'+S.money+'</span></div>'+
+  '<div class="tb-res">'+ic('compute',28)+'<span class="k">Compute</span><span class="v">'+S.compute+'</span></div>'+
+  '<div class="tb-res">'+ic('research',28)+'<span class="k">Research</span><span class="v'+(S.neg?' neg':'')+'">'+S.research+'</span>'+(S.neg?'<span class="flag">[!]</span>':'')+'</div>'+
+  '<div class="tb-res">'+ic('papers',28)+'<span class="k">Papers</span><span class="v">'+S.papers+'</span></div>'+
+  '<div class="tb-res">'+ic('reputation',28)+'<span class="k">Reputation</span><span class="v">'+S.rep+'</span></div>'+
+  '<div class="tb-sp"></div>'+
+  ((LAYER||EVENT)?'':'<div class="tb-menu">'+ic('menu',28)+'Menu <span class="key">Esc</span></div>')+
+'</div>');
+
+/* mode banner */
+if (VIEW === 'watch') {
+  add('<div class="abs banner"><span class="mode">## WATCH</span>'+
+    '<span class="sub">Wed 12 Jul 2017</span>'+
+    '<div class="play"><span class="on">||</span><span>1x</span><span>2x</span><span>4x</span></div>'+
+    '<div class="switch dim"><span class="vlab">View</span><div class="seg"><span>PLAN</span><span class="on">WATCH</span></div></div></div>');
+} else {
+  add('<div class="abs banner"><span class="mode">## PLAN</span>'+
+    '<div class="switch"><span class="vlab">View</span><div class="seg"><span class="on">PLAN</span><span>WATCH</span></div><span class="key amb">V</span></div></div>');
+}
+
+/* left rail */
+var W = VIEW === 'watch';
+function rb(lbl,key,on,off,cnt,gap){return '<div class="rb'+(on?' on':'')+(off?' off':'')+(gap?' gap':'')+'">'+ic(lbl.toLowerCase(),28)+'<span class="lbl">'+lbl+'</span>'+(cnt!==undefined?'<span class="cnt">'+cnt+'</span>':'')+(EVENT?'':'<span class="key">'+key+'</span>')+'</div>';}
+add('<div class="abs rail">'+
+  rb('Actions','A',VIEW==='actions',W)+
+  rb('Upgrades','U',VIEW==='upgrades',W)+
+  rb('Staff','E',false,false,S.staff)+
+  rb('Ledger','L',false,false)+
+  rb('Guide','F1',false,false,undefined,true)+
+'</div>');
+
+/* doom instrument */
+(function(){
+  var r=68, c=2*Math.PI*r, frac=S.doom/100;
+  var spark = M1 ? '' :
+    '<svg width="170" height="40" viewBox="0 0 170 40"><polyline fill="none" stroke="'+S.color+'" stroke-width="2.5" points="4,34 44,30 86,24 128,15 166,6"/>'+
+    '<circle cx="166" cy="6" r="3.5" fill="'+S.color+'"/></svg>';
+  add('<div class="abs panel p-steel doom">'+
+    '<div class="ph"><span class="t">'+ic('doom',24)+'P(DOOM)</span></div>'+
+    '<div class="body"'+(M1&&!S.rising?' style="justify-content:center"':'')+'>'+
+      '<div class="ring"><svg width="164" height="164" viewBox="0 0 164 164">'+
+        '<circle cx="82" cy="82" r="'+r+'" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="14"/>'+
+        '<circle cx="82" cy="82" r="'+r+'" fill="none" stroke="'+S.color+'" stroke-width="14" stroke-linecap="butt" stroke-dasharray="'+(c*frac)+' '+c+'" transform="rotate(-90 82 82)"/>'+
+      '</svg><div class="pct"><b style="color:'+S.color+'">'+S.doom.toFixed(1)+'%</b></div></div>'+
+      (M1&&!S.rising?'':'<div class="dside">'+
+        (S.rising ? '<span class="trend" style="color:'+S.color+';border:1px solid '+S.color+';display:flex;align-items:center;gap:8px">'+ic('rising',24)+'RISING</span>' : '')+
+        (spark ? '<div>'+spark+'<div class="dlab">last 5 months</div></div>' : '')+
+      '</div>')+
+    '</div></div>');
+})();
+
+/* attention block (shown once per view, always in the plan card) */
+function attention(){
+  if (VIEW==='watch') {
+    return '<div class="sec"><div class="sh">'+ic('attention',24)+'ATTENTION</div><div class="att">'+
+      '<span class="n" style="grid-column:1 / 3">Held for events</span><span class="left">20 hr</span>'+
+      '</div></div>';
+  }
+  var plUsed = M1?0:12, opUsed = M1?0:3;
+  return '<div class="sec"><div class="sh">'+ic('attention',24)+'ATTENTION</div><div class="att">'+
+    '<span class="n">Planning</span>'+pips(12,12-plUsed,'pl')+'<span class="left'+(M1?'':' zero')+'">'+(12-plUsed)+' left</span>'+
+    '<span class="n">Operating</span>'+pips(8,8-opUsed,'op')+'<span class="left">'+(8-opUsed)+' left</span>'+
+    '<span class="n">Reserve</span><span class="empty">none set aside</span><span class="left">0 hr</span>'+
+    '</div></div>';
+}
+
+/* plan card */
+(function(){
+  var html='';
+  if (VIEW==='watch') {
+    html = attention()+
+      '<div class="sec"><div class="sh">THIS MONTH</div><div class="empty">Nothing queued</div></div>';
+  } else if (M1) {
+    html = attention()+
+      '<div class="sec"><div class="sh">THIS MONTH</div><div class="empty">Nothing queued yet</div></div>'+
+      '<div class="sec"><div class="btn ghost">'+ic('actions',24)+'Choose actions <span class="key amb">A</span></div></div>';
+  } else if (VIEW==='plan') {
+    html = attention()+
+      '<div class="sec"><div class="sh">THIS MONTH</div><div class="qrow" style="grid-template-columns:1fr auto"><span>14 plays in 7 rows</span><span class="h">$110,300 + 6 rep</span></div></div>'+
+      '<div class="sec"><div class="btn ghost" style="background:rgba(246,168,0,.16)">Close plan <span class="key amb">Q</span></div></div>';
+  } else {
+    var rows='';
+    for (var i=0;i<3;i++){var q=QUEUE[i];rows+='<div class="qrow"><span class="no">'+(i+1)+'</span><span class="qn">'+ic(q.k,24)+q.n+(q.x>1?'<span class="x6">x'+q.x+'</span>':'')+'</span><span class="h">'+q.hr+' hr</span></div>';}
+    html = attention()+
+      '<div class="sec"><div class="sh">THIS MONTH</div>'+rows+'<div class="more">+ 4 more rows</div>'+
+        '<div class="qrow tot" style="grid-template-columns:1fr auto"><span>Total</span><span class="h">$110,300 + 6 rep</span></div></div>'+
+      '<div class="sec"><div class="btn ghost">Open plan <span class="key amb">Q</span></div></div>';
+  }
+  var card = add('<div class="abs panel p-warm plan">'+html+'</div>');
+  card.style.top = (1004 - card.offsetHeight) + 'px';
+})();
+
+/* bottom bar + commit */
+add('<div class="abs bottombar"><span class="bb-q">'+ic('feedback',24)+'Feedback'+(EVENT?'':' <span class="key">N</span>')+'</span></div>');
+if (VIEW==='watch') add('<div class="commit idle">MONTH IN PLAY</div>');
+else add('<div class="commit">COMMIT THE MONTH &gt;'+(LAYER?'':' <span class="key dark">Enter</span>')+'</div>');
+
+/* ---------- action menu ---------- */
+if (VIEW==='actions') {
+  var A = [
+    ['fundraise','Fundraising','4 choices','door','F'],
+    ['financing','Financing','7 choices','door'],
+    ['hire','Hire Staff','7 roles, 1 plan hr each -- <span class="why">no planning hours left</span>','door','H',2],
+    ['advertise','Advertise a Role','','soon'],
+    ['connections','Work Your Connections','2 op hr, 6 rep','add',null,1],
+    ['onboard','Onboard New Hires','op hr + money, varies by step -- <span class="why">no hires awaiting onboarding</span>','blk'],
+    '-',
+    ['safety','Safety Research','1 plan hr, 10 research <span class="why">(22 short)</span> -- <span class="why">no planning hours left</span>','blk'],
+    ['capability','Capability Research','1 plan hr, 10 research <span class="why">(22 short)</span> -- <span class="why">no planning hours left</span>','blk'],
+    ['publish','Publish Safety Paper','1 plan hr, 20 research <span class="why">(32 short)</span> -- <span class="why">no planning hours left</span>','blk'],
+    '-',
+    ['buycompute','Purchase Compute','$50,000, no hours','add'],
+    ['audit','Safety Audit','2 op hr, $40,000','add'],
+    ['operations','Operations','3 choices','door'],
+    ['office','Office','4 choices','door'],
+    '-',
+    ['scouting','Scouting','3 choices','door',null,11,true],
+    ['travel','Travel &amp; Conferences','4 choices','door','T'],
+    ['publicity','Publicity','5 choices','door','P'],
+    ['strategic','Strategic','4 choices','door']
+  ];
+  var h='';
+  A.forEach(function(a){
+    if (a==='-'){h+='<div class="agrp"></div>';return;}
+    var st=a[3], cls='arow'+(st==='blk'||st==='soon'?' blk':'')+(a[6]?' sel':'');
+    var hk = a[4]?'<span class="key" style="margin-right:10px">'+a[4]+'</span>':'';
+    var gl = st==='door'?'<span class="gl">&gt;</span>':(st==='add'?'<span class="gl add">+</span>':'<span class="gl"></span>');
+    var nm = a[1]+(a[5]?'<span class="chip">'+a[5]+' in plan</span>':'')+(st==='soon'?'<span class="chip soon">COMING SOON</span>':'');
+    var ct = st==='soon' ? '<div class="ct">Not playable yet</div>' : '<div class="ct">'+a[2]+'</div>';
+    h+='<div class="'+cls+'"><div class="ic'+(a[0]?' has':'')+'">'+(a[0]?'<img src="assets/icons/'+IC[a[0]]+'" alt="">':'')+'</div><div class="tx"><div class="nm">'+a[1].replace(a[1],nm)+'</div>'+ct+'</div>'+(hk||'<span></span>')+gl+'</div>';
+  });
+  var m = add('<div class="abs panel p-aub amenu"><div class="ph"><span class="t">'+ic('actions',24)+'ACTIONS</span><span class="r"><span class="xbtn">x</span></span></div><div class="alist">'+h+'</div></div>');
+  var sel = m.querySelector('.arow.sel');
+  var sr = sel.getBoundingClientRect();
+  var door = add('<div class="abs panel p-warm door" style="left:872px;top:0">'+
+    '<div class="ph"><span class="t">'+ic('scouting',24)+'SCOUTING</span><span class="r">3 choices</span></div>'+
+    '<div class="orow blk">'+ic('read',32)+'<div><div class="nm">Read the Literature</div><div class="ct">1 plan hr -- <span class="why">no planning hours left</span></div></div><span class="chip">8 in plan</span></div>'+
+    '<div class="orow sel">'+ic('meetups',32)+'<div><div class="nm">Go to Meetups</div><div class="ct">1 op hr, $300</div></div><span class="chip">1 in plan</span></div>'+
+    '<div class="orow blk">'+ic('post',32)+'<div><div class="nm">Post Online</div><div class="ct">1 plan hr -- <span class="why">no planning hours left</span></div></div><span class="chip">2 in plan</span></div>'+
+    '</div>');
+  var dTop = Math.round(sr.bottom + 12 - door.offsetHeight);
+  door.style.top = dTop + 'px';
+  add('<div class="conn" style="left:856px;top:'+Math.round(sr.top + sr.height/2 - 1)+'px;width:16px"></div>');
+  var det = add('<div class="abs panel p-steel detail" style="left:872px;top:0">'+
+    '<div class="t" style="display:flex;align-items:center;gap:12px">'+ic('meetups',40)+'Go to Meetups</div><div class="c">1 op hr, $300</div>'+
+    '<p>Drinks, badges, a talk you half-listen to. People remember you, and sometimes you meet someone worth a follow-up.</p>'+
+    '<div class="acts"><div class="btn teal">Add to plan <span class="key">Enter</span></div><div class="btn plain">Back <span class="key">Esc</span></div></div>'+
+    '</div>');
+  det.style.top = (dTop - 12 - det.offsetHeight) + 'px';
+}
+
+/* ---------- plan menu ---------- */
+/* Repeated plays are one group row; [+] expands it into one row per play, each with its own
+   up / down / remove. Post Online is shown expanded. Order is unchanged either way. */
+if (VIEW==='plan') {
+  var EXPAND = new URLSearchParams(location.search).get('expand');
+  function ctl(first,last){return '<span class="ctl"><span class="'+(first?'dis':'')+'">&#94;</span><span class="'+(last?'dis':'')+'">v</span><span class="x">x</span></span>';}
+  var head='<div class="prow head"><span>#</span><span>PLAY</span><span>HOURS</span><span style="text-align:right">COST</span><span style="text-align:right">ORDER</span></div>';
+  var rows='';
+  QUEUE.forEach(function(q,i){
+    var open = (EXPAND==='read' ? (i===2) : (q.n==='Post Online'));
+    var exp = q.x>1 ? '<span class="exp">'+(open?'-':'+')+'</span>' : '';
+    rows+='<div class="prow"><span class="no">'+(i+1)+'</span><span class="nmc">'+exp+ic(q.k,24)+q.n+(q.x>1?'<span class="x6">x'+q.x+'</span>':'')+'</span>'+
+      '<span class="hr '+q.t+'">'+q.hr+'</span><span class="mo">'+q.mo+'</span>'+ctl(i===0,i===QUEUE.length-1)+'</div>';
+    if (open) {
+      for (var k=1;k<=q.x;k++){
+        rows+='<div class="prow sub"><span class="no">'+(i+1)+'.'+k+'</span><span class="nmc">'+ic(q.k,24)+q.n+'</span>'+
+          '<span class="hr '+q.t+'">1 plan</span><span class="mo">--</span>'+ctl(false,false)+'</div>';
+      }
+    }
+  });
+  var tot='<div class="prow tot"><span></span><span>Total</span><span class="hr">12 plan, 3 op</span><span class="mo" style="grid-column:4 / 6">$110,300 + 6 rep</span></div>';
+  add('<div class="abs panel p-warm pmenu">'+
+    '<div class="ph"><span class="t">THE MONTH AHEAD</span><span class="r">runs top to bottom<span class="xbtn">x</span><span class="key">Esc</span></span></div>'+
+    '<div class="ptable">'+head+'</div>'+
+    '<div class="pscroll">'+rows+'</div>'+
+    '<div class="ptot">'+tot+'</div>'+
+    '<div class="sec" style="border-top:1px solid rgba(255,255,255,.08)"><div class="rq inline"><span class="sh">RESEARCH QUALITY</span><span class="opt">Rushed</span><span class="opt on">Standard</span><span class="opt">Thorough</span></div></div>'+
+    '<div class="sec"><div class="sh">UNDER WAY</div>'+
+      '<div class="gcols"><span style="border:none"></span><span>NOV</span><span>DEC</span><span>JAN</span><span>FEB</span></div>'+
+      '<div class="grow"><span>Candidate interview</span><div class="gtrack"><div class="gbar" style="left:0;width:37%"></div><span class="gdate" style="left:calc(37% + 8px)">mid-Dec 2017</span></div></div>'+
+      '<div class="grow"><span>Paper decision</span><div class="gtrack"><div class="gbar est" style="left:0;width:52%"></div><span class="gdate" style="left:calc(52% + 6px)">~Jan 2018</span></div></div>'+
+    '</div>'+
+    '<div class="pfoot"><div class="btn plain">'+ic('undo',24)+'Undo <span class="key">Z</span></div><div class="btn plain">'+ic('clear',24)+'Clear <span class="key">C</span></div><div class="btn plain">'+ic('attention',24)+'Reserve hours <span class="key">R</span></div></div>'+
+  '</div>');
+  var pm = document.querySelector('.pmenu'), sc = pm.querySelector('.pscroll');
+  if (sc.scrollHeight > sc.clientHeight + 1) {
+    sc.classList.add('over'); pm.classList.add('over');
+    var pr = pm.getBoundingClientRect(), r = sc.getBoundingClientRect();
+    var th = Math.max(40, Math.round(r.height * sc.clientHeight / sc.scrollHeight));
+    add('<div class="prail" style="left:'+(r.right-12)+'px;top:'+(r.top+4)+'px;height:'+(r.height-8)+'px"><i style="top:0;height:'+th+'px"></i></div>');
+  }
+}
+
+/* ---------- upgrades ---------- */
+if (VIEW==='upgrades') {
+  var U=[
+    ['Buy Comfy Office Chairs','Nicer office chairs. Flavour only for now.','$0',1],
+    ['Accounting Software','Bookkeeping tooling. Flavour only for now.','$0',1],
+    ['Supply Management System','Auto-orders supplies when low.','$25,000',1],
+    ['Secure Cloud Provider','Dampens frontier growth from capability breakthroughs.','$160,000',0],
+    ['Upgrade Computer System','+1 research per research action.','$200,000',0],
+    ['Research Automation Suite','Research actions more effective with compute.','$600,000',0],
+    ['High-Performance Computing Cluster','+20 compute, research effectiveness +25%.','$800,000',0]
+  ];
+  var h='';
+  U.forEach(function(u){
+    h+='<div class="urow'+(u[3]?'':' blk')+'"><div><div class="nm">'+u[0]+'</div><div class="ds">'+u[1]+'</div></div><span class="pr">'+u[2]+'</span>'+
+      '<span class="st">'+(u[3]?'<span class="ubtn buy">Buy</span>':'<span class="ubtn no">Can\'t afford</span>')+'</span></div>';
+  });
+  add('<div class="abs panel p-aub umenu"><div class="ph"><span class="t">'+ic('upgrades',24)+'UPGRADES</span><span class="r">bought at once, not queued<span class="xbtn">x</span><span class="key">Esc</span></span></div>'+h+'</div>');
+}
+
+/* ---------- watch ---------- */
+if (VIEW==='watch') {
+  var fd = add('<div class="abs panel p-steel feed"><div class="ph"><span class="t">FEED</span><span class="r">Filters</span></div>'+
+    '<div class="fl"><span class="d">Tue 4 Jul</span><span>Month committed: nothing queued, 20 hr held for events.</span></div>'+
+    '<div class="fl"><span class="d">Wed 12 Jul</span><span>A stray cat has wandered into the lab.</span></div>'+
+  '</div>');
+  fd.style.paddingBottom='8px'; fd.style.top = (1004 - fd.offsetHeight) + 'px';
+  add('<div class="abs panel p-warm slip">'+
+    '<div class="art2"><span class="tag">NEEDS A REPLY</span><div class="ttl">A Stray Cat Appears!</div><div class="dt">Wed 12 Jul 2017</div></div>'+
+    '<div class="body"><p>A friendly stray cat has wandered into your lab. It seems to enjoy watching the researchers work and occasionally walks across keyboards. Adopt it?</p>'+
+      '<div class="opt"><span class="key amb">1</span><span>Adopt the Cat</span><span class="c">$500, 1 held hr</span></div>'+
+      '<div class="opt"><span class="key amb">2</span><span>Feed It and Let It Go</span><span class="c">$100, 1 held hr</span></div>'+
+      '<div class="opt"><span class="key amb">3</span><span>Shoo It Away</span><span class="c free">free</span></div>'+
+    '</div></div>');
+}
+
+if (new URLSearchParams(location.search).get('check')) {
+  var bad=[];
+  document.querySelectorAll('#stage *').forEach(function(e){
+    var cs=getComputedStyle(e);
+    var hasText=[].some.call(e.childNodes,function(n){return n.nodeType===3&&n.textContent.trim();});
+    if(hasText && parseFloat(cs.fontSize)<16) bad.push('small:'+e.className+':'+cs.fontSize+':'+e.textContent.trim().slice(0,20));
+    if(e.scrollWidth>e.clientWidth+1 && cs.overflow!=='visible' ) bad.push('clip:'+e.className+':'+e.textContent.trim().slice(0,20));
+    var r=e.getBoundingClientRect(); if(r.width&&(r.right>1920||r.bottom>1080)) bad.push('off:'+e.className);
+  });
+  document.querySelectorAll('.panel').forEach(function(p){var pr=p.getBoundingClientRect();
+    p.querySelectorAll('*').forEach(function(e){if(e.closest('.pscroll')&&e!==e.closest('.pscroll'))return;var r=e.getBoundingClientRect(); if(r.width&&(r.right>pr.right+1||r.bottom>pr.bottom+1)) bad.push('out:'+p.className+'>'+e.className+':'+e.textContent.trim().slice(0,20));});});
+  document.body.setAttribute('data-check', bad.length?bad.join(' | '):'CLEAN');
+}
+</script>
+</body>
+</html>

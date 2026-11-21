@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rooms and Stations</title>
+<meta name="viewport" content="width=1920">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+:root{
+  --ink:#2a1d12; --ink-soft:#5a4632; --paper:#ece2c8; --paper-dim:#c9bea3; --manila:#d9bf86; --manila-dk:#b99b5c;
+  --amber:#F6A800; --amber-crt:#F2B24C; --amber-dim:#B98436; --crt-bg:#2c1c0d;
+  --plan:#E8A33D; --ops:#86B6D2; --teal:#1EC3B3; --teal-dk:#0E7F75;
+  --steel:#6B7C8C; --off:#E9F2F2; --aub:#2c1733; --aub-2:#3a2042;
+  --warn:#9a2c17; --doom1:#F6A800; --doom2:#E9752E; --doom3:#E24A3B; --doom4:#B31217;
+  --metal-a:#3b3a33; --metal-b:#2f2e28;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#2b221a}
+body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#2b221a}
+
+/* ---------- scene (one per place) ---------- */
+.sc-bg{position:absolute;left:0;top:0;width:1920px;height:1080px;background-size:cover;background-position:center}
+.sc-desk{background-image:url(assets/desk_bg.jpg);filter:blur(1.5px) brightness(.62) saturate(.9)}
+.sc-floor{background-image:url(assets/floor_bg.jpg);filter:brightness(.78) saturate(.95)}
+.sc-doomtint{position:absolute;left:0;top:0;width:1920px;height:620px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(233,117,46,.0),rgba(233,117,46,0) 100%)}
+.doom-uneasy .sc-doomtint{background:radial-gradient(ellipse 1300px 380px at 50% 230px,rgba(233,117,46,.20),rgba(233,117,46,0) 75%)}
+.sc-vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 1200px 700px at 50% 52%,rgba(0,0,0,0) 55%,rgba(20,8,14,.55) 100%)}
+.sc-desktop{position:absolute;left:0;top:846px;width:1920px;height:150px;
+  background:linear-gradient(180deg,rgba(70,48,28,.0),rgba(70,48,28,.25) 8%),url(assets/plywood.jpg);
+  background-size:auto,380px;filter:brightness(.55) sepia(.35);
+  box-shadow:0 -3px 0 #5b4127 inset,0 -14px 30px rgba(0,0,0,.45)}
+
+/* ---------- top frame ---------- */
+.fr-top{position:absolute;left:0;top:0;width:1920px;height:112px;
+  background:linear-gradient(180deg,rgba(40,36,30,.86),rgba(34,30,25,.92)),url(assets/metal.jpg);background-size:auto,300px;
+  border-bottom:3px solid #4d4336;box-shadow:0 6px 18px rgba(0,0,0,.45);z-index:20}
+.fr-top::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:3px;background:linear-gradient(90deg,#6a5a44,#8b7656 50%,#6a5a44)}
+
+/* calendar */
+.cal{position:absolute;left:18px;top:10px;width:176px;height:92px;background:var(--paper);color:var(--ink);
+  border-radius:3px;box-shadow:0 3px 0 #a8987a,0 6px 10px rgba(0,0,0,.4);overflow:hidden;text-align:center}
+.cal-band{height:24px;background:#8d2b1d;color:#f3e6d0;font:600 17px/24px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.cal-mon{font:700 40px/44px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.cal-no{font:700 16px/20px "Courier Prime",monospace;color:var(--ink-soft)}
+
+/* attention time card */
+.tc{position:absolute;left:210px;top:10px;width:566px;height:92px;background:var(--paper);color:var(--ink);
+  border-radius:3px;box-shadow:0 3px 0 #a8987a,0 6px 10px rgba(0,0,0,.4);
+  background-image:linear-gradient(90deg,rgba(141,43,29,.0) 0,rgba(141,43,29,0) 100%)}
+.tc-title{position:absolute;left:12px;top:5px;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#8d2b1d}
+.tc-row{position:absolute;left:12px;height:24px;display:flex;align-items:center;gap:8px}
+.tc-row.r1{top:30px}.tc-row.r2{top:60px}
+.tc-lab{width:48px;font:700 16px/24px "Courier Prime",monospace}
+.tc-boxes{display:flex;gap:4px;width:248px}
+.tc-box{width:17px;height:19px;border:2px solid var(--ink-soft);border-radius:2px;background:#f6efdc}
+.tc-box.plan.used{background:var(--plan);border-color:#7a5214;background-image:repeating-linear-gradient(45deg,rgba(60,30,0,.35) 0 2px,transparent 2px 5px)}
+.tc-box.ops.used{background:var(--ops);border-color:#2d5770;background-image:repeating-linear-gradient(45deg,rgba(0,30,50,.35) 0 2px,transparent 2px 5px)}
+.tc-box.plan{border-color:#9b6a1c}.tc-box.ops{border-color:#3c6c88}
+.tc-box.gone{border:2px dashed #b3a68a;background:transparent}
+.tc-left{width:82px;white-space:nowrap;font:700 16px/24px "Courier Prime",monospace;text-align:left}
+.tc-res{position:absolute;right:10px;top:8px;width:136px;height:76px;border-left:2px dashed #a8987a;padding-left:12px}
+.tc-res-lab{font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:1px;white-space:nowrap;color:#8d2b1d}
+.tc-res-row{display:flex;align-items:center;gap:6px;margin-top:10px}
+.tc-btn{width:32px;height:32px;border:2px solid var(--ink-soft);border-radius:4px;background:#f6efdc;font:700 18px/28px "Courier Prime",monospace;text-align:center;color:var(--ink)}
+.tc-res-val{width:56px;text-align:center;font:700 20px/32px "Courier Prime",monospace}
+
+/* P(Doom) instrument */
+.dm{position:absolute;left:784px;top:0;width:352px;height:136px;border-radius:0 0 10px 10px;
+  background:radial-gradient(ellipse 220px 120px at 50% 100%,#4a2a50,#2c1733 70%);
+  border:3px solid #6a5a44;border-top:none;box-shadow:0 8px 18px rgba(0,0,0,.55),inset 0 0 0 2px #1d0f22;z-index:22}
+.dm-lab{position:absolute;left:0;width:100%;top:8px;text-align:center;font:600 17px/18px "Barlow Condensed",sans-serif;letter-spacing:4px;color:#d9c7dc}
+.dm-rise{position:absolute;right:12px;top:8px;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#ffb07a}
+.dm-svg{position:absolute;left:26px;top:16px;width:300px;height:116px}
+.dm-val{position:absolute;left:0;width:100%;top:78px;text-align:center;font:600 44px/48px "IBM Plex Mono",monospace;text-shadow:0 0 12px rgba(246,168,0,.35)}
+
+/* counters */
+.ct{position:absolute;top:14px;height:84px;background:linear-gradient(180deg,#3a3127,#2c251e);border:2px solid #8b7656;border-radius:4px;
+  box-shadow:inset 0 0 0 2px #1f1a15,0 4px 8px rgba(0,0,0,.4);padding:6px 10px}
+.ct-lab{font:600 16px/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#cdbb98}
+.ct-val{margin-top:8px;height:38px;background:#efe6d0;color:var(--ink);border-radius:2px;font:600 24px/38px "IBM Plex Mono",monospace;text-align:center;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
+.ct-val.neg{background:#f3d2c4;color:#8a1f10}
+.ct-flag{font:700 18px/38px "IBM Plex Mono",monospace;color:#8a1f10}
+
+/* reputation gauge */
+.rp{position:absolute;left:1660px;top:10px;width:244px;height:92px;background:var(--paper);color:var(--ink);border-radius:3px;
+  box-shadow:0 3px 0 #a8987a,0 6px 10px rgba(0,0,0,.4)}
+.rp-lab{position:absolute;left:12px;top:6px;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#8d2b1d}
+.rp-val{position:absolute;left:12px;top:32px;font:700 40px/48px "IBM Plex Mono",monospace}
+.rp-svg{position:absolute;right:10px;top:6px;width:132px;height:80px}
+
+/* ---------- bottom frame ---------- */
+.fr-bot{position:absolute;left:0;top:984px;width:1920px;height:96px;z-index:20;
+  background:linear-gradient(180deg,rgba(40,36,30,.9),rgba(30,27,22,.95)),url(assets/metal.jpg);background-size:auto,300px;
+  border-top:3px solid #6a5a44;box-shadow:0 -6px 16px rgba(0,0,0,.45)}
+.nav{position:absolute;left:18px;top:12px;display:flex;gap:12px}
+.nav-tab{position:relative;width:332px;height:72px;border-radius:5px;background:linear-gradient(180deg,#4a4336,#3a342b);
+  border:2px solid #8b7656;box-shadow:inset 0 0 0 2px #2a251e;padding:9px 12px 0 64px;color:#e6dcc6}
+.nav-tab .key{position:absolute;left:12px;top:17px;width:40px;height:34px;border-radius:4px;background:#e6dcc6;color:var(--ink);
+  font:700 16px/34px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74}
+.nav-tab .nm{font:700 22px/26px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.nav-tab .st{font:500 16px/22px "IBM Plex Mono",monospace;color:#cdbb98}
+.nav-tab .lamp{position:absolute;right:14px;top:14px;width:14px;height:14px;border-radius:50%;background:#4b3f2e;border:2px solid #2a251e}
+.nav-tab.on{background:linear-gradient(180deg,#6b5636,#4d3d27);border-color:var(--amber);top:-8px;height:80px;box-shadow:inset 0 0 0 2px #2a251e,0 0 14px rgba(246,168,0,.35)}
+.nav-tab.on .lamp{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.nav-tab.on .nm{color:#fff3d6}
+
+.cm{position:absolute;left:1430px;top:10px;width:474px;height:76px;border-radius:6px;
+  background:linear-gradient(180deg,#1fd0bf,#11998c);border:3px solid #0a5e56;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 5px 0 #08443e,0 0 22px rgba(30,195,179,.35);
+  color:#06211e;display:flex;align-items:center;justify-content:center;gap:18px}
+.cm-txt{font:700 30px/34px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.cm-key{height:34px;padding:0 10px;border-radius:4px;background:#e9fffb;font:700 16px/34px "IBM Plex Mono",monospace;box-shadow:0 3px 0 #0a5e56}
+/* watch: same slot becomes playback */
+.pb{position:absolute;left:1430px;top:10px;width:474px;height:76px;border-radius:6px;background:linear-gradient(180deg,#3d3a33,#2d2a24);
+  border:3px solid #8b7656;display:flex;align-items:center;gap:8px;padding:0 10px}
+.pb-st{width:116px;font:700 18px/20px "Barlow Condensed",sans-serif;letter-spacing:2px;color:var(--amber)}
+.pb-st small{display:block;font:500 16px/20px "IBM Plex Mono",monospace;color:#cdbb98;letter-spacing:0}
+.pb-b{height:52px;min-width:72px;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 18px/52px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74;padding:0 8px}
+.pb-b.on{background:var(--amber);box-shadow:0 3px 0 #8a5d00}
+
+/* ---------- DESK: card file (actions) ---------- */
+.rk{position:absolute;left:20px;top:126px;width:500px;height:848px;border-radius:6px;
+  background:linear-gradient(180deg,rgba(64,46,30,.92),rgba(52,37,24,.94)),url(assets/plywood.jpg);background-size:auto,300px;
+  border:3px solid #6e5233;box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 0 0 2px #2e2014;z-index:5}
+.rk-head{height:46px;display:flex;align-items:center;padding:0 14px;gap:10px}
+.rk-plate{background:linear-gradient(180deg,#c9a764,#a7843f);color:#2a1d12;border-radius:3px;padding:0 12px;font:700 19px/30px "Barlow Condensed",sans-serif;letter-spacing:3px;box-shadow:0 2px 0 #6e5233}
+.rk-legend{margin-left:auto;display:flex;gap:8px;align-items:center}
+.rk-list{padding:0 10px;display:flex;flex-direction:column;gap:2px}
+.rk-row{position:relative;height:42px;border-radius:3px;padding:1px 66px 0 12px;color:var(--ink);background:var(--paper);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.rk-row .l1{display:flex;align-items:baseline;justify-content:space-between;gap:10px;height:21px;white-space:nowrap}
+.rk-row .nm{font:700 18px/21px "Courier Prime",monospace;overflow:hidden;text-overflow:ellipsis}
+.rk-row .ln2{display:flex;gap:6px;align-items:center;height:19px;white-space:nowrap}
+.rk-row.door{background:linear-gradient(90deg,var(--manila),#e2cd9a)}
+.rk-row.off{background:var(--paper-dim);color:#5d5141}
+.rk-row.off .nm{color:#5d5141}
+.rk-row.open{outline:3px solid var(--amber);outline-offset:-1px;box-shadow:0 0 14px rgba(246,168,0,.5)}
+.rk-row .tab{position:absolute;right:4px;top:3px;height:36px;width:54px;border-radius:4px;text-align:center;font:700 18px/36px "IBM Plex Mono",monospace;color:#2a1d12}
+.rk-row .tab.go{background:var(--manila-dk)}
+.rk-row .tab.add{background:#cfc3a5;border:2px solid #9d8f74;line-height:32px;font-size:22px}
+.rk-row.off .tab.add{opacity:.4}
+.rk-row .tab.open{background:var(--amber);font-size:16px}
+.rk-row .new{margin-left:auto;font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#fff;background:#8d2b1d;border-radius:2px;padding:0 6px}
+.why{font:700 17px/20px "Barlow Condensed",sans-serif;letter-spacing:.5px;color:var(--warn)}
+.dim-txt{font:400 16px/20px "Courier Prime",monospace;color:#4f4233}
+
+/* chips (shared) */
+.chip{display:inline-block;height:20px;border-radius:3px;padding:0 6px;font:600 16px/20px "IBM Plex Mono",monospace;white-space:nowrap}
+.chip.plan{background:var(--plan);color:#2a1700}
+.chip.ops{background:var(--ops);color:#0d2330}
+.chip.res{border:1.5px solid #7a6a55;line-height:17px;color:#3b2d1e;background:rgba(255,255,255,.25)}
+.chip.held{border:1.5px solid #2a1d12;line-height:17px;color:#2a1d12;background:#f6efdc}
+.chip.ghost{border:1.5px dashed #8a7a64;line-height:17px;color:#5d5141}
+.off .chip.plan{background:#cfae79}.off .chip.ops{background:#a9c2cf}
+
+/* ---------- DESK: CRT ---------- */
+.crt{position:absolute;left:540px;top:140px;width:862px;height:736px;border-radius:26px 26px 18px 18px;
+  background:linear-gradient(180deg,#d4c9ab,#b9ab88 70%,#a49572);box-shadow:0 18px 30px rgba(0,0,0,.6),inset 0 -6px 0 #8f815f,inset 0 3px 0 #e8dfc6;z-index:4}
+.crt-scr{position:absolute;left:26px;top:24px;width:810px;height:652px;border-radius:18px;overflow:hidden;
+  background:radial-gradient(ellipse 560px 420px at 50% 45%,#3a2611,#2c1c0d 70%,#22160a);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 0 4px #6f6448}
+.crt-scr::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:18px;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+.crt-chin{position:absolute;left:0;bottom:8px;width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 40px}
+.crt-brand{font:700 16px/18px "Barlow Condensed",sans-serif;letter-spacing:4px;color:#6f6448}
+.crt-led{width:12px;height:12px;border-radius:50%;background:#5ce38a;box-shadow:0 0 8px #5ce38a}
+.crt-in{position:absolute;inset:0;padding:20px 24px;color:var(--amber-crt);text-shadow:0 0 6px rgba(242,178,76,.35)}
+.crt-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--amber-dim);padding-bottom:6px;height:40px}
+.crt-h .t{font:600 22px/30px "IBM Plex Mono",monospace;letter-spacing:2px}
+.crt-h .s{font:500 18px/30px "IBM Plex Mono",monospace;color:#e9c27f}
+.q-head,.q-row{display:grid;grid-template-columns:40px 1fr 118px 118px 104px;align-items:center;column-gap:8px}
+.q-head{height:30px;font:500 16px/30px "IBM Plex Mono",monospace;color:#c99a52;border-bottom:1px solid rgba(185,132,54,.45)}
+.q-row{height:30px;font:500 17px/30px "IBM Plex Mono",monospace;border-bottom:1px dotted rgba(185,132,54,.25)}
+.q-row .n{color:#c99a52}
+.mult{color:#ffd690;font-weight:600}
+.q-row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-row .ctl{display:flex;gap:6px;justify-content:flex-end}
+.q-btn{width:28px;height:24px;border:1.5px solid var(--amber-dim);border-radius:3px;font:600 16px/21px "IBM Plex Mono",monospace;text-align:center;color:#e9c27f}
+.crt .chip.plan{background:transparent;border:1.5px solid var(--plan);color:var(--plan);line-height:17px}
+.crt .chip.ops{background:transparent;border:1.5px solid var(--ops);color:var(--ops);line-height:17px}
+.q-blank{border-bottom:1px dotted rgba(185,132,54,.22)}
+.q-empty{height:60px;font:500 18px/60px "IBM Plex Mono",monospace;color:#c99a52}
+.uw{margin-top:16px}
+.feed-row{display:grid;grid-template-columns:96px 1fr;font:500 17px/25px "IBM Plex Mono",monospace;padding:3px 0}
+.uw-h{font:600 18px/28px "IBM Plex Mono",monospace;letter-spacing:2px;border-bottom:2px solid var(--amber-dim)}
+.uw-axis{display:grid;grid-template-columns:250px repeat(4,1fr);height:26px;font:500 16px/26px "IBM Plex Mono",monospace;color:#c99a52}
+.uw-axis div{border-left:1px solid rgba(185,132,54,.45);padding-left:6px}
+.uw-axis div:first-child{border-left:none;padding-left:0}
+.uw-row{position:relative;display:grid;grid-template-columns:250px 1fr;height:34px;align-items:center;font:500 17px/34px "IBM Plex Mono",monospace}
+.uw-track{position:relative;height:34px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),rgba(185,132,54,.35) calc(25% - 1px),rgba(185,132,54,.35) 25%)}
+.uw-bar{position:absolute;top:8px;height:18px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--amber-crt) 0 10px,#d9962f 10px 12px)}
+.uw-bar.fuzzy{-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+.uw-end{position:absolute;top:0;font:600 16px/34px "IBM Plex Mono",monospace;color:#f7d79c;white-space:nowrap}
+.crt-foot{position:absolute;left:24px;right:24px;bottom:16px;display:flex;gap:12px;align-items:center;justify-content:flex-start}
+.crt-k{height:32px;border:1.5px solid var(--amber-dim);border-radius:3px;padding:0 10px;font:600 16px/29px "IBM Plex Mono",monospace;color:#e9c27f}
+.crt-foot .tot{margin-left:auto;font:500 16px/32px "IBM Plex Mono",monospace;color:#e9c27f}
+
+/* ---------- DESK: open folder ---------- */
+.fd{position:absolute;left:1426px;top:132px;width:476px;z-index:5}
+.fd-tab{position:absolute;left:0;top:0;height:40px;width:280px;border-radius:8px 8px 0 0;background:var(--amber);color:var(--ink);
+  font:700 20px/40px "Barlow Condensed",sans-serif;letter-spacing:3px;padding-left:16px;box-shadow:0 -2px 6px rgba(0,0,0,.3)}
+.fd-close{position:absolute;right:0;top:0;height:36px;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 16px/36px "IBM Plex Mono",monospace;padding:0 12px;box-shadow:0 3px 0 #9d8f74}
+.fd-body{position:relative;margin-top:40px;width:476px;border-radius:0 8px 8px 8px;background:linear-gradient(180deg,#e2c993,var(--manila));
+  box-shadow:0 12px 26px rgba(0,0,0,.55),inset 0 0 0 2px #b0924f,0 0 0 3px var(--amber);padding:16px}
+.fd-sub{font:700 16px/20px "Courier Prime",monospace;color:#5a4220;margin-bottom:12px}
+.slip{position:relative;background:var(--paper);color:var(--ink);border-radius:2px;padding:10px 14px 12px;margin-bottom:12px;
+  box-shadow:0 3px 6px rgba(0,0,0,.3);background-image:linear-gradient(180deg,rgba(141,43,29,.0) 0 30px,transparent 30px)}
+.slip .nm{font:700 19px/24px "Courier Prime",monospace}
+.slip .cost{display:flex;gap:6px;align-items:center;margin-top:6px}
+.slip .ds{font:400 16px/21px "Courier Prime",monospace;color:#4a3a28;margin-top:8px}
+.slip.off{background:var(--paper-dim)}
+.slip.off .nm{color:#5d5141}
+.slip .qd{position:absolute;right:12px;top:10px;font:700 16px/20px "Courier Prime",monospace;color:#2d5770;border:2px solid #2d5770;border-radius:3px;padding:0 6px;transform:rotate(-4deg)}
+
+/* operator silhouette */
+.op{position:absolute;left:770px;top:832px;width:390px;height:156px;z-index:9;pointer-events:none}
+
+/* ---------- WATCH: event memo ---------- */
+.ev{position:absolute;left:1414px;top:146px;width:488px;z-index:12;transform:rotate(-1.2deg)}
+.ev-paper{position:relative;background:var(--paper);color:var(--ink);border-radius:3px;box-shadow:0 18px 40px rgba(0,0,0,.6);
+  padding:22px 24px;background-image:url(assets/graph.jpg);background-size:340px;background-blend-mode:multiply}
+.ev-paper::before{content:"";position:absolute;inset:0;background:rgba(236,226,200,.72);border-radius:3px}
+.ev-in{position:relative}
+.ev-hd{display:flex;justify-content:space-between;font:700 16px/20px "Courier Prime",monospace;color:#8d2b1d;border-bottom:2px solid #8d2b1d;padding-bottom:6px}
+.ev-img{margin-top:14px;height:260px;border-radius:2px;background:url(assets/event_keynote.jpg) center/cover;filter:sepia(.25) contrast(1.05);box-shadow:inset 0 0 0 2px #8b7656}
+.ev-t{font:700 28px/34px "Courier Prime",monospace;margin-top:14px}
+.ev-tx{font:400 17px/24px "Courier Prime",monospace;margin-top:10px;color:#3a2b1c;margin-bottom:16px}
+.ev-held{margin-top:12px;font:700 16px/20px "Courier Prime",monospace;color:#5a4220}
+.ev-opt{display:grid;grid-template-columns:30px 1fr;grid-template-rows:24px 22px;column-gap:12px;row-gap:4px;align-items:center;margin-top:12px;border:2px solid #7a6a55;border-radius:4px;background:#f6efdc;padding:6px 12px}
+.ev-opt .k{grid-row:span 2;width:30px;height:30px;border-radius:3px;background:var(--ink);color:var(--paper);font:700 16px/30px "IBM Plex Mono",monospace;text-align:center;flex:none}
+.ev-opt .o{font:700 18px/24px "Courier Prime",monospace}
+.ev-opt .cs{display:flex;gap:6px}
+
+/* ---------- LAB FLOOR ---------- */
+.lf-board{position:absolute;left:20px;top:132px;width:620px;height:322px;z-index:5;border-radius:6px;
+  background:linear-gradient(180deg,#e9e6dc,#d6d2c4);border:10px solid #7a6a55;box-shadow:0 12px 26px rgba(0,0,0,.55);color:var(--ink);padding:14px 18px}
+.lf-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px solid #2a1d12;padding-bottom:6px}
+.lf-h .t{font:700 24px/30px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.lf-h .s{font:700 16px/30px "Courier Prime",monospace;color:#5a4632}
+.lf-cols,.lf-row{display:grid;grid-template-columns:160px 1fr 104px 56px;column-gap:10px;align-items:center}
+.lf-cols{height:30px;font:700 16px/30px "Courier Prime",monospace;color:#5a4632;border-bottom:1px solid #a49a86}
+.lf-row{height:50px;font:700 18px/22px "Courier Prime",monospace;border-bottom:1px solid #bfb7a5}
+.lf-row .mag{height:32px;border-radius:3px;background:#2d5770;color:#eef6fa;text-align:center;font:700 16px/32px "IBM Plex Mono",monospace}
+.lf-row.blank{color:transparent}
+.lf-under{margin-top:16px;border-top:3px solid #2a1d12;padding-top:10px}
+.lf-under .t{font:700 18px/24px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.lf-under .r{font:700 17px/26px "Courier Prime",monospace;margin-top:6px;display:flex;justify-content:space-between}
+
+.lf-rq{position:absolute;left:1340px;top:132px;width:560px;height:440px;z-index:5;border-radius:6px;padding:16px 20px;
+  background:linear-gradient(180deg,rgba(66,78,66,.94),rgba(52,62,52,.96)),url(assets/metal.jpg);background-size:auto,300px;
+  border:3px solid #8b7656;box-shadow:0 12px 26px rgba(0,0,0,.55),inset 0 0 0 2px #2a251e}
+.lf-rq .plate{display:inline-block;background:linear-gradient(180deg,#c9a764,#a7843f);color:#2a1d12;border-radius:3px;padding:0 12px;font:700 20px/32px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.lf-dial{position:relative;width:200px;height:200px;margin:18px auto 6px}
+.lf-opt{display:grid;grid-template-columns:150px 1fr;column-gap:14px;align-items:center;height:104px;margin-top:12px;border-radius:4px;padding:6px 12px;background:rgba(20,24,20,.35);border:2px solid rgba(205,187,152,.35)}
+.lf-opt .b{height:40px;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 18px/40px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74}
+.lf-opt .d{font:500 17px/23px "IBM Plex Mono",monospace;color:#e3dccb}
+.lf-opt.on{border-color:var(--amber);background:rgba(246,168,0,.12)}
+.lf-opt.on .b{background:var(--amber);box-shadow:0 3px 0 #8a5d00}
+
+.lf-fish{position:absolute;left:20px;top:478px;width:620px;height:492px;z-index:5;border-radius:16px;
+  background:linear-gradient(180deg,#d4c9ab,#b9ab88);box-shadow:0 14px 28px rgba(0,0,0,.6),inset 0 -5px 0 #8f815f;padding:18px 18px 50px}
+.lf-cam{position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;
+  background:repeating-linear-gradient(90deg,#4f5a52 0 63px,#46514a 63px 64px),#4f5a52;box-shadow:inset 0 0 30px rgba(0,0,0,.6),0 0 0 3px #6f6448}
+.lf-cam::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px)}
+.lf-chin{position:absolute;left:30px;right:30px;bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.lf-wall{position:absolute;left:0;top:0;width:100%;height:84px;background:linear-gradient(180deg,#6b6153,#5a5145);border-bottom:6px solid #3a342b}
+.lf-rec{position:absolute;right:14px;top:12px;font:700 16px/20px "IBM Plex Mono",monospace;color:#ffd0c4}
+.lf-rec i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#E24A3B;margin-right:6px}
+.lf-lab{position:absolute;left:14px;top:10px;background:var(--paper);color:var(--ink);border-radius:3px;padding:0 12px;font:700 18px/32px "Barlow Condensed",sans-serif;letter-spacing:3px}
+.px{position:absolute;image-rendering:pixelated}
+.lf-desk{position:absolute;width:190px;height:70px;background:linear-gradient(180deg,#8a6a45,#6e5233);border:4px solid #3e2c1a;border-radius:3px}
+.lf-desk.empty{opacity:.75}
+.lf-mon{position:absolute;width:56px;height:42px;background:#d4c9ab;border:4px solid #8f815f;border-radius:4px}
+.lf-mon i{position:absolute;inset:4px;background:#3a2611;box-shadow:0 0 8px rgba(242,178,76,.6) inset}
+.lf-tag{position:absolute;background:var(--paper);color:var(--ink);border-radius:3px;padding:2px 10px;font:700 16px/20px "Courier Prime",monospace;box-shadow:0 3px 6px rgba(0,0,0,.4);white-space:nowrap}
+.lf-tag small{display:block;font:400 16px/20px "Courier Prime",monospace;color:#4a3a28}
+
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var view = q.get("view") || "m5";
+  if (["m1","m5","watch","place2"].indexOf(view) < 0) view = "m5";
+
+  var ST = {
+    m1: {no:1, mon:"JUL", year:"2017", full:"JULY 2017", money:"$245,000", compute:"100", research:"0", papers:"0", rep:50, doom:20.0,
+         planUsed:0, opsUsed:0, reserve:0, staff:0, queued:0, onboardEligible:0},
+    m5: {no:5, mon:"NOV", year:"2017", full:"NOVEMBER 2017", money:"$140,000", compute:"65", research:"-12", papers:"0", rep:32, doom:40.2,
+         planUsed:12, opsUsed:3, reserve:0, staff:1, queued:14, onboardEligible:0},
+    // WATCH, day 9: the committed batch has already executed (costs paid, effects applied).
+    // From m5: $140,000 - $60,300 = $79,700; research -12 + 8 x 3 = 12; rep 32 - 6 + 1.5 - 3 x 1 = 24.5 -> "25".
+    watch: {no:5, mon:"NOV", year:"2017", full:"NOVEMBER 2017", money:"$79,700", compute:"65", research:"12", papers:"0", rep:25, doom:40.2,
+         planUsed:12, opsUsed:3, reserve:0, held:5, staff:2, queued:14, onboardEligible:1}
+  };
+  // onboardEligible = employed hires not yet onboarded or mentored (hiring_panel_controller.gd:139).
+  // m5: Maya (hired Sep) has finished onboarding and mentoring -> 0. watch: Jonah was hired 01 Nov -> 1.
+  var S = view === "m1" ? ST.m1 : (view === "watch" ? ST.watch : ST.m5);
+
+  function chip(kind, txt){ return '<span class="chip '+kind+'">'+txt+'</span>'; }
+  function P(n){ return chip("plan", n+"h PLAN"); }
+  function O(n){ return chip("ops", n+"h OPS"); }
+  function R(t){ return chip("res", t); }
+
+  // ---------- actions (card file) ----------
+  var noPlan = S.planUsed >= 12;
+  function A(id, nm, o){ o.id=id; o.nm=nm; return o; }
+  var acts = [
+    A("fundraise","Fundraising",{door:4, unit:"choices"}),
+    A("hire_staff","Hire Staff",{door:7, unit:"roles", each:true, note: noPlan ? "no planning hours" : ""}),
+    A("advertise","Advertise a Role",{off:"coming soon", cost:['<span class="dim-txt">cost not listed yet</span>']}),
+    A("use_connections","Work Your Connections",{cost:[O(2),R("6 rep")]}),
+    A("onboard_next","Onboard New Hires",{cost:[chip("ops","OPS hrs"),R("money"),'<span class="dim-txt">varies by step</span>'], off: S.staff === 0 ? "nobody hired" : (S.onboardEligible ? "" : "no hires to onboard")}),
+    A("safety_research","Safety Research",{cost:[P(1),R("10 research")], off: noPlan ? "no planning hours" : "needs 10 research"}),
+    A("capability_research","Capability Research",{cost:[P(1),R("10 research")], off: noPlan ? "no planning hours" : "needs 10 research"}),
+    A("publish_paper","Publish Safety Paper",{cost:[P(1),R("20 research")], off: noPlan ? "no planning hours" : "needs 20 research"}),
+    A("travel","Travel & Conferences",{door:4, unit:"choices"}),
+    A("buy_compute","Purchase Compute",{cost:[R("$50,000"),chip("ghost","no hours")]}),
+    A("operations","Operations",{door:3, unit:"choices"}),
+    A("office","Office",{door:4, unit:"choices"}),
+    A("publicity","Publicity",{door:5, unit:"choices"}),
+    A("financing","Financing",{door:7, unit:"choices"}),
+    A("scouting","Scouting",{door:3, unit:"choices"})
+  ];
+  if (S.no >= 5){
+    acts.push(A("audit_safety","Safety Audit",{cost:[O(2),R("$40,000")], isNew:true}));
+    acts.push(A("strategic","Strategic",{door:4, unit:"choices", isNew:true}));
+  }
+  var openDoor = view === "m1" ? "fundraise" : "scouting";
+
+  function rackHTML(){
+    var h = '<div class="rk" id="rk"><div class="rk-head"><span class="rk-plate">ACTIONS</span>'+
+      (view==="watch" ? '<span class="rk-legend"><span class="why" style="color:#f3d2c4">LOCKED UNTIL MONTH END</span></span>' : '<span class="rk-legend">'+chip("plan","PLAN")+chip("ops","OPS")+'</span>')+'</div><div class="rk-list">';
+    acts.forEach(function(a){
+      var isOpen = a.door && a.id===openDoor && view!=="watch";
+      var cls = "rk-row" + (a.door ? " door" : "") + (a.off ? " off" : "") + (isOpen ? " open" : "");
+      var why = a.off || a.note || "";
+      h += '<div class="'+cls+'" data-id="'+a.id+'"><div class="l1"><span class="nm">'+a.nm+'</span>'+(why ? '<span class="why">&times; '+why+'</span>' : '')+'</div><div class="ln2">';
+      if (a.door){
+        h += '<span class="dim-txt">door &middot; '+a.door+' '+a.unit+(a.each ? ' &middot;' : '')+'</span>'+(a.each ? P(1)+'<span class="dim-txt">each</span>' : '');
+      } else {
+        h += (a.cost||[]).join("");
+      }
+      if (a.isNew) h += '<span class="new">NEW</span>';
+      h += '</div>';
+      h += '<div class="tab '+(isOpen ? 'open' : (a.door ? 'go' : 'add'))+'">'+(isOpen ? "OPEN" : (a.door ? "&gt;" : "+"))+'</div>';
+      h += '</div>';
+    });
+    return h + '</div></div>';
+  }
+
+  // ---------- CRT: the month ahead ----------
+  // PLAN 1 + 8 + 3 = 12 (all used); OPS 2 + 1 = 3 (5 left). Repeats of one action share a row.
+  var queueM5 = [
+    ["Hire: Safety Researcher", P(1), "$60,000"],
+    ["Work Your Connections", O(2), "6 rep"],
+    ["Go to Meetups", O(1), "$300"],
+    ["Read the Literature", P(8), "", 8],
+    ["Post Online", P(3), "", 3]
+  ];
+  function qName(r){ return r[0] + (r[3] ? ' <span class="mult">x'+r[3]+'</span>' : ''); }
+  function crtPlanHTML(){
+    var h = '<div class="crt-in"><div class="crt-h"><span class="t">THE MONTH AHEAD</span><span class="s">'+S.full+'</span></div>';
+    h += '<div class="q-head"><span>#</span><span>ACTION</span><span>HOURS</span><span>COST</span><span style="text-align:right">ORDER</span></div>';
+    if (view === "m1"){
+      h += '<div class="q-empty" style="height:30px;line-height:30px">Nothing queued.</div>';
+      for (var e=0;e<11;e++) h += '<div class="q-row q-blank"></div>';
+    } else {
+      queueM5.forEach(function(r,i){
+        h += '<div class="q-row"><span class="n">'+(i+1<10?"0":"")+(i+1)+'</span><span class="nm">'+qName(r)+'</span><span>'+r[1]+'</span><span>'+(r[2]||"&mdash;")+'</span>'+
+             '<span class="ctl"><span class="q-btn">^</span><span class="q-btn">v</span><span class="q-btn">x</span></span></div>';
+      });
+    }
+    h += '<div class="uw"><div class="uw-h">UNDER WAY</div>';
+    if (view === "m1"){
+      h += '<div class="q-empty">Nothing under way.</div>';
+    } else {
+      h += '<div class="uw-axis"><div></div><div>NOV 17</div><div>DEC 17</div><div>JAN 18</div><div>FEB 18</div></div>';
+      h += '<div class="uw-row"><span>Candidate interview</span><div class="uw-track"><div class="uw-bar" style="left:0;width:37%"></div><div class="uw-end" style="left:calc(37% + 8px)">results mid-Dec</div></div></div>';
+      h += '<div class="uw-row"><span>Paper submission</span><div class="uw-track"><div class="uw-bar fuzzy" style="left:0;width:64%"></div><div class="uw-end" style="left:calc(64% + 8px)">decision ~Jan</div></div></div>';
+    }
+    h += '</div>';
+    h += '<div class="crt-foot"><span class="crt-k">[Z] Undo</span><span class="crt-k">[C] Clear</span>'+
+         '<span class="tot">'+(view==="m1" ? "0 queued &middot; $0 committed" : "14 queued &middot; $60,300 + 6 rep committed")+'</span></div></div>';
+    return h;
+  }
+  function crtWatchHTML(){
+    var h = '<div class="crt-in"><div class="crt-h"><span class="t">NOVEMBER 2017 &middot; DAY 9</span><span class="s">PAUSED</span></div>';
+    h += '<div class="q-head"><span></span><span>COMMITTED, IN ORDER</span><span>HOURS</span><span>STATUS</span><span></span></div>';
+    queueM5.forEach(function(r,i){
+      h += '<div class="q-row" style="color:#c99a52"><span class="n">0'+(i+1)+'</span><span class="nm">'+qName(r)+'</span><span>'+r[1]+'</span><span style="grid-column:span 2">[x] done 01 Nov</span></div>';
+    });
+    h += '<div class="uw"><div class="uw-h">FEED</div>';
+    var feed = [
+      ["01 Nov","Hired Jonah Reyes (Safety Specialist, Skill 4)"],
+      ["01 Nov","Reached out through your network -- a pre-vetted lead may surface shortly."],
+      ["01 Nov","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+      ["01 Nov","Read for a day (+3.0 research). Nobody noticed. <span class='mult'>x8</span>"],
+      ["01 Nov","Posted (+4.0 hype, -1.0 reputation). <span class='mult'>x3</span>"],
+      ["09 Nov","Talent Opportunity -- on your desk."]
+    ];
+    feed.forEach(function(f,i){
+      h += '<div class="feed-row"'+(i===5?' style="color:#ffd690"':'')+'><span style="color:#c99a52">'+f[0]+'</span><span>'+f[1]+'</span></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  // ---------- folder (opened door) ----------
+  function folderHTML(){
+    var title, sub, slips;
+    if (view === "m1"){
+      title = "FUNDRAISING"; sub = "4 choices";
+      slips = [
+        {nm:"Modest Funding Round", cost:[O(1),R("2 rep")], ds:"Conservative fundraising - lower amounts, lower risk, always available"},
+        {nm:"Major Funding Round", cost:[O(2),R("8 rep")], ds:"Aggressive funding - higher amounts but requires strong reputation"},
+        {nm:"Business Loan", cost:[O(1)], ds:"Immediate funds via debt - creates future repayment obligation"},
+        {nm:"Research Grant", cost:[P(1),R("1 paper")], off:"needs 1 paper", ds:"Government/foundation funding - requires published papers"}
+      ];
+    } else {
+      title = "SCOUTING"; sub = "3 choices";
+      slips = [
+        {nm:"Read the Literature", cost:[P(1)], off:"no planning hours", queued:"8 queued", ds:"Sit down with the arxiv firehose. Slow, free, and the only scouting that makes you better at the actual work."},
+        {nm:"Go to Meetups", cost:[O(1),R("$300")], queued:"1 queued", ds:"Drinks, badges, a talk you half-listen to. People remember you, and sometimes one of them is looking for a job."},
+        {nm:"Post Online", cost:[P(1)], off:"no planning hours", queued:"3 queued", ds:"Be loud. Hype is not respect -- it buys you attention from people who fund things and costs you standing with people who read things."}
+      ];
+    }
+    var h = '<div class="fd"><div class="fd-tab">OPEN: '+title+'</div><div class="fd-close">[Esc] Close</div><div class="fd-body">'+
+            '<div class="fd-sub">'+sub+'</div>';
+    slips.forEach(function(s){
+      h += '<div class="slip'+(s.off?" off":"")+'"><div class="nm">'+s.nm+'</div><div class="cost">'+s.cost.join("")+
+           (s.off ? '<span class="why">&times; '+s.off+'</span>' : '')+'</div><div class="ds">'+s.ds+'</div>'+
+           (s.queued ? '<span class="qd">'+s.queued+'</span>' : '')+'</div>';
+    });
+    return h + '</div></div>';
+  }
+
+  // ---------- event memo (watch) ----------
+  function eventHTML(){
+    // talent_recruitment (min_turn 5). A handled option also pays the window's 1 hour, held hours first; Decline is the free exit.
+    var held = chip("held","+1 held hr");
+    return '<div class="ev"><div class="ev-paper"><div class="ev-in">'+
+      '<div class="ev-hd"><span>ACROSS YOUR DESK</span><span>9 NOV 2017</span></div>'+
+      '<div class="ev-img"></div>'+
+      '<div class="ev-t">Talent Opportunity</div>'+
+      '<div class="ev-tx">A brilliant researcher wants to join your lab at reduced cost!</div>'+
+      '<div class="ev-opt"><span class="k">1</span><span class="o">Fast-Track Hiring</span><span class="cs">'+R("$25,000")+held+'</span></div>'+
+      '<div class="ev-opt"><span class="k">2</span><span class="o">Standard Hiring</span><span class="cs">'+R("$25,000")+held+'</span></div>'+
+      '<div class="ev-opt"><span class="k">3</span><span class="o">Decline Offer</span><span class="cs">'+chip("ghost","free")+'</span></div>'+
+      '</div></div></div>';
+  }
+
+  // ---------- frame ----------
+  function arc(cx, cy, r, a0, a1){
+    function pt(a){ var t = Math.PI*(1-a); return [cx + r*Math.cos(t), cy - r*Math.sin(t)]; }
+    var p0 = pt(a0), p1 = pt(a1);
+    return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 0 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1);
+  }
+  function doomColor(d){ return d < 30 ? "var(--doom1)" : d < 55 ? "var(--doom2)" : d < 80 ? "var(--doom3)" : "var(--doom4)"; }
+  function doomHTML(){
+    var d = S.doom, cx=150, cy=112, r=84;
+    var bands = [[0,.3,"#F6A800"],[.3,.55,"#E9752E"],[.55,.8,"#E24A3B"],[.8,1,"#B31217"]];
+    var svg = '<svg class="dm-svg" viewBox="0 0 300 116">';
+    bands.forEach(function(b){ svg += '<path d="'+arc(cx,cy,r,b[0]+.004,b[1]-.004)+'" stroke="'+b[2]+'" stroke-width="10" fill="none" opacity=".85"/>'; });
+    for (var i=0;i<=10;i++){ var t=Math.PI*(1-i/10); svg += '<line x1="'+(cx+(r+6)*Math.cos(t)).toFixed(1)+'" y1="'+(cy-(r+6)*Math.sin(t)).toFixed(1)+'" x2="'+(cx+(r+(i%5?9:11))*Math.cos(t)).toFixed(1)+'" y2="'+(cy-(r+(i%5?9:11))*Math.sin(t)).toFixed(1)+'" stroke="#d9c7dc" stroke-width="'+(i%5?1.5:2.5)+'"/>'; }
+    svg += '<path d="'+arc(cx,cy,r+14,0,d/100)+'" stroke="#fff1d6" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    svg += '<text x="'+(cx-r-22)+'" y="'+(cy-4)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="15" text-anchor="end">0</text>';
+    svg += '<text x="'+(cx+r+22)+'" y="'+(cy-4)+'" fill="#ffb3a6" font-family="IBM Plex Mono" font-size="15" text-anchor="start">100</text>';
+    svg += '</svg>';
+    return '<div class="dm"><div class="dm-lab">P(DOOM)</div>'+(S.no >= 5 ? '<div class="dm-rise">^ RISING</div>' : '')+svg+'<div class="dm-val" style="color:'+doomColor(d)+'">'+d.toFixed(1)+'%</div></div>';
+  }
+  function repHTML(){
+    var v = S.rep, cx=66, cy=60, r=50;
+    var svg = '<svg class="rp-svg" viewBox="0 0 132 80">';
+    svg += '<path d="'+arc(cx,cy,r,0,.1)+'" stroke="#8a1f10" stroke-width="9" fill="none"/>';
+    svg += '<path d="'+arc(cx,cy,r,.1,1)+'" stroke="#7a6a55" stroke-width="9" fill="none" opacity=".55"/>';
+    var t = Math.PI*(1-v/100);
+    svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+(r-2)*Math.cos(t)).toFixed(1)+'" y2="'+(cy-(r-2)*Math.sin(t)).toFixed(1)+'" stroke="#2a1d12" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#2a1d12"/>';
+    svg += '<text x="'+(cx-r)+'" y="'+(cy+19)+'" fill="#8a1f10" font-family="IBM Plex Mono" font-size="15" font-weight="600" text-anchor="middle">0</text>';
+    svg += '<text x="'+(cx+r)+'" y="'+(cy+19)+'" fill="#4a3a28" font-family="IBM Plex Mono" font-size="15" font-weight="600" text-anchor="middle">100</text>';
+    svg += '</svg>';
+    return '<div class="rp"><div class="rp-lab">REPUTATION</div><div class="rp-val">'+v+'</div>'+svg+'</div>';
+  }
+  function boxes(kind, total, used){
+    var gone = view === "watch";   // after Commit, unspent typed hours have moved into the held pool
+    var h=''; for (var i=0;i<total;i++) h += '<span class="tc-box '+kind+(i<used?' used':(gone?' gone':''))+'"></span>'; return h; }
+  function leftTxt(total, used){ return view === "watch" ? used+' spent' : (total-used)+' left'; }
+  function timecardHTML(){
+    var watch = view === "watch";
+    return '<div class="tc"><div class="tc-title">ATTENTION</div>'+
+      '<div class="tc-row r1"><span class="tc-lab">PLAN</span><span class="tc-boxes">'+boxes("plan",12,S.planUsed)+'</span><span class="tc-left">'+leftTxt(12,S.planUsed)+'</span></div>'+
+      '<div class="tc-row r2"><span class="tc-lab">OPS</span><span class="tc-boxes">'+boxes("ops",8,S.opsUsed)+'</span><span class="tc-left">'+leftTxt(8,S.opsUsed)+'</span></div>'+
+      '<div class="tc-res"><div class="tc-res-lab">'+(watch ? "HELD FOR EVENTS" : "RESERVE")+'</div><div class="tc-res-row">'+
+      (watch ? '<span class="tc-res-val" style="width:auto">'+S.held+'h</span>' :
+       '<span class="tc-btn">-</span><span class="tc-res-val">'+S.reserve+'h</span><span class="tc-btn">+</span>')+
+      '</div></div></div>';
+  }
+  function counters(){
+    var c = [["MONEY",S.money,1142,166],["COMPUTE",S.compute,1318,104],["RESEARCH",S.research,1432,122],["PAPERS",S.papers,1564,84]];
+    return c.map(function(x){
+      var neg = x[1].charAt(0) === "-";
+      return '<div class="ct" style="left:'+x[2]+'px;width:'+x[3]+'px"><div class="ct-lab">'+x[0]+'</div><div class="ct-val'+(neg?' neg':'')+'">'+x[1]+(neg?' <span class="ct-flag">[!]</span>':'')+'</div></div>';
+    }).join("");
+  }
+  function topHTML(){
+    return '<div class="fr-top"><div class="cal"><div class="cal-band">'+S.year+'</div><div class="cal-mon">'+S.mon+'</div><div class="cal-no">MONTH '+S.no+'</div></div>'+
+      timecardHTML()+counters()+repHTML()+'</div>'+doomHTML();
+  }
+  function navHTML(active){
+    var tabs = [
+      ["F1","DESK", view==="m1" ? "nothing queued" : (view==="watch" ? "day 9 of 30" : S.queued+" queued")],
+      ["F2","LAB FLOOR", (S.staff ? S.staff+" staff" : "no staff")+" &middot; Standard"],
+      ["F3","PROCUREMENT","7 upgrades"],
+      ["F4","RECORDS","ledger clean &middot; guide"]
+    ];
+    var h = '<div class="fr-bot"><div class="nav">';
+    tabs.forEach(function(t,i){ h += '<div class="nav-tab'+(i===active?' on':'')+'"><span class="key">'+t[0]+'</span><div class="nm">'+t[1]+'</div><div class="st">'+t[2]+'</div><span class="lamp"></span></div>'; });
+    h += '</div>';
+    if (view === "watch"){
+      h += '<div class="pb"><div class="pb-st">PAUSED<small>memo open</small></div><span class="pb-b on">||</span><span class="pb-b">1x</span><span class="pb-b">2x</span><span class="pb-b">4x</span></div>';
+    } else {
+      h += '<div class="cm"><span class="cm-txt">COMMIT THE MONTH</span><span class="cm-key">Enter</span></div>';
+    }
+    return h + '</div>';
+  }
+
+  function operatorSVG(){
+    // Seen from behind: chair back, head above it, shoulders either side. Rim-lit by the CRT.
+    return '<svg class="op" viewBox="0 0 390 156">'+
+      '<path d="M54 156 C60 112 84 92 128 86 L262 86 C306 92 330 112 336 156 Z" fill="#1d1117"/>'+
+      '<path d="M60 150 C66 112 88 94 128 88" stroke="#f2b24c" stroke-opacity=".45" stroke-width="2" fill="none"/>'+
+      '<path d="M330 150 C324 112 302 94 262 88" stroke="#f2b24c" stroke-opacity=".45" stroke-width="2" fill="none"/>'+
+      '<path d="M170 92 L170 70 L220 70 L220 92 Z" fill="#1d1117"/>'+
+      '<ellipse cx="195" cy="40" rx="34" ry="40" fill="#1d1117"/>'+
+      '<path d="M162 34 C166 10 182 0 197 0 C214 0 228 12 229 34" stroke="#f2b24c" stroke-opacity=".5" stroke-width="2" fill="none"/>'+
+      '<rect x="118" y="78" width="154" height="90" rx="22" fill="#2b1d24" stroke="#3d2b33" stroke-width="3"/>'+
+      '</svg>';
+  }
+
+  // ---------- assemble ----------
+  var stage = document.getElementById("stage");
+  if (S.doom >= 30) stage.classList.add("doom-uneasy");
+  var html = '';
+  if (view === "place2"){
+    html += '<div class="sc-bg sc-floor"></div><div class="sc-doomtint"></div><div class="sc-vign"></div>';
+    html += floorHTML();
+    html += topHTML() + navHTML(1);
+  } else {
+    html += '<div class="sc-bg sc-desk"></div><div class="sc-doomtint"></div><div class="sc-vign"></div><div class="sc-desktop"></div>';
+    html += rackHTML();
+    html += '<div class="crt"><div class="crt-scr">'+(view==="watch" ? crtWatchHTML() : crtPlanHTML())+'</div><div class="crt-chin"><span class="crt-brand">LABTERM 90</span><span class="crt-led"></span></div></div>';
+    html += operatorSVG();
+    html += view === "watch" ? eventHTML() : folderHTML();
+    html += topHTML() + navHTML(0);
+  }
+  stage.innerHTML = html;
+  if (view === "watch"){ var rk = document.getElementById("rk"); rk.style.filter = "saturate(.55) brightness(.7)"; }
+
+  function floorHTML(){
+    var h = '';
+    // staff board
+    h += '<div class="lf-board"><div class="lf-h"><span class="t">STAFF</span><span class="s">IN / OUT</span></div>'+
+      '<div class="lf-cols"><span>NAME</span><span>ROLE</span><span>SINCE</span><span></span></div>'+
+      '<div class="lf-row"><span>Maya Haddad</span><span>Safety Researcher</span><span>Sep 2017</span><span class="mag">IN</span></div>'+
+      '<div class="lf-under"><div class="t">COMING</div>'+
+      '<div class="r"><span>Hire: Safety Researcher</span><span>queued this month</span></div>'+
+      '<div class="r"><span>Candidate interview</span><span>results mid-Dec</span></div></div></div>';
+    // research quality
+    var modes = [["Rushed","2.0x speed. Erodes research integrity, widens capability overhang."],
+                 ["Standard","Baseline speed. No side effects."],
+                 ["Thorough","0.5x speed. Repairs research integrity, narrows capability overhang."]];
+    h += '<div class="lf-rq"><span class="plate">RESEARCH QUALITY</span>';
+    modes.forEach(function(m,i){ h += '<div class="lf-opt'+(i===1?' on':'')+'"><span class="b">'+m[0]+'</span><span class="d">'+m[1]+'</span></div>'; });
+    h += '</div>';
+    // floor camera: a CRT on the wall showing the floor (Pip's OfficeFloor sprites)
+    h += '<div class="lf-fish"><div class="lf-cam"><div class="lf-wall"></div><span class="lf-lab">CAM 1 &middot; FLOOR</span><span class="lf-rec"><i></i>LIVE</span>';
+    h += '<img class="px" src="assets/server_cluster.png" style="left:20px;top:200px;width:192px;height:180px">';
+    h += '<img class="px" src="assets/water_cooler.png" style="left:430px;top:36px;width:56px;height:105px">';
+    h += '<img class="px" src="assets/cabinet.png" style="left:500px;top:26px;width:68px;height:106px">';
+    h += '<div class="lf-desk" style="left:236px;top:300px"></div><div class="lf-mon" style="left:302px;top:266px"><i></i></div>';
+    h += '<img class="px" src="assets/worker_idle_0.png" style="left:420px;top:214px;width:150px;height:150px;z-index:2">';
+    h += '<div class="lf-tag" style="left:432px;top:196px;z-index:3">Maya Haddad</div>';
+    h += '</div><div class="lf-chin"><span class="crt-brand">LABTERM 90</span><span class="crt-led"></span></div></div>';
+    return h;
+  }
+})();
+</script>
+</body>
+</html>
