@@ -10,14 +10,15 @@
 <style>
 /* C. The Paperwork Desk -- high-fidelity run.
    One 1920x1080 stage, scaled uniformly to the window (Godot: canvas_items, expand).
-   Type scale (px at 1920): 16 label/caption . 18 body/value . 22 heading . 30 title . display 40/64/96 (instruments only). */
+   Type scale (px at 1920): 16 label/caption . 18 body/value . 22 heading . 30 title . display 40/64/96 (instruments only).
+   ?state=1..6 draws the six states of fork/design/hifi/run-state.md; &check=1 adds a layout self-check. */
 :root{
-  --paper:#efe6d0; --paper2:#e6dbc0; --paper-line:#c9d3d6;
+  --paper:#efe6d0; --paper-line:#c9d3d6;
   --ink:#24201b; --ink2:#4a4238; --print:#2c5a4d; --print-soft:#8fa89f;
   --red:#b02a22; --red-ink:rgba(176,42,34,.92);
   --plan:#8a5a0e; --plan-fill:#d9a441; --plan-fill2:#c78f2c;
   --op:#17605f; --op-fill:#3f9a96; --op-fill2:#2f8580;
-  --manila:#d6b77c; --lamp-off:#4a3328; --board:#7a5a3a; --board-dk:#4a3420;
+  --manila:#d6b77c; --board-dk:#4a3420; --amber:#F6A800;
   --t-label:16px; --t-body:18px; --t-head:22px; --t-title:30px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -33,10 +34,19 @@ img{display:block}
 .lbl{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:1.5px;text-transform:uppercase}
 .p{color:var(--plan);font-weight:700}.o{color:var(--op);font-weight:700}
 
-/* ---------- the office (Pip's art) ---------- */
+/* ---------- the office (Pip's art) + the doom layer ---------- */
 .art{position:absolute;inset:0;background:url(assets/office_wide_dawn.webp) center 40%/cover}
 .art::before{content:"";position:absolute;inset:0;background:var(--wash)}
 .art::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 72% 62% at 50% 44%,rgba(20,12,16,0) 38%,rgba(20,12,16,.6))}
+.layer{position:absolute;pointer-events:none;z-index:1}
+.grade{inset:0;background:rgba(30,8,32,.6);mix-blend-mode:multiply}
+.tint{inset:0;background:rgba(110,30,90,.22);mix-blend-mode:color}
+.dkgrade{position:absolute;left:0;top:846px;width:1920px;height:234px;z-index:3;pointer-events:none;background:rgba(70,30,80,.75);mix-blend-mode:multiply}
+.sky{left:880px;top:250px;width:820px;height:340px;mix-blend-mode:overlay;
+  background:radial-gradient(ellipse 48% 42% at 50% 48%,rgba(200,30,60,.95),rgba(150,30,110,.7) 55%,rgba(120,30,110,0) 100%)}
+.skyglow{left:900px;top:280px;width:780px;height:280px;mix-blend-mode:screen;background:radial-gradient(ellipse 46% 40% at 50% 50%,rgba(150,30,80,.35),rgba(150,30,80,0) 100%)}
+.mon{border-radius:50%;filter:blur(14px);mix-blend-mode:screen;background:radial-gradient(circle,rgba(150,70,200,.75),rgba(122,59,143,.35) 45%,rgba(122,59,143,0) 70%)}
+.mon-tint{mix-blend-mode:color;border-radius:12px;filter:blur(10px);background:rgba(140,60,190,.85)}
 
 /* ---------- wall instruments ---------- */
 .wall{position:absolute;z-index:2}
@@ -48,24 +58,20 @@ img{display:block}
 .acc{left:228px;top:48px;height:76px;padding:0 18px;display:flex;align-items:center;gap:20px;background:var(--paper);box-shadow:3px 4px 0 rgba(0,0,0,.45);transform:rotate(-.6deg)}
 .acc::before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#9b9b9b}
 .acc .cell{display:flex;align-items:center;gap:8px}
-.acc .lbl{letter-spacing:1px}
-.acc .lbl{display:block;color:var(--ink2)}
+.acc .lbl{display:block;color:var(--ink2);letter-spacing:1px}
 .acc b{display:block;font:700 var(--t-head)/26px "Courier Prime";color:var(--ink);white-space:nowrap}
 .acc b.neg{color:var(--red)}
-.doom{left:800px;top:28px;width:400px;height:184px;padding:12px 18px;border-radius:6px;
+.doom{left:800px;top:28px;width:400px;height:184px;padding:10px 18px;border-radius:6px;
   background:linear-gradient(180deg,#5d4a3a,#46372b);border:3px solid #2b2019;box-shadow:inset 0 1px 0 rgba(255,220,170,.25),3px 5px 0 rgba(0,0,0,.45)}
 .doom-l{display:flex;align-items:center;gap:10px;font:600 var(--t-label)/28px Oswald;letter-spacing:3px;color:#f3e3c4}
-.doom-scr{margin-top:6px;height:92px;border-radius:4px;border:2px solid #1f1612;position:relative;overflow:hidden;padding:0 18px;
-  background:radial-gradient(ellipse at 50% 50%,#4a2416,#341a12 75%);display:flex;align-items:center;justify-content:space-between}
-.doom-scr::after{content:"";position:absolute;inset:0;background:url(assets/tex_amber_scanlines_512.webp);background-size:256px;opacity:.18;mix-blend-mode:screen;pointer-events:none}
-.doom-v{font:400 96px/88px VT323;letter-spacing:3px;color:var(--doomc);text-shadow:0 0 14px var(--doomc)}
-.doom-b{display:flex;flex-direction:column;align-items:flex-end;gap:2px;color:var(--doomc);text-shadow:0 0 8px var(--doomc)}
-.doom-b .band{font:400 40px/36px VT323;letter-spacing:3px}
-.doom-b .dir{font:400 24px/24px VT323;letter-spacing:2px;opacity:.85}
-.lamps{margin-top:10px;display:flex;gap:4px}
-.lamp{flex:1;height:14px;border-radius:2px;background:var(--lamp-off);border:1px solid #2a1c16}
-.lamp.on{background:var(--doomc);box-shadow:0 0 6px var(--doomc)}
-.lamp.end{background:#6d1814}
+.doom-scr{margin-top:6px;height:88px;border-radius:4px;border:2px solid #1f1612;position:relative;overflow:hidden;padding:0 18px;
+  background:radial-gradient(ellipse at 50% 50%,var(--scr1,#4a2416),var(--scr2,#341a12) 75%);display:flex;align-items:center;justify-content:space-between}
+.doom-scr::after,.doom-band::after{content:"";position:absolute;inset:0;background:url(assets/tex_amber_scanlines_512.webp);background-size:256px;opacity:.18;mix-blend-mode:screen;pointer-events:none}
+.doom-v{font:400 96px/84px VT323;letter-spacing:3px;color:var(--doomc);text-shadow:0 0 14px var(--doomglow)}
+.doom-dir{font:400 30px/30px VT323;letter-spacing:2px;color:var(--doomc);text-shadow:0 0 8px var(--doomglow);align-self:flex-end;margin-bottom:12px}
+.doom-band{position:relative;overflow:hidden;margin-top:6px;height:34px;border-radius:3px;border:2px solid #1f1612;background:var(--scr2,#341a12);
+  display:flex;align-items:center;justify-content:center;gap:14px;font:400 30px/30px VT323;letter-spacing:4px;color:var(--doomc);text-shadow:0 0 8px var(--doomglow)}
+.doom-band small{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:2px;color:#cdb89a;text-shadow:none}
 .rep{right:48px;top:32px;width:240px;height:180px;border-radius:6px;padding:12px 16px;
   background:linear-gradient(180deg,#e9dfc8,#d9ccb0);border:3px solid #6b5636;box-shadow:3px 5px 0 rgba(0,0,0,.45)}
 .rep-top{display:flex;justify-content:space-between;align-items:center}
@@ -73,28 +79,131 @@ img{display:block}
 .rep-v{font:700 40px/40px Oswald;color:var(--ink)}
 .rep svg{display:block;margin:4px auto 0}
 
-/* ---------- desk band ---------- */
+/* ---------- desk band and desk objects ---------- */
 .dk{position:absolute;left:0;top:846px;width:1920px;height:234px;z-index:2;
   background:linear-gradient(180deg,rgba(30,18,10,.55),rgba(30,18,10,0) 26px),linear-gradient(rgba(122,88,52,.5),rgba(96,68,40,.6)),url(assets/tex_plywood_stained_512.webp);
   background-size:auto,auto,512px;box-shadow:0 -4px 12px rgba(0,0,0,.45)}
 .dko{position:absolute;z-index:4}
-.stamp-obj{right:48px;top:856px;width:280px;height:196px;border-radius:6px;padding:14px 16px;
+.kbr{position:absolute;right:14px;bottom:12px}
+/* card box */
+.box{left:48px;top:836px;width:280px;height:216px}
+.box .cards{position:absolute;left:26px;right:26px;top:0;height:48px}
+.box .cards i{position:absolute;bottom:-8px;width:100%;height:44px;transform:rotate(-1.5deg);background:var(--paper);border-top:2px solid var(--red);box-shadow:0 -1px 0 rgba(0,0,0,.2)}
+.box .cards i:nth-child(2){bottom:-14px;transform:rotate(1deg);background:var(--manila);border-top-color:var(--manila)}
+.box .cards i:nth-child(3){bottom:-20px;transform:none}
+.box .front{position:absolute;left:0;right:0;top:36px;bottom:0;border-radius:4px;padding:20px;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#6e5034,#553b25);border:3px solid #34241a;box-shadow:3px 5px 0 rgba(0,0,0,.4),inset 0 2px 0 rgba(255,220,170,.25)}
+.box .front .kbr{color:#f0e2c6}
+.box.glow .front{box-shadow:0 0 0 4px var(--amber),0 0 26px 6px rgba(246,168,0,.65),3px 5px 0 rgba(0,0,0,.4)}
+.box.locked .front{filter:saturate(.45) brightness(.78)}
+.dkttl{display:flex;align-items:center;gap:10px}
+.plate{display:inline-block;white-space:nowrap;font:700 var(--t-body)/30px Oswald;letter-spacing:2px;color:#2a1e0e;padding:0 12px;background:linear-gradient(180deg,#d1b06c,#a2823f);border:1px solid #5e4720;border-radius:2px;box-shadow:inset 0 1px 0 rgba(255,240,200,.6)}
+.box .row{margin-top:18px;font:600 var(--t-body)/22px "IBM Plex Sans Condensed";color:#f0e2c6}
+.box .sub{margin-top:6px;font:500 var(--t-label)/20px "IBM Plex Sans Condensed";color:#dccbaa}
+/* schedule clipboard on the desk */
+.clipb{left:356px;top:792px;width:356px;height:260px;border-radius:6px;background:#7a5a3a;border:3px solid var(--board-dk);box-shadow:3px 5px 0 rgba(0,0,0,.4)}
+.clipb::before{content:"";position:absolute;left:50%;top:-10px;width:110px;height:26px;margin-left:-55px;border-radius:4px;background:linear-gradient(180deg,#c8ccd0,#8f969b);border:2px solid #5d6367;z-index:1}
+.clipb .sh{position:absolute;left:12px;right:12px;top:18px;bottom:12px;background:var(--paper);padding:20px 16px 10px;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.clipb .hd{display:flex;align-items:center;border-bottom:2px solid var(--print);padding-bottom:4px}
+.clipb .hd b{font:700 var(--t-body)/22px Oswald;letter-spacing:1px;color:var(--print);text-transform:uppercase}
+.clipb .kbr{color:var(--print)}
+.hrow{margin-top:8px}
+.hrow .l{display:flex;justify-content:space-between;align-items:baseline}
+.hrow .l em{font:700 var(--t-label)/20px "Courier Prime";font-style:normal;color:var(--ink)}
+.sboxes{margin-top:4px;display:flex;gap:3px}
+.sbx{width:21px;height:18px;border:1.5px solid var(--print);background:rgba(255,255,255,.4)}
+.sbx.pl{background:repeating-linear-gradient(135deg,var(--plan-fill) 0 4px,var(--plan-fill2) 4px 7px);border-color:var(--plan)}
+.sbx.op{background:repeating-linear-gradient(135deg,var(--op-fill) 0 4px,var(--op-fill2) 4px 7px);border-color:var(--op)}
+.days{margin-top:6px;display:flex;gap:2px}
+.day{width:11px;height:16px;border:1px solid var(--print);background:rgba(255,255,255,.4)}
+.day.done{background:var(--print)}
+.day.now{background:var(--red);border-color:var(--red)}
+.clipb .foot{margin-top:10px;font:400 var(--t-label)/20px "Courier Prime";color:var(--ink)}
+/* shortcut objects */
+.sc{width:180px;height:94px;padding:12px 14px;border-radius:3px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:3px 4px 0 rgba(0,0,0,.4)}
+.sc .t{display:flex;align-items:center;gap:10px;font:700 var(--t-body)/22px Oswald;letter-spacing:.8px;text-transform:uppercase}
+.sc .r{display:flex;justify-content:space-between;align-items:center;font:500 var(--t-label)/20px "IBM Plex Sans Condensed";white-space:nowrap}
+.sc-staff{background:var(--manila);color:#2e2312}
+.sc-upg{background:linear-gradient(90deg,#284a68 0 10px,#33608a 10px);color:#eef1f4}
+.sc-led{background:linear-gradient(90deg,#1f3d2e 0 12px,#2f5a43 12px);color:#eae6d2}
+.sc-gd{background:linear-gradient(90deg,#6a1f1a 0 12px,#8a2b23 12px);color:#f4e7dc}
+/* the office cat (Pip's live cat photos, godot/assets/cats/simple) in a frame on the desk */
+.cat{left:866px;top:858px;width:160px;height:188px;padding:12px 12px 0;border-radius:4px;
+  background:linear-gradient(180deg,#5b3d24,#3e2916);border:2px solid #2a1b0f;box-shadow:3px 5px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,220,170,.25)}
+.cat .ph{width:132px;height:132px;background:url(assets/cat_doom_cat_360.webp) center/cover;border:3px solid #e8dcc0;box-shadow:inset 0 0 10px rgba(0,0,0,.4)}
+.cat .nm{margin:8px auto 0;width:96px;height:24px;border-radius:2px;background:linear-gradient(180deg,#d1b06c,#a2823f);border:1px solid #5e4720;
+  font:600 var(--t-label)/22px "IBM Plex Sans Condensed";text-align:center;color:#2a1e0e}
+.cat.eldritch{box-shadow:0 0 0 2px rgba(150,80,200,.7),0 0 34px 12px rgba(122,59,143,.8),0 0 80px 30px rgba(122,59,143,.45),3px 5px 0 rgba(0,0,0,.45)}
+.cat.eldritch .ph{filter:saturate(.75) brightness(.8) hue-rotate(-12deg)}
+.smoke{position:absolute;pointer-events:none;border-radius:50%;filter:blur(16px);background:radial-gradient(circle,rgba(170,120,210,.55),rgba(122,59,143,0) 70%)}
+/* commit stamp (and its other faces) */
+.stamp{right:48px;top:856px;width:280px;height:196px;border-radius:6px;padding:14px 16px;
   background:linear-gradient(180deg,#7a5230,#5b3b1f);border:3px solid #3b2612;box-shadow:3px 5px 0 rgba(0,0,0,.45),inset 0 2px 0 rgba(255,220,170,.3)}
-.stamp-face{height:120px;border-radius:3px;background:var(--red);display:flex;align-items:center;justify-content:center;gap:14px;
+.stamp.top{z-index:7}
+.face{height:120px;border-radius:3px;background:var(--red);display:flex;align-items:center;justify-content:center;gap:14px;
   box-shadow:inset 0 0 0 3px #e8c9b8,inset 0 0 0 6px var(--red),inset 0 0 0 8px #e8c9b8}
-.stamp-face .t{font:700 28px/32px Oswald;letter-spacing:1.5px;color:#fbf1e6;text-transform:uppercase}
-.stamp-note{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:#f2e2c4}
+.face .t{font:700 28px/32px Oswald;letter-spacing:1.5px;color:#fbf1e6;text-transform:uppercase}
+.face .t.sm{font-size:var(--t-head);line-height:26px;letter-spacing:.6px}
+.face .s{display:block;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:0;text-transform:none;color:#f6efe4}
+.face.grey{background:#6a6056;box-shadow:inset 0 0 0 3px #d9cfc0,inset 0 0 0 6px #6a6056,inset 0 0 0 8px #d9cfc0}
+.face.go{background:#2f5a43;box-shadow:inset 0 0 0 3px #d9e4d2,inset 0 0 0 6px #2f5a43,inset 0 0 0 8px #d9e4d2}
+.snote{margin-top:14px;display:flex;justify-content:space-between;align-items:center;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:#f2e2c4}
+.spd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.spd button{height:36px;border:2px solid #c9b48c;border-radius:3px;font:600 var(--t-label)/32px Oswald;letter-spacing:1px;color:#ecdcbf;text-align:center}
+.spd button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 
-/* ---------- menus ---------- */
+/* ---------- layers above the desk ---------- */
 .dim{position:absolute;inset:0;background:rgba(28,18,22,.55);z-index:5}
+.dim.light{background:rgba(28,18,22,.3)}
 
-/* the schedule: the clipboard, lifted off the desk */
-.board{position:absolute;left:48px;top:236px;width:1512px;height:860px;z-index:6;border-radius:8px 8px 0 0;
+/* advisor note (state 1, the tutorial's first step) */
+.note{position:absolute;z-index:6;left:84px;top:470px;width:470px;padding:16px 22px 16px;background:#f3ecd8;transform:rotate(-1deg);
+  box-shadow:4px 6px 0 rgba(0,0,0,.4);border-top:6px solid var(--amber)}
+.note .lbl{color:var(--plan)}
+.note p{margin-top:8px;font:400 var(--t-body)/26px "Courier Prime";color:var(--ink)}
+.note .ft{margin-top:12px;display:flex;justify-content:flex-end}
+.note .ft button{height:36px;padding:0 12px;border:1.5px solid var(--ink2);border-radius:3px;display:flex;align-items:center;gap:10px;font:600 var(--t-body)/20px "IBM Plex Sans Condensed"}
+.penarrow{position:absolute;z-index:6;pointer-events:none}
+
+/* action card drawer (state 2) */
+.mn{position:absolute;left:48px;top:232px;width:1512px;height:824px;z-index:6;border-radius:8px;padding:16px 22px;
+  background:linear-gradient(180deg,#4b3a2c,#3e3024);border:3px solid #2e2219;box-shadow:0 12px 0 rgba(0,0,0,.35),inset 0 2px 8px rgba(0,0,0,.4)}
+.mn-hd{display:flex;align-items:center;gap:14px;height:44px}
+.chip{display:inline-flex;align-items:center;gap:8px;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:#ecdcbf;padding:5px 12px;border:1.5px solid rgba(236,220,191,.45);border-radius:3px;white-space:nowrap}
+.chip b{font:700 var(--t-body)/20px "Courier Prime";color:#fff}
+.chip b.neg{color:#ff9a86}
+.mn .btn-x{background:var(--paper);border-color:transparent}
+.ac-rows{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.ac-row{display:flex;gap:14px;height:132px}
+.ac-div{width:36px;flex:none;border-radius:3px;background:linear-gradient(90deg,#b9a27a,#a58c62);display:flex;align-items:center;justify-content:center}
+.ac-div span{writing-mode:vertical-rl;transform:rotate(180deg);font:700 var(--t-label)/1 "IBM Plex Sans Condensed";letter-spacing:2px;color:#2e2416;text-transform:uppercase;white-space:nowrap}
+.ac-slots{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.ac-slot{position:relative;min-width:0}
+.card{position:relative;width:100%;height:132px;padding:16px 14px 10px;display:flex;flex-direction:column;background:var(--paper);border-radius:2px;box-shadow:1px 2px 0 rgba(0,0,0,.35);
+  background-image:linear-gradient(var(--red) 0 0),repeating-linear-gradient(180deg,transparent 0 23px,var(--paper-line) 23px 24px);background-size:100% 2px,100% 100%;background-position:0 58px,0 60px;background-repeat:no-repeat}
+.card>*{flex-shrink:0}
+.card.folder{background:var(--manila);background-image:none;padding-top:24px;clip-path:polygon(0 0,34% 0,38% 18px,100% 18px,100% 100%,0 100%);box-shadow:none;filter:drop-shadow(1px 2px 0 rgba(0,0,0,.35))}
+.card.folder::before{content:"FOLDER";position:absolute;left:12px;top:0;font:700 var(--t-label)/18px "IBM Plex Sans Condensed";letter-spacing:1px;color:#5c4520}
+.ac-top{display:flex;align-items:center;gap:10px;min-width:0}
+.ac-name{min-width:0;font:600 var(--t-head)/26px "IBM Plex Sans Condensed";color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-cost{margin-top:8px;font:500 var(--t-body)/22px "IBM Plex Sans Condensed";color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.folder .ac-cost{font-weight:700;color:#5c4520}
+.ac-desc{margin-top:2px;font:400 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--ink2)}
+.ac-st{margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
+.rstamp{display:inline-block;white-space:nowrap;font:600 var(--t-label)/19px Oswald;letter-spacing:.3px;text-transform:uppercase;color:var(--red-ink);border:2px solid var(--red-ink);padding:0 5px;border-radius:2px;transform:rotate(-1.5deg);background:rgba(239,230,208,.35)}
+.rstamp.grey{color:#6a5d4c;border-color:#6a5d4c}
+.onf{position:absolute;right:6px;top:-6px;z-index:2;font:700 var(--t-label)/20px "Courier Prime";color:#2f2f2f;padding:0 8px;background:#f6f1e4;border:1.5px solid #5c5c5c;border-radius:10px;white-space:nowrap;box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.ac-slot.focus::after{content:"";position:absolute;inset:-6px;border:3px solid var(--amber);border-radius:4px;box-shadow:0 0 12px rgba(246,168,0,.7);pointer-events:none;z-index:3}
+.addk{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--ink)}
+.ac-empty{border:2px dashed rgba(236,220,191,.18);border-radius:3px}
+
+/* the schedule: the clipboard, lifted off the desk (state 3) */
+.board{position:absolute;left:48px;top:232px;width:1512px;height:824px;z-index:6;border-radius:8px;
   background:linear-gradient(180deg,#866343,#6e5034);border:3px solid var(--board-dk);box-shadow:0 12px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,220,170,.25)}
 .clip{position:absolute;left:50%;top:-14px;width:150px;height:40px;margin-left:-75px;border-radius:6px;z-index:2;
   background:linear-gradient(180deg,#d4d8dc,#9aa1a6 60%,#7d8489);border:2px solid #4f5559;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 .clip::after{content:"";position:absolute;left:52px;top:9px;width:42px;height:12px;border-radius:6px;background:#5d6367;box-shadow:inset 0 2px 2px rgba(0,0,0,.5)}
-.sheet{position:absolute;left:14px;right:14px;top:14px;bottom:0;padding:30px 32px 0 56px;
+.sheet{position:absolute;left:14px;right:14px;top:14px;bottom:14px;padding:26px 32px 0 56px;
   background-color:var(--paper);
   background-image:linear-gradient(rgba(239,230,208,.88),rgba(239,230,208,.88)),url(assets/tex_grid_graphpaper_aged_512.webp);background-size:auto,512px;
   box-shadow:0 1px 0 rgba(0,0,0,.25),inset 0 0 60px rgba(120,90,40,.12)}
@@ -106,13 +215,11 @@ img{display:block}
 .fm-for .lbl{color:var(--print)}
 .fm-for b{font:700 var(--t-head)/28px "Courier Prime";border-bottom:1.5px solid var(--print);padding:0 8px}
 .btn-x{margin-left:auto;height:44px;padding:0 14px;border-radius:3px;display:flex;align-items:center;gap:10px;
-  background:#e2d6ba;border:1.5px solid var(--print);font:600 var(--t-body)/20px "IBM Plex Sans Condensed";box-shadow:2px 3px 0 rgba(0,0,0,.25)}
-.fm-body{display:grid;grid-template-columns:852px 480px;gap:58px;margin-top:18px}
-
-/* the register (left) */
+  background:#e2d6ba;border:1.5px solid var(--print);font:600 var(--t-body)/20px "IBM Plex Sans Condensed";box-shadow:2px 3px 0 rgba(0,0,0,.25);color:var(--ink)}
+.fm-body{display:grid;grid-template-columns:852px 480px;gap:58px;margin-top:14px}
 .tbl-h,.tbl-r{display:grid;grid-template-columns:44px 76px 390px 198px 104px 40px;align-items:center}
 .tbl-h{height:34px;color:var(--print);border-bottom:1.5px solid var(--print)}
-.tbl-r{height:44px;border-bottom:1px solid var(--print-soft);position:relative}
+.tbl-r{height:42px;border-bottom:1px solid var(--print-soft);position:relative}
 .tbl-r.spill{background:linear-gradient(90deg,rgba(217,164,65,.22),rgba(217,164,65,.06))}
 .c-n{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--print);text-align:center}
 .c-mv{display:flex;gap:6px;padding-left:8px}
@@ -125,22 +232,19 @@ img{display:block}
 .tag{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--plan);border:1.5px solid var(--plan);border-radius:2px;padding:0 5px;background:rgba(239,230,208,.7);white-space:nowrap}
 .c-c{font:400 var(--t-body)/22px "Courier Prime";text-align:right;padding-right:12px;white-space:nowrap}
 .c-x{display:flex;justify-content:center}
-.tbl-h .c-c{font:inherit}
-.tot{display:flex;align-items:center;height:48px;border-top:4px double var(--print);margin-top:0;font:400 var(--t-body)/22px "Courier Prime"}
+.tot{display:flex;align-items:center;height:46px;border-top:4px double var(--print);font:400 var(--t-body)/22px "Courier Prime"}
 .tot>.lbl{color:var(--print);width:130px;padding-left:12px}
 .tot .k{font:600 var(--t-label)/20px "IBM Plex Sans Condensed";letter-spacing:1.5px;text-transform:uppercase;color:var(--print);margin-right:12px}
 .tot .hrs{font-weight:700}
-.tot .cst{margin-left:auto;padding-right:60px;font-weight:700}
-.tools{display:flex;gap:14px;margin-top:16px}
+.tot .cst{margin-left:auto;padding-right:52px;font-weight:700}
+.tools{display:flex;gap:14px;margin-top:14px}
 .tools button{height:44px;padding:0 18px;border-radius:3px;display:flex;align-items:center;gap:10px;font:600 var(--t-body)/20px "IBM Plex Sans Condensed";color:#2e2312}
 .t-pencil{background:linear-gradient(180deg,#e5b94a,#c99a2b);border:2px solid #7d5c16}
 .t-eraser{background:linear-gradient(180deg,#e8a7a0,#cf8a83);border:2px solid #84463f}
-.fine{margin-top:22px;max-width:860px;padding-top:10px;border-top:1px solid var(--print-soft);font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.fine{margin-top:18px;padding-top:10px;border-top:1px solid var(--print-soft);font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
 .fine b{color:var(--print);letter-spacing:1px}
-
-/* the side column (right) */
-.sec{display:flex;align-items:center;gap:10px;color:var(--print);border-bottom:1.5px solid var(--print);padding-bottom:6px;margin-bottom:12px}
-.side>section+section{margin-top:26px}
+.sec{display:flex;align-items:center;gap:10px;color:var(--print);border-bottom:1.5px solid var(--print);padding-bottom:6px;margin-bottom:10px}
+.side>section+section{margin-top:16px}
 .hr-l{display:flex;align-items:baseline;gap:16px;height:24px}
 .hr-l .pen{margin-left:auto;margin-right:30px}
 .hr-l em{font:700 var(--t-body)/22px "Courier Prime";font-style:normal;color:var(--ink)}
@@ -154,10 +258,10 @@ img{display:block}
 .hrs-wrap{position:relative}
 .hrs-wrap svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
 .pen{font:700 var(--t-label)/20px "Courier Prime";color:var(--op)}
-.led{margin-top:16px}
+.led{margin-top:10px}
 .ln{display:flex;align-items:center;height:32px;font:400 var(--t-body)/22px "Courier Prime"}
 .ln .k{white-space:nowrap}
-.ln .dots{flex:1;margin:0 8px;height:2px;align-self:center;margin-top:10px;background:radial-gradient(circle,var(--ink2) 1px,transparent 1.4px) 0 0/8px 2px repeat-x;opacity:.6}
+.ln .dots{flex:1;margin:0 8px;height:2px;margin-top:10px;background:radial-gradient(circle,var(--ink2) 1px,transparent 1.4px) 0 0/8px 2px repeat-x;opacity:.6}
 .ln .v{white-space:nowrap;font-weight:700}
 .ln.sub{padding-left:22px;color:var(--ink2)}
 .ln.sub .v{color:var(--op)}
@@ -166,10 +270,74 @@ img{display:block}
 .stp{display:flex;align-items:center;gap:6px}
 .stp .val{width:44px;height:30px;border:1.5px solid var(--print);background:rgba(255,255,255,.55);font:700 var(--t-body)/27px "Courier Prime";text-align:center}
 .stp button{width:30px;height:30px;border:1.5px solid var(--print);border-radius:2px;font:700 var(--t-body)/26px "Courier Prime";color:var(--print);text-align:center}
-.cap{margin-top:6px;font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.cap{margin-top:4px;font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
 .rq{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .rq button{height:44px;border:2px solid var(--print-soft);border-radius:3px;font:600 var(--t-body)/40px Oswald;letter-spacing:1px;color:var(--ink2);text-align:center;text-transform:uppercase}
 .rq button.on{border-color:var(--red);color:var(--red);box-shadow:inset 0 0 0 1px var(--red);background:rgba(255,255,255,.35)}
+
+/* WATCH: the memo (event) and the teleprinter (month feed) (state 4) */
+.memo{position:absolute;z-index:6;left:560px;top:246px;width:690px;height:516px;padding:22px 30px;background:var(--paper);box-shadow:6px 10px 0 rgba(0,0,0,.42);transform:rotate(.4deg)}
+.memo .pclip{position:absolute;left:330px;top:-16px;width:26px;height:66px;border:4px solid #9da3a6;border-radius:13px}
+.memo-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px double var(--print);padding-bottom:8px}
+.memo-h .from{color:var(--print)}
+.memo-h .from b{display:block;font:700 var(--t-body)/24px "Courier Prime";letter-spacing:0;color:var(--ink);text-transform:none}
+.memo-body{display:grid;grid-template-columns:1fr 118px;gap:22px;margin-top:14px;height:146px}
+.memo-t{font:700 var(--t-title)/36px Oswald;letter-spacing:.5px}
+.memo-d{margin-top:8px;font:400 var(--t-body)/27px "Courier Prime"}
+.cv{position:relative;width:112px;height:146px;background:#fbf7ec;border:1px solid #c9bda2;box-shadow:2px 3px 0 rgba(0,0,0,.25);transform:rotate(3deg);padding:12px 12px}
+.cv b{display:block;font:700 var(--t-label)/18px "Courier Prime";color:var(--print);letter-spacing:2px}
+.cv i{display:block;height:3px;margin-top:9px;background:#b9ae95}
+.cv i:nth-child(odd){width:70%}
+.cv::after{content:"";position:absolute;right:16px;top:-12px;width:14px;height:38px;border:3px solid #9da3a6;border-radius:8px}
+.ask{margin-top:6px;display:flex;justify-content:space-between;color:var(--print);border-bottom:1.5px solid var(--print);padding-bottom:4px}
+.ch{display:grid;grid-template-columns:40px 38px 1fr 236px;align-items:center;height:58px;border-bottom:1px solid var(--print-soft);width:100%}
+.ch .n{font:700 var(--t-label)/20px "Courier Prime";color:var(--print)}
+.ch .tick{width:24px;height:24px;border:2px solid var(--print);background:rgba(255,255,255,.5);position:relative}
+.ch.on .tick::after{content:"";position:absolute;left:5px;top:-4px;width:9px;height:18px;border:solid var(--red);border-width:0 4px 4px 0;transform:rotate(40deg)}
+.ch.on{background:linear-gradient(90deg,rgba(246,168,0,.22),rgba(246,168,0,.05))}
+.ch .nm{font:700 var(--t-body)/22px "Courier Prime";display:block}
+.ch .ef{display:block;font:400 var(--t-label)/20px "IBM Plex Sans Condensed";color:var(--ink2)}
+.ch .c{font:400 var(--t-body)/22px "Courier Prime";text-align:right;padding-right:6px;white-space:nowrap}
+.memo-f{position:absolute;left:30px;right:30px;bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.memo-f .have{font:400 var(--t-body)/22px "Courier Prime";color:var(--ink2)}
+.memo-f .have b{color:var(--ink)}
+.file{height:44px;padding:0 16px;border-radius:3px;display:flex;align-items:center;gap:10px;background:var(--red);color:#fbf1e6;font:600 var(--t-body)/20px "IBM Plex Sans Condensed";box-shadow:2px 3px 0 rgba(0,0,0,.3)}
+.tape{position:absolute;z-index:4;left:1276px;top:232px;width:596px;height:604px;padding:16px 20px;background:#ece5cf;box-shadow:4px 6px 0 rgba(0,0,0,.38);transform:rotate(-.4deg);
+  background-image:repeating-linear-gradient(180deg,transparent 0 31px,rgba(44,90,77,.14) 31px 32px)}
+.tape::before{content:"";position:absolute;left:0;right:0;top:-8px;height:10px;background:radial-gradient(circle at 6px 0,transparent 5px,#ece5cf 5.5px) 0 0/12px 10px repeat-x}
+.tape-h{display:flex;justify-content:space-between;color:var(--print);margin-bottom:6px}
+.tl{display:grid;grid-template-columns:76px 1fr;font:400 var(--t-label)/32px "Courier Prime"}
+.tl b{color:var(--print)}
+.tl span{line-height:22px;padding:3px 0}
+.tl.hot{color:var(--red);font-weight:700}
+.tl.hot b{color:var(--red)}
+
+/* Month review: the printed ledger (state 5) */
+.rcpt{position:absolute;z-index:6;left:356px;top:236px;width:1204px;height:812px;padding:26px 44px 0;background:#f2ead6;box-shadow:6px 10px 0 rgba(0,0,0,.4)}
+.rcpt::before,.rcpt::after{content:"";position:absolute;left:0;right:0;height:12px;background:radial-gradient(circle at 8px 0,transparent 6px,#f2ead6 6.5px) 0 0/16px 12px repeat-x}
+.rcpt::before{top:-11px;transform:scaleY(-1)}
+.rcpt::after{bottom:-11px}
+.r-h{text-align:center;border-bottom:2px dashed var(--ink2);padding-bottom:12px}
+.r-h .lbl{color:var(--print);letter-spacing:3px}
+.r-h h1{font:700 var(--t-title)/38px Oswald;letter-spacing:1px;margin-top:4px}
+.r-h p{margin-top:4px;font:400 var(--t-body)/24px "Courier Prime"}
+.r-sec{margin-top:26px}
+.r-sec .lbl{color:var(--print);border-bottom:1.5px solid var(--print);padding-bottom:3px;margin-bottom:4px;display:flex;justify-content:space-between}
+.mv{display:grid;grid-template-columns:90px 1fr 150px;font:400 var(--t-body)/34px "Courier Prime"}
+.mv .d{text-align:right;font-weight:700}
+.mv .bad{color:var(--red)}
+.hp{display:grid;grid-template-columns:76px 1fr;font:400 var(--t-body)/24px "Courier Prime";padding:3px 0}
+.hp b{color:var(--print)}
+.hp em{font-style:normal;color:var(--ink2)}
+.hp.memo-l{font-weight:700}
+.r-cols{display:grid;grid-template-columns:470px 1fr;gap:48px}
+.r-line{display:flex;justify-content:space-between;font:400 var(--t-body)/34px "Courier Prime"}
+.r-line b{font-weight:700}
+.r-line .bad{color:var(--red)}
+.r-line.tot{border-top:1.5px solid var(--ink2);margin-top:2px}
+.r-note{margin-top:4px;font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
+.slot{height:96px;border:2px dashed var(--print-soft);border-radius:3px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 12px;
+  font:400 var(--t-label)/22px "IBM Plex Sans Condensed";color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -179,23 +347,40 @@ img{display:block}
 var Q=new URLSearchParams(location.search);
 var STATE=+(Q.get('state')||3);
 
-/* ---------------- Pip's icons (assets/icons, copied from godot/assets/icons) + "new, needs art" SVGs ---------------- */
+/* ---------------- Pip's icons (assets/icons, copied from godot/assets/icons) + "new, needs art" SVGs (new_*.svg) ---------------- */
 var I={
  money:'resource_money_64.png',compute:'resource_compute_small_64.png',research:'resource_research_small_64.png',papers:'resource_papers_small_64.png',
  rep:'resource_reputation_64.png',doom:'resource_doom_small_64.png',hours:'resource_action_points_64.png',
- schedule:'ui_config_date_64.png',commit:'button_confirm_normal_64.png',
+ actions:'ui_guide_actions_64.png',schedule:'ui_config_date_64.png',commit:'button_confirm_normal_64.png',pause:'ui_control_pause_64.png',begin:'ui_control_forward_64.png',
+ staff:'ui_staff_management_64.png',upgrades:'button_upgrade_normal_64.png',ledger:'ui_budget_finance_64.png',guide:'ui_control_help_64.png',
  close:'ui_control_cancel_64.png',undo:'ui_control_back_64.png',clear:'ui_control_clear_64.png',
  up:'ui_control_up_64.png',down:'ui_control_down_64.png',remove:'ui_control_remove_64.png',
+ /* action cards */
+ fundraising:'ui_guide_resources_64.png',financing:'action_funding_loan_64.png',buy_compute:'action_facility_upgrade_compute_64.png',
+ hire:'button_hire_normal_64.png',advertise:'new_advertise_notice.svg',connections:'action_publicity_network_64.png',onboard:'employee_status_training_64.png',
+ safety:'action_research_alignment_64.png',capability:'action_research_capability_control_64.png',publish:'action_research_formal_verification_64.png',audit:'employee_role_auditor_64.png',
+ scouting:'action_research_monitoring_64.png',travel:'new_travel_suitcase.svg',publicity:'new_publicity_megaphone.svg',
+ operations:'employee_role_engineer_64.png',office:'action_facility_expand_office_64.png',strategic:'ui_guide_strategy_64.png',
+ /* plays */
  hire_safety:'employee_role_safety_specialist_64.png',read:'ui_guide_book_64.png',post:'new_post_online_bubble.svg',
- audit:'employee_role_auditor_64.png',connections:'action_publicity_network_64.png',meetups:'new_meetup_badge.svg',
- networking:'network_64.png',tour:'ui_infrastructure_facilities_64.png',maintenance:'employee_role_engineer_64.png',supplies:'new_supplies_box.svg'
+ meetups:'new_meetup_badge.svg',networking:'network_64.png',tour:'ui_infrastructure_facilities_64.png',maintenance:'employee_role_engineer_64.png',supplies:'new_supplies_box.svg'
 };
 var TILE={networking:1};
 function ic(k,sz){return '<img class="ic i'+sz+(TILE[k]?' tile':'')+'" src="assets/icons/'+I[k]+'" alt="">';}
 
-/* ---------------- the run (fork/design/hifi/run-state.md) ---------------- */
-var DOOMC={HIGH:{c:'#E9752E',wash:'rgba(233,117,46,.14)'},ELEVATED:{c:'#F6A800',wash:'rgba(246,168,0,.07)'}};
-var NOV={yr:'2017',mo:'NOV',sub:'Plan, month 5',month:'NOVEMBER 2017',money:'$140,000',compute:'65',research:'-12',papers:'0',rep:32,doom:40.2,band:'HIGH',dir:'RISING'};
+/* ---------------- the run (fork/design/hifi/run-state.md) ----------------
+   Counter colours: ThemeManager.get_doom_stroke_color() at the level (DOOM_STOPS ramp).
+   Room wash / glow: docs/art/PALETTE_AND_DOOM_INTENSITY.md art bands (0 cosy .. 3 eldritch). */
+var JUL={yr:'2017',mo:'JUL',sub:'Plan, month 1',money:'$245,000',compute:'100',research:'0',papers:'0',rep:50,doom:20.0,band:'ELEVATED',
+  c:'#7ECA4B',wash:'rgba(246,168,0,.05)'};
+var NOV={yr:'2017',mo:'NOV',sub:'Plan, month 5',month:'NOVEMBER 2017',money:'$140,000',compute:'65',research:'-12',papers:'0',rep:32,doom:40.2,band:'HIGH',dir:'RISING',
+  c:'#E79625',wash:'rgba(233,117,46,.13)'};
+var WATCH=Object.assign({},NOV,{yr:'NOV 2017',mo:'14',sub:'Tue, workday 10',money:'$37,400',rep:34,research:'-6',dir:''});
+var DEC=Object.assign({},NOV,{yr:'2017',mo:'DEC',sub:'Month review',money:'$12,400',rep:34,research:'-6',doom:56.7,band:'SEVERE',dir:'',
+  c:'#D74429',wash:'rgba(226,74,59,.16)'});
+var APR={yr:'2018',mo:'APR',sub:'Plan, month 10',money:'$12,300',compute:'65',research:'4',papers:'0',rep:21,doom:81.4,band:'CATASTROPHIC',
+  c:'#B84AA0',glow:'#9A4FC0',wash:'rgba(122,59,143,.20)',scr1:'#2c1236',scr2:'#1a0a20',eldritch:1};
+
 /* State 3: the month's plan. [icon, play, where it lives, hours, pool, cost] -- run-state.md table */
 var PLAN3=[
  ['hire_safety','Hire: Safety Researcher','Hire Staff',1,'plan','$60,000'],
@@ -207,14 +392,12 @@ var PLAN3=[
  ['meetups','Go to Meetups','Scouting',1,'op','$300'],
  ['networking','Networking','Publicity',1,'op',''],
  ['tour','Tour Offices','Office',1,'op',''],
- ['maintenance','Office Maintenance','Operations',1,'op','$5,000'],
+ ['meetups','Go to Meetups','Scouting',1,'op','$300'],
  ['supplies','Order Office Supplies','Operations',1,'op','$2,000']
 ];
 
 /* ---------------- wall ---------------- */
 function wall(st){
-  var d=DOOMC[st.band], lamps='', lit=Math.floor(st.doom/10);
-  for(var i=0;i<10;i++) lamps+='<div class="lamp'+(i<lit?' on':'')+(i==9?' end':'')+'"></div>';
   var cx=104,cy=82,r=68;
   function pt(f,rr){var a=Math.PI*(1-f);return [(cx+Math.cos(a)*rr).toFixed(1),(cy-Math.sin(a)*rr).toFixed(1)];}
   function arc(a0,a1,col){var p0=pt(a0,r),p1=pt(a1,r);return '<path d="M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 0 1 '+p1[0]+' '+p1[1]+'" stroke="'+col+'" stroke-width="8" fill="none"/>';}
@@ -225,39 +408,153 @@ function wall(st){
     '<text x="156" y="102" font-family="IBM Plex Sans Condensed" font-weight="700" font-size="16" fill="#4a4238">100</text>'+
     '<line x1="'+cx+'" y1="'+cy+'" x2="'+n[0]+'" y2="'+n[1]+'" stroke="#24201b" stroke-width="4" stroke-linecap="round"/><circle cx="'+cx+'" cy="'+cy+'" r="7" fill="#24201b"/></svg>';
   var neg=st.research.charAt(0)=='-';
-  return '<div class="art" style="--wash:'+d.wash+'"></div>'+
+  var dv='--doomc:'+st.c+';--doomglow:'+(st.glow||st.c)+(st.scr1?';--scr1:'+st.scr1+';--scr2:'+st.scr2:'');
+  return art(st)+
    '<div class="wall cal"><div class="cal-yr">'+st.yr+'</div><div class="cal-mo">'+st.mo+'</div><div class="cal-sub lbl">'+st.sub+'</div></div>'+
-   '<div class="wall acc">'+
-     cell('money','Money',st.money)+cell('compute','Compute',st.compute)+cell('research','Research',st.research,neg)+cell('papers','Papers',st.papers)+'</div>'+
-   '<div class="wall doom" style="--doomc:'+d.c+'"><div class="doom-l">'+ic('doom',28)+'P(DOOM)</div>'+
-     '<div class="doom-scr"><span class="doom-v">'+st.doom.toFixed(1)+'%</span><span class="doom-b"><span class="band">'+st.band+'</span>'+(st.dir?'<span class="dir">'+st.dir+'</span>':'')+'</span></div>'+
-     '<div class="lamps">'+lamps+'</div></div>'+
+   '<div class="wall acc">'+cell('money','Money',st.money)+cell('compute','Compute',st.compute)+cell('research','Research',st.research,neg)+cell('papers','Papers',st.papers)+'</div>'+
+   '<div class="wall doom" style="'+dv+'"><div class="doom-l">'+ic('doom',28)+'P(DOOM)</div>'+
+     '<div class="doom-scr"><span class="doom-v">'+st.doom.toFixed(1)+'%</span>'+(st.dir?'<span class="doom-dir">'+st.dir+'</span>':'')+'</div>'+
+     '<div class="doom-band"><small>BAND</small>'+st.band+'</div></div>'+
    '<div class="wall rep"><div class="rep-top"><span class="lbl">'+ic('rep',28)+'Reputation</span><span class="rep-v">'+st.rep+'</span></div>'+dial+'</div>';
   function cell(k,l,v,bad){return '<span class="cell">'+ic(k,28)+'<span><span class="lbl">'+l+'</span><b'+(bad?' class="neg"':'')+'>'+v+'</b></span></span>';}
 }
-
-/* ---------------- desk ---------------- */
-function desk(st,o){
-  o=o||{};
-  return '<div class="dk"></div>'+
-   '<div class="dko stamp-obj"><div class="stamp-face">'+ic('commit',36)+'<span class="t">Commit the<br>month</span></div>'+
-   '<div class="stamp-note"><span>Held for events: '+o.held+' hr</span>'+(o.menu?'':'<span class="key">Enter</span>')+'</div></div>';
+/* Pip's office art + the doom layer: one ambient grade and one glow hue; the window sky, the monitors and the cat take the band.
+   The room keeps its shape; nothing moves. */
+function art(st){
+  var h='<div class="art" style="--wash:'+st.wash+'"></div>';
+  if(st.eldritch){
+    h+='<div class="layer grade"></div><div class="layer tint"></div>'+
+       '<div class="layer sky"></div><div class="layer skyglow"></div>'+
+       '<div class="layer mon-tint" style="left:196px;top:470px;width:130px;height:110px"></div>'+
+       '<div class="layer mon" style="left:120px;top:400px;width:300px;height:260px"></div>'+
+       '<div class="layer mon-tint" style="left:1344px;top:466px;width:96px;height:66px"></div>'+
+       '<div class="layer mon" style="left:1290px;top:420px;width:210px;height:170px"></div>';
+  }
+  return h;
 }
 
-/* ---------------- the schedule (Form A-20) ---------------- */
+/* ---------------- desk ----------------
+   o: {mode:'plan'|'watch'|'review', menu, cards, planLeft, opLeft, foot, staff, held, glow, day} */
+function desk(st,o){
+  var h='<div class="dk"></div>'+(st.eldritch?'<div class="dkgrade"></div>':'');
+  // card box
+  var watch=o.mode=='watch'||o.mode=='review';
+  h+='<button class="dko box'+(o.glow?' glow':'')+(watch?' locked':'')+'"><span class="cards"><i></i><i></i><i></i></span><span class="front">'+
+     '<span class="dkttl">'+ic('actions',36)+'<span class="plate">ACTION CARDS</span></span>'+
+     '<span class="row">'+(watch?'Closed this month':o.cards+' on file')+'</span>'+
+     '<span class="sub">'+(watch?'Opens again at the next plan':'Cards and folders')+'</span>'+
+     (watch||o.menu?'':'<span class="key kbr">A</span>')+'</span></button>';
+  // schedule clipboard
+  var body;
+  if(o.mode=='watch'){
+    var days='';for(var d=1;d<=22;d++) days+='<i class="day'+(d<o.day?' done':d==o.day?' now':'')+'"></i>';
+    body='<div class="hrow"><div class="l"><span class="lbl" style="color:var(--print)">Committed Wed 1 Nov</span><em>11 plays</em></div></div>'+
+         '<div class="hrow"><div class="l"><span class="lbl" style="color:var(--ink2)">Workday</span><em>'+o.day+' of 22</em></div><div class="days">'+days+'</div></div>'+
+         '<div class="foot">Held for events: '+o.held+' hr</div>';
+  } else if(o.mode=='review'){
+    body='<div class="hrow"><div class="l"><span class="lbl" style="color:var(--print)">November closed</span><em>11 plays</em></div></div>'+
+         '<div class="foot">December form blank<br>Opens after the review</div>';
+  } else {
+    var pb='',ob='';for(var i=0;i<12;i++) pb+='<i class="sbx'+(i<o.planLeft?' pl':'')+'"></i>';for(i=0;i<8;i++) ob+='<i class="sbx'+(i<o.opLeft?' op':'')+'"></i>';
+    body='<div class="hrow"><div class="l"><span class="lbl p">Planning</span><em>'+o.planLeft+' of 12 left</em></div><div class="sboxes">'+pb+'</div></div>'+
+         '<div class="hrow"><div class="l"><span class="lbl o">Operating</span><em>'+o.opLeft+' of 8 left</em></div><div class="sboxes">'+ob+'</div></div>'+
+         '<div class="foot">'+o.foot+'</div>';
+  }
+  h+='<button class="dko clipb"><span class="sh"><span class="hd dkttl">'+ic('schedule',28)+'<b>Schedule</b></span>'+body+(o.menu||watch?'':'<span class="key kbr">P</span>')+'</span></button>';
+  // the cat
+  h+='<div class="dko cat'+(st.eldritch?' eldritch':'')+'"><div class="ph"></div><div class="nm">Doom Cat</div></div>';
+  if(st.eldritch) h+='<div class="dko smoke" style="left:836px;top:800px;width:120px;height:110px"></div><div class="dko smoke" style="left:950px;top:780px;width:110px;height:120px"></div>';
+  // shortcuts
+  var sc=[['sc-staff','Staff file','S',o.staff,'staff'],['sc-upg','Upgrades','U','7 on offer','upgrades'],['sc-led','Ledger','L','Clean','ledger'],['sc-gd','Guide','G','Player Guide','guide']];
+  sc.forEach(function(x,i){
+    h+='<button class="dko sc '+x[0]+'" style="left:'+(1180+(i%2)*200)+'px;top:'+(856+Math.floor(i/2)*102)+'px"><span class="t">'+ic(x[4],36)+x[1]+'</span>'+
+       '<span class="r"><span>'+x[3]+'</span>'+(o.menu||watch?'':'<span class="key">'+x[2]+'</span>')+'</span></button>';
+  });
+  // the stamp
+  if(o.mode=='watch'){
+    h+='<div class="dko stamp"><div class="face grey">'+ic('pause',36)+'<span class="t sm">Paused<span class="s">for your answer</span></span></div>'+
+       '<div class="spd"><button>1x</button><button class="on">2x</button><button>4x</button></div></div>';
+  } else if(o.mode=='review'){
+    h+='<button class="dko stamp top"><div class="face go">'+ic('begin',36)+'<span class="t sm">Begin planning<br>December 2017</span></div>'+
+       '<div class="snote"><span>Next: the December form</span><span class="key">Enter</span></div></button>';
+  } else {
+    h+='<button class="dko stamp"><div class="face">'+ic('commit',36)+'<span class="t">Commit the<br>month</span></div>'+
+       '<div class="snote"><span>Held for events: '+o.held+' hr</span>'+(o.menu?'':'<span class="key">Enter</span>')+'</div></button>';
+  }
+  return h;
+}
+
+/* ---------------- state 1: first month, first screen ---------------- */
+function state1(){
+  // The cold open hands over with the Advisor line (cold_open_sequence.gd HANDOFF_HINT_TEXT); the glowing control is the card box,
+  // where the Scouting folder lives in this concept.
+  var note='<div class="note"><div class="lbl">Advisor</div>'+
+    '<p>You do not know anything yet. Go and find out -- scouting (the glowing button).</p>'+
+    '<div class="ft"><button>Got it <span class="key">Esc</span></button></div></div>'+
+    '<svg class="penarrow" style="left:150px;top:690px" width="120" height="150" viewBox="0 0 120 150">'+
+      '<path d="M40 6 C 70 40, 30 80, 62 128" fill="none" stroke="#F6A800" stroke-width="4" stroke-linecap="round"/>'+
+      '<path d="M48 120 L63 136 L72 114" fill="none" stroke="#F6A800" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return wall(JUL)+desk(JUL,{mode:'plan',cards:15,planLeft:12,opLeft:8,foot:'Form blank',staff:'No staff hired',held:20,glow:1})+note;
+}
+
+/* ---------------- state 2: choosing an action (the card drawer) ---------------- */
+var CARDS2=[
+ ['Funds',[
+   {k:'fundraising',n:'Fundraising',c:'4 choices &gt;',f:1},
+   {k:'financing',n:'Financing',c:'7 choices &gt;',f:1},
+   {k:'buy_compute',n:'Purchase Compute',c:'$50,000, no hours'}]],
+ ['People',[
+   {k:'hire',n:'Hire Staff',c:'7 roles, 1 <span class="p">plan hr</span> each &gt;',f:1,onf:1},
+   {k:'advertise',n:'Advertise a Role',c:'',st:['Soon'],grey:1},
+   {k:'connections',n:'Work Your Connections',c:'2 <span class="o">op hr</span>, 6 rep'},
+   {k:'onboard',n:'Onboard New Hires',c:'<span class="o">op hr</span> + money per step',st:['Nobody hired yet'],grey:1}]],
+ ['Research',[
+   {k:'safety',n:'Safety Research',c:'1 <span class="p">plan hr</span>, 10 research',st:['Short 22 research']},
+   {k:'capability',n:'Capability Research',c:'1 <span class="p">plan hr</span>, 10 research',st:['Short 22 research']},
+   {k:'publish',n:'Publish Safety Paper',c:'1 <span class="p">plan hr</span>, 20 research',st:['Short 32 research']},
+   {k:'audit',n:'Safety Audit',c:'2 <span class="o">op hr</span>, $40,000',d:'Comprehensive safety review',focus:1}]],
+ ['Outreach',[
+   {k:'scouting',n:'Scouting',c:'3 choices &gt;',f:1,onf:2},
+   {k:'travel',n:'Travel &amp; Conferences',c:'4 choices &gt;',f:1,st:['Submit Paper: short 27 research']},
+   {k:'publicity',n:'Publicity',c:'5 choices &gt;',f:1}]],
+ ['The lab',[
+   {k:'operations',n:'Operations',c:'3 choices &gt;',f:1},
+   {k:'office',n:'Office',c:'4 choices &gt;',f:1},
+   {k:'strategic',n:'Strategic',c:'4 choices &gt;',f:1}]]
+];
+function card(c){
+  return '<div class="ac-slot'+(c.focus?' focus':'')+'"><button class="card'+(c.f?' folder':'')+'"><span class="ac-top">'+ic(c.k,36)+'<span class="ac-name">'+c.n+'</span></span>'+
+    (c.c?'<span class="ac-cost">'+c.c+'</span>':'')+(c.d?'<span class="ac-desc">'+c.d+'</span>':'')+
+    '<span class="ac-st">'+(c.st||[]).map(function(s){return '<span class="rstamp'+(c.grey?' grey':'')+'">'+s+'</span>';}).join('')+
+    (c.focus?'<span class="addk">Add to form <span class="key">Enter</span></span>':'')+'</span></button>'+
+    (c.onf?'<span class="onf">on form: '+c.onf+'</span>':'')+'</div>';
+}
+function state2(){
+  var h='<div class="dim"></div><section class="mn"><div class="mn-hd"><span class="dkttl">'+ic('actions',36)+'<span class="plate">ACTION CARDS</span></span>'+
+    '<span class="chip">'+ic('hours',24)+'Planning <b>9 of 12</b> left</span><span class="chip">'+ic('hours',24)+'Operating <b>8 of 8</b> left</span>'+
+    '<span class="chip">'+ic('money',24)+'Money <b>$140,000</b></span><span class="chip">'+ic('research',24)+'Research <b class="neg">-12</b></span>'+
+    '<button class="btn-x">'+ic('close',24)+'Close <span class="key">Esc</span></button></div><div class="ac-rows">';
+  CARDS2.forEach(function(r){
+    h+='<div class="ac-row"><div class="ac-div"><span>'+r[0]+'</span></div><div class="ac-slots">'+r[1].map(card).join('');
+    for(var i=r[1].length;i<4;i++) h+='<div class="ac-empty"></div>';
+    h+='</div></div>';
+  });
+  h+='</div></section>';
+  return wall(NOV)+desk(NOV,{mode:'plan',menu:1,cards:17,planLeft:9,opLeft:8,foot:'',staff:'No staff hired',held:17})+h;
+}
+
+/* ---------------- state 3: the month's plan (Form A-20) ---------------- */
 function schedule(st,rows,o){
-  var planCap=12, opCap=8;
-  var planWork=0, opWork=0;
+  var planCap=12, opCap=8, planWork=0, opWork=0;
   rows.forEach(function(r){ if(r[4]=='plan') planWork+=r[3]; else opWork+=r[3]; });
   var spill=Math.max(0,opWork-opCap);                 // ADR-0011 2026-07-28: operating may eat planning hours
   var planLeft=planCap-planWork-spill, opLeft=Math.max(0,opCap-opWork);
   var held=planLeft+opLeft+o.reserve;                 // unspent remainder + explicit reserve (none here)
-  // which row's hours spilled: the operating work beyond the 8th operating hour, in queue order
-  var acc=0, spillRow=-1;
+  var acc=0, spillRow=-1;                             // the play whose hours ran past the 8th operating hour, in queue order
   rows.forEach(function(r,i){ if(r[4]=='op'){ acc+=r[3]; if(acc>opCap && spillRow<0) spillRow=i; } });
 
   var h='<div class="dim"></div><div class="board"><div class="clip"></div><div class="sheet">'+
-    '<span class="hole" style="top:150px"></span><span class="hole" style="top:560px"></span>'+
+    '<span class="hole" style="top:140px"></span><span class="hole" style="top:540px"></span>'+
     '<div class="fm-top"><div><div class="fm-no lbl">Form A-20 / Founder\'s office</div><div class="fm-title">'+ic('schedule',36)+'Schedule of the month</div></div>'+
     '<div class="fm-for"><span class="lbl">For the month of</span><b>'+st.month+'</b></div>'+
     '<button class="btn-x">'+ic('close',24)+'Close <span class="key">Esc</span></button></div>'+
@@ -276,32 +573,24 @@ function schedule(st,rows,o){
      '<div class="tools"><button class="t-pencil">'+ic('undo',24)+'Undo <span class="key">Z</span></button><button class="t-eraser">'+ic('clear',24)+'Clear form <span class="key">C</span></button></div>'+
      '<div class="fine"><b>PARA. 2.</b> Operating work may spill into planning hours. Planning work may never use operating hours.</div>';
   h+='</div><div class="side">';
-
-  // Founder's hours: filled box = hour LEFT (council rule 1); the spilled hour is struck in operating teal
   function boxes(cap,left,cls,sp){var b='';for(var i=0;i<cap;i++){var c=i<left?cls:(i>=cap-sp?'sp':'');b+='<i class="bx '+c+'"></i>';}return b;}
-  // geometry for the spill arrow (box 34 + gap 6)
-  var bw=40, planY=24+6, opY=planY+28+18+24+6;  // top of planning boxes, top of operating boxes (relative to .hrs-wrap)
-  var opEnd=opCap*bw-6, spX=(planCap-1)*bw+17;
+  var bw=40, planY=24+6, opY=planY+28+18+24+6, opEnd=opCap*bw-6, spX=(planCap-1)*bw+17;
   var arrow=spill?'<svg width="480" height="140">'+
      '<path d="M'+(opEnd+8)+' '+(opY+14)+' H'+(spX-14)+' Q'+spX+' '+(opY+14)+' '+spX+' '+(opY)+' V'+(planY+38)+'" fill="none" stroke="#17605f" stroke-width="2.5" stroke-dasharray="6 4"/>'+
-     '<path d="M'+(spX-7)+' '+(planY+42)+' L'+spX+' '+(planY+31)+' L'+(spX+7)+' '+(planY+42)+'" fill="none" stroke="#17605f" stroke-width="2.5" stroke-linejoin="round"/>'+
-     '</svg>':'';
-  h+='<section><div class="sec lbl">'+ic('hours',24)+'Founder\'s hours</div>'+
-     '<div class="hrs-wrap">'+
+     '<path d="M'+(spX-7)+' '+(planY+42)+' L'+spX+' '+(planY+31)+' L'+(spX+7)+' '+(planY+42)+'" fill="none" stroke="#17605f" stroke-width="2.5" stroke-linejoin="round"/></svg>':'';
+  h+='<section><div class="sec lbl">'+ic('hours',24)+'Founder\'s hours</div><div class="hrs-wrap">'+
        '<div class="hr-l"><span class="lbl p">Planning</span><em class="'+(planLeft==0?'zero':'')+'">'+planLeft+' of '+planCap+' left</em></div>'+
        '<div class="boxes">'+boxes(planCap,planLeft,'pl',spill)+'</div>'+
        '<div class="hr-l" style="margin-top:18px"><span class="lbl o">Operating</span><em class="'+(opLeft==0?'zero':'')+'">'+opLeft+' of '+opCap+' left</em>'+(spill?'<span class="pen">'+spill+' hr spills up</span>':'')+'</div>'+
-       '<div class="boxes">'+boxes(opCap,opLeft,'op',0)+'</div>'+
-       arrow+'</div>'+
+       '<div class="boxes">'+boxes(opCap,opLeft,'op',0)+'</div>'+arrow+'</div>'+
      '<div class="led">'+
        '<div class="ln"><span class="k">Planning work</span><span class="dots"></span><span class="v">'+planWork+' hr</span></div>'+
        '<div class="ln"><span class="k">Operating work</span><span class="dots"></span><span class="v">'+opWork+' hr</span></div>'+
        (spill?'<div class="ln sub"><span class="k">of which from planning hours</span><span class="dots"></span><span class="v">'+spill+' hr</span></div>':'')+
        '<div class="ln"><span class="k">Set aside for events</span><span class="dots"></span><span class="stp"><span class="val">'+o.reserve+'</span><button>-</button><button>+</button></span></div>'+
        '<div class="ln big"><span class="k">Held for events at Commit</span><span class="dots"></span><span class="v">'+held+' hr</span></div>'+
-       '<div class="cap">Hours not spent at Commit wait for this month\'s events, then lapse at month end.</div>'+
-     '</div></section>';
-  h+='<section><div class="sec lbl">'+ic('money',24)+'After Commit</div>'+
+       '<div class="cap">Hours not spent at Commit wait for this month\'s events, then lapse at month end.</div></div></section>';
+  h+='<section><div class="sec lbl">'+ic('money',24)+'After costs</div>'+
      '<div class="ln"><span class="k">Money</span><span class="dots"></span><span class="v">'+st.money+' -&gt; '+o.moneyAfter+'</span></div>'+
      '<div class="ln"><span class="k">Reputation</span><span class="dots"></span><span class="v">'+st.rep+' -&gt; '+o.repAfter+'</span></div></section>';
   h+='<section><div class="sec lbl">'+ic('research',24)+'Research quality</div>'+
@@ -310,14 +599,86 @@ function schedule(st,rows,o){
   h+='</div></div></div></div>';
   return {html:h,held:held};
 }
-
-/* ---------------- states ---------------- */
 function state3(){
-  var f=schedule(NOV,PLAN3,{reserve:0,cost:'$107,300 + 6 rep',moneyAfter:'$32,700',repAfter:26});
-  return wall(NOV)+desk(NOV,{menu:1,held:f.held})+f.html;
+  var f=schedule(NOV,PLAN3,{reserve:0,cost:'$102,600 + 6 rep',moneyAfter:'$37,400',repAfter:26});
+  return wall(NOV)+desk(NOV,{mode:'plan',menu:1,cards:17,planLeft:7,opLeft:0,foot:'',staff:'No staff hired',held:f.held})+f.html;
 }
+
+/* ---------------- state 4: WATCH, an event that asks for a choice ---------------- */
+function state4(){
+  var memo='<div class="memo"><div class="pclip"></div>'+
+    '<div class="memo-h"><div class="from lbl">Memo<b>Tue 14 Nov 2017</b></div><span class="rstamp" style="font-size:var(--t-body);line-height:24px">Needs your answer</span></div>'+
+    '<div class="memo-body"><div><div class="memo-t">Talent Opportunity</div><div class="memo-d">A brilliant researcher wants to join your lab at reduced cost!</div></div>'+
+      '<div class="cv"><b>C.V.</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>'+
+    '<div class="ask lbl"><span>Tick one</span><span>Cost</span></div>'+
+    '<button class="ch on"><span class="n">[1]</span><span class="tick"></span><span><span class="nm">Fast-Track Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000 + 1 held hr</span></button>'+
+    '<button class="ch"><span class="n">[2]</span><span class="tick"></span><span><span class="nm">Standard Hiring</span><span class="ef">+1 safety researcher</span></span><span class="c">$25,000</span></button>'+
+    '<button class="ch"><span class="n">[3]</span><span class="tick"></span><span><span class="nm">Decline Offer</span><span class="ef">no change</span></span><span class="c">free</span></button>'+
+    '<div class="memo-f"><span class="have">In hand: <b>$37,400</b>, <b>7</b> held hr</span><button class="file">File answer <span class="key">Enter</span></button></div></div>';
+  var feed=[
+    ['01 Nov','Month committed: 11 plays'],
+    ['01 Nov','Safety Researcher hired'],
+    ['01 Nov','Read for a day (+3.0 research). Nobody noticed. (x2)'],
+    ['01 Nov','Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies.'],
+    ['01 Nov','Safety audit (+scrutiny, +3 reputation)'],
+    ['01 Nov','Work Your Connections: done'],
+    ['01 Nov','Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool.'],
+    ['01 Nov','Networking (+3 reputation)'],
+    ['01 Nov','Tour Offices: Three landlords will quote you terms'],
+    ['01 Nov','Worked the room (+1.5 reputation). No leads you have room for.'],
+    ['01 Nov','Office supplies restocked (+50 stationery, now at 100)'],
+    ['01 Nov','Held for events: 7 hr'],
+    ['14 Nov','MEMO: Talent Opportunity',1]];
+  var tape='<div class="tape"><div class="tape-h lbl"><span>Teleprinter</span><span>November 2017</span></div>'+
+    feed.map(function(l){return '<div class="tl'+(l[2]?' hot':'')+'"><b>'+l[0]+'</b><span>'+l[1]+'</span></div>';}).join('')+'</div>';
+  return wall(WATCH)+desk(WATCH,{mode:'watch',staff:'1 on payroll',held:7,day:10})+'<div class="dim light"></div>'+memo+tape;
+}
+
+/* ---------------- state 5: end of month, the month review ---------------- */
+function state5(){
+  var done=[
+    ['01 Nov','Hire: Safety Researcher','hired'],
+    ['01 Nov','Read the Literature x2','Read for a day (+3.0 research). Nobody noticed.'],
+    ['01 Nov','Post Online','Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies.'],
+    ['01 Nov','Safety Audit','Safety audit (+scrutiny, +3 reputation)'],
+    ['01 Nov','Work Your Connections','done'],
+    ['01 Nov','Go to Meetups','Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool.'],
+    ['01 Nov','Networking','Networking (+3 reputation)'],
+    ['01 Nov','Tour Offices','Three landlords will quote you terms'],
+    ['01 Nov','Go to Meetups','Worked the room (+1.5 reputation). No leads you have room for.'],
+    ['01 Nov','Order Office Supplies','Office supplies restocked (+50 stationery, now at 100)']];
+  var r='<div class="dim"></div><div class="rcpt">'+
+   '<div class="r-h"><div class="lbl">Founder\'s office -- month review</div><h1>NOVEMBER 2017</h1><p>December 2017 begins.</p></div>'+
+   '<div class="r-cols"><div>'+
+     '<div class="r-sec"><div class="lbl"><span>Last month\'s movement</span></div>'+
+       '<div class="mv"><span>Funds</span><span>$140,000 -&gt; $12,400</span><span class="d bad">-$127,600</span></div>'+
+       '<div class="mv"><span>Staff</span><span>0 -&gt; 2</span><span class="d">+2</span></div>'+
+       '<div class="mv"><span>Doom</span><span>HIGH -&gt; SEVERE</span><span class="d bad">crossed up</span></div></div>'+
+     '<div class="r-sec"><div class="lbl"><span>Money</span></div>'+
+       '<div class="r-line"><span>Opened</span><b>$140,000</b></div>'+
+       '<div class="r-line"><span>Plays on the form</span><b class="bad">-$102,600</b></div>'+
+       '<div class="r-line"><span>Fast-Track Hiring</span><b class="bad">-$25,000</b></div>'+
+       '<div class="r-line tot"><span>Closed</span><b>$12,400</b></div></div>'+
+     '<div class="r-sec"><div class="lbl"><span>Founder\'s hours</span></div>'+
+       '<div class="r-line"><span>Held for events</span><b>7 hr</b></div>'+
+       '<div class="r-line"><span>Used on Talent Opportunity</span><b>1 hr</b></div>'+
+       '<div class="r-line"><span>Lapsed at month end</span><b>6 hr</b></div>'+
+       '<div class="r-note">Attention: 20 fresh decisions this month (last month\'s unspent reserve evaporated -- no banking).</div></div>'+
+   '</div><div>'+
+     '<div class="r-sec"><div class="lbl"><span>What happened in November</span></div>'+
+     done.map(function(l){return '<div class="hp"><b>'+l[0]+'</b><span>'+l[1]+' <em>-- '+l[2]+'</em></span></div>';}).join('')+
+     '<div class="hp memo-l"><b>14 Nov</b><span>MEMO Talent Opportunity <em>-- Fast-tracked hiring process! (+1 safety researcher)</em></span></div></div>'+
+   '</div></div></div>';
+  return wall(DEC)+desk(DEC,{mode:'review',staff:'2 on payroll'})+r;
+}
+
+/* ---------------- state 6: late game, high P(Doom) ---------------- */
+function state6(){
+  return wall(APR)+desk(APR,{mode:'plan',cards:17,planLeft:12,opLeft:8,foot:'Form blank',staff:'2 on payroll',held:20});
+}
+
 var stage=document.getElementById('stage');
-stage.innerHTML=state3();
+stage.innerHTML=[null,state1,state2,state3,state4,state5,state6][STATE in {1:1,2:1,3:1,4:1,5:1,6:1}?STATE:3]();
 
 /* ---------------- fit the 1920x1080 stage to the window ---------------- */
 function fit(){
@@ -326,7 +687,7 @@ function fit(){
 }
 fit(); addEventListener('resize',fit);
 
-/* ---------------- ?check=1: layout self-check (overflow, off-stage, small text) ---------------- */
+/* ---------------- ?check=1: layout self-check (overflow, off-stage, small text, overlaps) ---------------- */
 if(Q.get('check')){
   (document.fonts?document.fonts.ready:Promise.resolve()).then(function(){
     var out=[], sr=stage.getBoundingClientRect(), s=sr.width/1920;
@@ -336,14 +697,17 @@ if(Q.get('check')){
       if(hasText){
         var fs=parseFloat(cs.fontSize); if(fs<16) out.push('SMALL '+fs+'px: '+e.textContent.trim().slice(0,40));
         if(e.scrollWidth>e.clientWidth+1&&cs.overflow!='visible') out.push('CLIP-X '+e.className+': '+e.textContent.trim().slice(0,40));
+        var p=e.parentElement; if(p){var pr=p.getBoundingClientRect(),er=e.getBoundingClientRect();
+          if(getComputedStyle(p).overflow=='visible'&&(er.right>pr.right+2||er.bottom>pr.bottom+2)&&!/doom|cal|onf|rstamp/.test(e.className+p.className)) out.push('SPILL '+e.className+' in '+p.className+': '+e.textContent.trim().slice(0,30));}
       }
       var r=e.getBoundingClientRect();
-      if(r.width&&(r.right>sr.right+1||r.bottom>sr.bottom+1||r.left<sr.left-1||r.top<sr.top-1)&&!e.closest('.art,.dk,.dim,.board'))
+      if(r.width&&(r.right>sr.right+1||r.bottom>sr.bottom+1||r.left<sr.left-1||r.top<sr.top-1)&&!e.closest('.art,.dk,.dim,.layer'))
         out.push('OFFSTAGE '+e.className+' '+Math.round((r.left-sr.left)/s)+','+Math.round((r.top-sr.top)/s)+' '+Math.round(r.width/s)+'x'+Math.round(r.height/s));
     });
-    var objs=[].slice.call(stage.querySelectorAll('.wall,.dko'));
+    var objs=[].slice.call(stage.querySelectorAll('.wall,.dko:not(.smoke),.note,.memo,.tape,.rcpt'));
+    var LAYER=/note|memo|tape|rcpt/;
     objs.forEach(function(x,i){objs.slice(i+1).forEach(function(y){var A=x.getBoundingClientRect(),B=y.getBoundingClientRect();
-      if(A.left<B.right&&B.left<A.right&&A.top<B.bottom&&B.top<A.bottom) out.push('OVERLAP '+x.className+' / '+y.className);});});
+      if(!(LAYER.test(y.className)&&/dko/.test(x.className))&&A.left<B.right-1&&B.left<A.right-1&&A.top<B.bottom-1&&B.top<A.bottom-1) out.push('OVERLAP '+x.className+' / '+y.className);});});
     var pre=document.createElement('pre');pre.id='chk';pre.textContent='CHECK '+(out.length?out.join('\n'):'OK');document.body.appendChild(pre);
   });
 }

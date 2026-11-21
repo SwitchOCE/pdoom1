@@ -158,6 +158,179 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
 .tape-gap{height:10px}
 .tape-foot{margin-top:4px;padding-left:34px;font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft)}
 .tape-foot.warn{color:var(--warn)}
+
+/* ---------- the doom layer on the room ("a layer, not a repaint"; docs/art/PALETTE_AND_DOOM_INTENSITY.md) ---------- */
+.band0 .sc-bg{filter:brightness(1) saturate(1)}
+.band0 .sc-tint{background:radial-gradient(ellipse 1100px 520px at 50% 420px,rgba(246,168,0,.10),rgba(246,168,0,0) 75%)}
+.band2 .sc-bg{filter:brightness(.82) saturate(.8)}
+.band2 .sc-tint{background:radial-gradient(ellipse 1300px 460px at 52% 280px,rgba(226,74,59,.18),rgba(226,74,59,0) 75%)}
+.band3 .sc-bg{filter:brightness(.66) saturate(.62) contrast(1.08)}
+.band3 .sc-tint{background:linear-gradient(180deg,rgba(23,10,28,.45),rgba(14,6,20,.55));mix-blend-mode:multiply}
+.dl{position:absolute;inset:0;pointer-events:none}
+.dl-sky{position:absolute;left:296px;top:146px;width:920px;height:246px;clip-path:polygon(0 2%,100% 14%,100% 100%,0 100%);
+  background:linear-gradient(180deg,#4a1450 0%,#8a2440 50%,#b8402e 80%,#5a1a40 100%);mix-blend-mode:color;opacity:.75;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%),linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%),linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);mask-composite:intersect}
+.dl-sky2{position:absolute;left:296px;top:146px;width:920px;height:246px;clip-path:polygon(0 2%,100% 14%,100% 100%,0 100%);
+  background:radial-gradient(ellipse 460px 140px at 52% 78%,rgba(190,60,70,.30),rgba(122,59,143,.10) 60%,rgba(0,0,0,0) 100%);mix-blend-mode:screen}
+.dl-mon{position:absolute;border-radius:3px;background:#a55bd0;mix-blend-mode:color;opacity:.9}
+.dl-glow{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(160,90,210,.42),rgba(122,59,143,.16) 50%,rgba(122,59,143,0));mix-blend-mode:screen}
+.dl-smoke{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(150,113,143,.30),rgba(150,113,143,0));filter:blur(8px)}
+
+/* ---------- home: station shortcuts (left) ---------- */
+.dock{position:absolute;left:48px;top:330px;width:410px;display:flex;flex-direction:column;gap:18px;z-index:20}
+.st{position:relative;height:78px;border-radius:6px;background:linear-gradient(180deg,rgba(74,67,54,.95),rgba(58,52,43,.95));
+  border:2px solid #8b7656;box-shadow:inset 0 0 0 2px #2a251e,0 6px 14px rgba(0,0,0,.45);padding:12px 14px 0 138px;color:#efe5cf}
+.st .ic{position:absolute;left:74px;top:13px}
+.st .kc{position:absolute;left:16px;top:18px;width:46px;height:40px;border-radius:4px;background:#e6dcc6;color:var(--ink);
+  font:700 var(--f18)/40px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74}
+.st .nm{font:700 var(--f22)/28px "Barlow Condensed",sans-serif;letter-spacing:2px}
+.st .sb{font:500 var(--f16)/22px "IBM Plex Mono",monospace;color:#d8c9a8;white-space:nowrap}
+.st.lever{border-color:var(--amber);background:linear-gradient(180deg,rgba(112,88,50,.97),rgba(80,62,38,.97));
+  box-shadow:inset 0 0 0 2px #2a251e,0 0 0 3px rgba(246,168,0,.35),0 0 28px rgba(246,168,0,.55)}
+.st.locked{opacity:.5}
+.dock.hush .kc{visibility:hidden}
+
+/* ---------- home: this month card ---------- */
+.mc{position:absolute;left:1500px;top:178px;width:372px;background:var(--paper);color:var(--ink);border-radius:3px;z-index:20;
+  box-shadow:0 4px 0 var(--paper-edge),0 12px 24px rgba(0,0,0,.5);padding:44px 22px 20px;transform:rotate(.6deg)}
+.mc::before{content:"";position:absolute;left:50%;top:-14px;width:120px;height:34px;margin-left:-60px;border-radius:5px;
+  background:linear-gradient(180deg,#bfc4c6,#8f9496);box-shadow:0 3px 0 #5f6365}
+.mc-h{display:flex;align-items:center;gap:10px;font:700 var(--f22)/28px "Barlow Condensed",sans-serif;letter-spacing:3px;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:6px;white-space:nowrap}
+.mc-at{margin-top:14px;display:grid;grid-template-columns:104px 1fr 70px;column-gap:10px;row-gap:10px;align-items:center}
+.mc-at .l{font:700 var(--f16)/22px "Courier Prime",monospace;letter-spacing:.5px}
+.mc-at .l.p{color:#9a5c0c} .mc-at .l.o{color:#2d5770}
+.mc-at .v{font:700 var(--f16)/22px "Courier Prime",monospace;text-align:right;white-space:nowrap}
+.bar{height:16px;border-radius:2px;background:#f6efdc;border:2px solid #7a6a55;overflow:hidden;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0}
+.bar.plan i{background:var(--plan)} .bar.ops i{background:var(--ops)}
+.mc-q{margin-top:16px;border-top:1px dashed var(--paper-edge);padding-top:12px;font:400 var(--f16)/24px "Courier Prime",monospace;color:var(--ink-soft)}
+.mc-row{display:flex;align-items:center;gap:10px;height:30px;font:700 var(--f16)/30px "Courier Prime",monospace;white-space:nowrap}
+.mc-row .k{flex:1}
+.mc-day{display:flex;align-items:baseline;justify-content:space-between;margin-top:12px;white-space:nowrap}
+.mc-day b{font:700 var(--f22)/28px "Courier Prime",monospace}
+.mc-day span{font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft)}
+.strip{display:flex;gap:2px;margin-top:8px;height:16px}
+.strip i{flex:1;border:1.5px solid #7a6a55;border-radius:1px;background:#f6efdc}
+.strip i.done{background:#5a4632;border-color:#5a4632}
+.strip i.now{background:var(--amber);border-color:#8a5d00}
+.feed{margin-top:8px}
+.feed div{font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink);padding:3px 0;border-bottom:1px dotted #c2b392}
+.feed div:last-child{border-bottom:none}
+.feed .d{color:var(--ink-mute);margin-right:8px}
+.feed .more{color:var(--ink-soft)}
+.sec{font:700 var(--f16)/22px "Courier Prime",monospace;letter-spacing:2px;color:var(--red);margin-top:14px}
+
+/* ---------- first-run advisor note (state 1) ---------- */
+.adv{position:absolute;left:500px;top:300px;width:420px;z-index:22;color:var(--ink);transform:rotate(-1deg)}
+.adv-p{position:relative;background:linear-gradient(180deg,#f3e9cc,#ece0bd);border-radius:2px;padding:18px 22px 18px;box-shadow:0 14px 30px rgba(0,0,0,.55)}
+.adv-p::before{content:"";position:absolute;left:50%;top:-10px;width:90px;height:22px;margin-left:-45px;background:rgba(233,222,190,.75);box-shadow:0 1px 2px rgba(0,0,0,.25);transform:rotate(2deg)}
+.adv-h{display:flex;justify-content:space-between;align-items:center;font:700 var(--f16)/22px "Courier Prime",monospace;letter-spacing:2px;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:6px}
+.adv-x{width:28px;height:26px;border:1.5px solid #9d8f74;border-radius:3px;text-align:center;font:700 var(--f16)/23px "IBM Plex Mono",monospace;color:var(--ink-soft)}
+.adv-t{margin-top:10px;font:700 var(--f18)/26px "Courier Prime",monospace}
+.adv-s{margin-top:8px;font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft)}
+.adv-arrow{position:absolute;left:-62px;top:52px;width:62px;height:20px}
+
+/* ---------- ACTIONS station: the card file (state 2) ---------- */
+.rk{position:absolute;left:48px;top:160px;width:1120px;height:872px;border-radius:8px;z-index:25;
+  background:linear-gradient(180deg,rgba(66,47,30,.97),rgba(52,37,24,.98));
+  border:3px solid #6e5233;box-shadow:0 18px 40px rgba(0,0,0,.65),inset 0 0 0 2px #2e2014;padding:18px 22px}
+.rk-top{display:flex;justify-content:space-between;align-items:center;height:40px}
+.plate{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(180deg,#c9a764,#a7843f);color:#2a1d12;border-radius:3px;padding:0 14px;height:40px;font:700 var(--f22)/40px "Barlow Condensed",sans-serif;letter-spacing:3px;box-shadow:0 2px 0 #6e5233}
+.back{height:40px;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 var(--f16)/40px "IBM Plex Mono",monospace;padding:0 14px;box-shadow:0 3px 0 #9d8f74;white-space:nowrap}
+.rk-res{margin-top:16px;display:flex;gap:12px;height:60px}
+.rs{display:flex;align-items:center;gap:10px;background:#efe6d0;color:var(--ink);border-radius:3px;padding:0 14px 0 10px;min-width:150px;box-shadow:inset 0 2px 4px rgba(0,0,0,.25)}
+.rs .k{font:700 var(--f16)/18px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#6a5236;white-space:nowrap}
+.rs .v{font:600 var(--f22)/30px "IBM Plex Mono",monospace;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.rs.neg{background:#f3d2c4}.rs.neg .v{color:#8a1f10}
+.rs.rs-hrs{margin-left:auto}
+.rk-grid{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+.rk-col{display:flex;flex-direction:column;gap:8px}
+.ac{position:relative;height:60px;border-radius:4px;padding:6px 74px 0 62px;color:var(--ink);background:var(--paper);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.ac > .ic{position:absolute;left:10px;top:10px}
+.ac .l1{display:flex;align-items:center;justify-content:space-between;gap:10px;height:24px;white-space:nowrap}
+.ac .nm{font:700 var(--f18)/24px "Courier Prime",monospace}
+.ac .l2{display:flex;gap:6px;align-items:center;height:26px;white-space:nowrap}
+.ac.door{background:linear-gradient(90deg,#d9bf86,#e2cd9a)}
+.ac.off{background:#c9bea3}
+.ac.off .nm{color:#5d5141}
+.ac.off > .ic{opacity:.55;filter:saturate(.6)}
+.ac.focus{outline:3px solid var(--amber);outline-offset:1px;box-shadow:0 0 18px rgba(246,168,0,.6)}
+.ac .tab{position:absolute;right:6px;top:7px;height:46px;width:58px;border-radius:4px;text-align:center;font:700 var(--f22)/46px "IBM Plex Mono",monospace;color:#2a1d12}
+.ac .tab.go{background:#b99b5c}
+.ac .tab.add{background:#cfc3a5;border:2px solid #9d8f74;line-height:42px}
+.ac.off .tab.add{opacity:.4}
+.ac .tab.enter{background:var(--amber);font-size:var(--f16);border:2px solid #8a5d00;line-height:42px}
+.why{font:700 var(--f16)/20px "Barlow Condensed",sans-serif;letter-spacing:.5px;color:var(--warn);white-space:nowrap}
+.dim-txt{font:400 var(--f16)/22px "Courier Prime",monospace;color:#4f4233;white-space:nowrap}
+.stamp{font:700 var(--f16)/20px "Courier Prime",monospace;color:#2d5770;border:2px solid #2d5770;border-radius:3px;padding:0 6px;transform:rotate(-3deg);white-space:nowrap}
+.new{font:700 var(--f16)/20px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#fff;background:var(--red);border-radius:2px;padding:0 6px}
+.pchip{display:inline-block;height:24px;border-radius:3px;padding:0 7px;font:600 var(--f16)/24px "IBM Plex Mono",monospace;white-space:nowrap}
+.pchip.plan{background:var(--plan);color:#2a1700}
+.pchip.ops{background:var(--ops);color:#0d2330}
+.pchip.res{border:1.5px solid #7a6a55;line-height:21px;color:#3b2d1e;background:rgba(255,255,255,.25)}
+.pchip.ghost{border:1.5px dashed #8a7a64;line-height:21px;color:#5d5141}
+.rk-det{position:absolute;left:22px;right:22px;bottom:18px;height:78px;border-radius:4px;background:#efe6d0;color:var(--ink);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.25),0 0 0 2px var(--amber);display:flex;align-items:center;gap:16px;padding:0 16px}
+.rk-det .tx{flex:1;min-width:0}
+.rk-det .t1{font:700 var(--f18)/26px "Courier Prime",monospace;white-space:nowrap}
+.rk-det .t2{display:flex;gap:8px;align-items:center;margin-top:4px;font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft);white-space:nowrap}
+.rk-det .go{height:44px;border-radius:4px;background:var(--amber);border:2px solid #8a5d00;font:700 var(--f16)/40px "IBM Plex Mono",monospace;padding:0 14px;white-space:nowrap}
+
+/* ---------- WATCH: the event memo across the desk (state 4) ---------- */
+.scrim{position:absolute;inset:0;background:rgba(18,12,9,.38);z-index:21;pointer-events:none}
+.ev{position:absolute;left:630px;top:172px;width:600px;z-index:24;transform:rotate(-.8deg)}
+.ev-p{background:linear-gradient(180deg,#f1e8d0,var(--paper));color:var(--ink);border-radius:3px;box-shadow:0 22px 46px rgba(0,0,0,.65);padding:20px 24px 22px}
+.ev-hd{display:flex;justify-content:space-between;font:700 var(--f16)/22px "Courier Prime",monospace;letter-spacing:1px;color:var(--red);border-bottom:2px solid var(--red);padding-bottom:6px}
+.ev-img{margin-top:14px;height:208px;border-radius:2px;background:url(assets/event_talent_desk.webp) center/cover;filter:sepia(.2) contrast(1.05);box-shadow:inset 0 0 0 2px #8b7656}
+.ev-t{font:700 var(--f28)/34px "Courier Prime",monospace;margin-top:14px}
+.ev-tx{font:400 var(--f18)/26px "Courier Prime",monospace;margin-top:6px;color:#3a2b1c}
+.ev-cash{display:flex;align-items:center;gap:10px;margin-top:12px;padding:6px 12px;border:1.5px solid #7a6a55;border-radius:3px;background:#f6efdc;font:700 var(--f16)/26px "Courier Prime",monospace;white-space:nowrap}
+.ev-cash .sp{flex:1}
+.ev-opt{position:relative;display:grid;grid-template-columns:32px 1fr;column-gap:14px;align-items:center;margin-top:10px;border:2px solid #7a6a55;border-radius:4px;background:#f6efdc;padding:8px 96px 8px 12px;height:66px}
+.ev-opt .k{grid-row:span 2;width:32px;height:32px;border-radius:3px;background:var(--ink);color:var(--paper);font:700 var(--f16)/32px "IBM Plex Mono",monospace;text-align:center}
+.ev-opt .o{display:flex;align-items:center;gap:10px;font:700 var(--f18)/24px "Courier Prime",monospace;white-space:nowrap}
+.ev-opt .cs{display:flex;gap:8px;align-items:center;margin-top:4px;white-space:nowrap}
+.ev-opt .fx{font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink-soft)}
+.ev-opt.focus{outline:3px solid var(--amber);outline-offset:1px;box-shadow:0 0 16px rgba(246,168,0,.55)}
+.ev-opt .ent{position:absolute;right:12px;top:16px;height:30px;border-radius:3px;background:var(--amber);border:2px solid #8a5d00;padding:0 10px;font:700 var(--f16)/26px "IBM Plex Mono",monospace}
+.pb{position:absolute;left:1500px;top:972px;width:372px;height:76px;border-radius:6px;z-index:40;background:linear-gradient(180deg,#3d3a33,#2d2a24);
+  border:3px solid #8b7656;display:flex;align-items:center;gap:8px;padding:0 10px;box-shadow:0 5px 0 #1e1b16}
+.pb-st{width:96px;font:700 var(--f16)/20px "Barlow Condensed",sans-serif;letter-spacing:2px;color:var(--amber)}
+.pb-b{height:52px;flex:1;border-radius:4px;background:#e6dcc6;color:var(--ink);font:700 var(--f18)/52px "IBM Plex Mono",monospace;text-align:center;box-shadow:0 3px 0 #9d8f74;opacity:.5}
+.pb-b.on{background:var(--amber);box-shadow:0 3px 0 #8a5d00;opacity:1}
+
+/* ---------- Month Review: the typed report (state 5) ---------- */
+.rv{position:absolute;left:330px;top:176px;width:1120px;z-index:25;color:var(--ink);transform:rotate(-.3deg);
+  background:linear-gradient(180deg,#f2e9d2,var(--paper));border-radius:3px;box-shadow:0 24px 50px rgba(0,0,0,.65);padding:24px 36px 20px}
+.rv::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:repeating-linear-gradient(90deg,#b9ab88 0 14px,transparent 14px 22px);opacity:.35}
+.rv-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px double var(--red);padding-bottom:10px}
+.rv-h .t{font:700 var(--f28)/36px "Courier Prime",monospace;letter-spacing:1px}
+.rv-h .s{font:700 var(--f18)/24px "Courier Prime",monospace;color:var(--red)}
+.rv-cols{display:grid;grid-template-columns:380px 1fr;column-gap:44px;margin-top:6px}
+.rv-cols > div + div{border-left:1.5px dashed var(--ink-mute);padding-left:44px}
+.mv{display:grid;grid-template-columns:70px 1fr;row-gap:2px;margin-top:10px}
+.mv .k{font:700 var(--f18)/34px "Courier Prime",monospace}
+.mv .v{font:400 var(--f18)/34px "Courier Prime",monospace;white-space:nowrap}
+.mv .v b{font-weight:700}
+.mv .dlt{font:400 var(--f16)/34px "Courier Prime",monospace;color:var(--ink-soft);margin-left:8px}
+.band-w{display:inline-block;height:26px;padding:0 8px;border-radius:3px;font:700 var(--f16)/26px "Barlow Condensed",sans-serif;letter-spacing:2px;color:#fff;vertical-align:middle}
+.rv-p{font:400 var(--f16)/24px "Courier Prime",monospace;color:var(--ink);margin-top:8px}
+.rv-p.mute{color:var(--ink-soft)}
+.pbx{display:flex;gap:4px;margin-top:10px}
+.pbx i{width:18px;height:18px;border-radius:2px;display:block}
+.pbx.plan i{background:var(--plan);border:2px solid #9a5c0c}
+.pbx.ops i{background:var(--ops);border:2px solid #2d5770}
+.pl{margin-top:10px}
+.pl-r{display:grid;grid-template-columns:28px 232px 1fr;column-gap:10px;padding:3px 0;border-bottom:1px dotted #c2b392;align-items:start}
+.pl-r .ic{margin-top:1px}
+.pl-r .n{font:700 var(--f16)/22px "Courier Prime",monospace}
+.pl-r .r{font:400 var(--f16)/22px "Courier Prime",monospace;color:var(--ink)}
+.pl-r.evr .n{color:var(--red)}
+.cm2{flex-direction:column;gap:0}
+.cm2 .cm-txt{line-height:30px}
+.cm2 .cm-sub{font:700 var(--f16)/20px "IBM Plex Mono",monospace;letter-spacing:1px}
+.cm-row{display:flex;align-items:center;gap:12px}
 </style>
 </head>
 <body>
@@ -170,8 +343,19 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
 
   // ---------- the run (fork/design/hifi/run-state.md) ----------
   // Values are run-state.md's sourced lines or godot/data/; fixtures are listed in notes.md.
-  var NOV = {year:"2017", mon:"NOV", day:"WED 1", no:5, full:"NOVEMBER 2017", money:140000, compute:65, research:-12, papers:0, rep:32, doom:40.2, rising:true};
-  var S = NOV;
+  var STATES = {
+    1: {year:"2017", mon:"JUL", day:"TUE 4",  no:1,  full:"JULY 2017",     money:245000, compute:100, research:0,   papers:0, rep:50, doom:20.0, rising:false, band:0},
+    2: {year:"2017", mon:"NOV", day:"WED 1",  no:5,  full:"NOVEMBER 2017", money:140000, compute:65,  research:-12, papers:0, rep:32, doom:40.2, rising:true,  band:1},
+    3: {year:"2017", mon:"NOV", day:"WED 1",  no:5,  full:"NOVEMBER 2017", money:140000, compute:65,  research:-12, papers:0, rep:32, doom:40.2, rising:true,  band:1},
+    // WATCH, Tue 14 Nov (run-state REVISION 2): every queued play ran at Commit on 01 Nov. Money = $140,000 - $102,600.
+    // Reputation = 32 - 6 (Connections) - 1 (Post Online) + 1.5 + 1.5 (Meetups x2) + 3 (Networking) + 3 (Safety Audit) = 34.
+    // Research = -12 + 3 + 3 (Read the Literature x2) = -6.
+    4: {year:"2017", mon:"NOV", day:"TUE 14", no:5,  full:"NOVEMBER 2017", money:37400,  compute:65,  research:-6,  papers:0, rep:34, doom:40.2, rising:true,  band:1, held:7},
+    5: {year:"2017", mon:"DEC", day:"FRI 1",  no:6,  full:"DECEMBER 2017", money:12400,  compute:65,  research:-6,  papers:0, rep:34, doom:56.7, rising:true,  band:2},
+    // projected, all fixture (run-state.md state 6)
+    6: {year:"2018", mon:"APR", day:"MON 2",  no:10, full:"APRIL 2018",    money:12300,  compute:65,  research:4,   papers:0, rep:21, doom:81.4, rising:true,  band:3}
+  };
+  var S = STATES[state];
 
   // ---------- Pip's icons (assets/icons, copied from godot/assets/icons); new_*.svg = drawn here, needs art ----------
   var ICON = {
@@ -185,8 +369,17 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     scout_meetups:"new_meetup_badge.svg",
     network:"network_64.png",                                          // Pip's mapping
     tour_offices:"ui_home_hq_64.png",
-    office_maintenance:"new_maintenance.svg",
-    order_supplies:"new_supplies.svg"
+    order_supplies:"new_supplies.svg",
+    // card file (state 2)
+    fundraise:"ui_guide_resources_64.png", hire_staff:"button_hire_normal_64.png", advertise:"new_advertise.svg",
+    onboard_next:"employee_status_training_64.png", safety_research:"action_research_robustness_64.png",
+    capability_research:"action_research_ml_fundamentals_64.png", publish_paper:"paper.png", travel:"new_travel.svg",
+    buy_compute:"action_facility_upgrade_compute_64.png", operations:"ui_system_settings_64.png", office:"action_facility_expand_office_64.png",
+    publicity:"new_publicity.svg", financing:"action_funding_loan_64.png", scouting:"employee_status_investigating_64.png",
+    strategic:"ui_guide_strategy_64.png", compute:"compute.png", papers:"paper.png",
+    // stations (home dock)
+    st_actions:"ui_guide_actions_64.png", st_floor:"ui_staff_management_64.png", st_proc:"button_upgrade_normal_64.png", st_records:"ui_save_archive_64.png",
+    decline:"ui_control_cancel_64.png"
   };
   function ic(key, size){ return '<img class="ic" src="assets/icons/'+ICON[key]+'" width="'+size+'" height="'+size+'" alt="">'; }
   function money(n){ var s = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); return (n<0?"-$":"$")+s; }
@@ -204,7 +397,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     {id:"scout_meetups",   nm:"Go to Meetups",         wh:"SCOUTING",   pool:"O", h:1, cost:"$300"},
     {id:"network",         nm:"Networking",            wh:"PUBLICITY",  pool:"O", h:1, cost:""},
     {id:"tour_offices",    nm:"Tour Offices",          wh:"OFFICE",     pool:"O", h:1, cost:""},
-    {id:"office_maintenance", nm:"Office Maintenance", wh:"OPERATIONS", pool:"O", h:1, cost:"$5,000"},
+    {id:"scout_meetups",   nm:"Go to Meetups",         wh:"SCOUTING",   pool:"O", h:1, cost:"$300"},
     {id:"order_supplies",  nm:"Order Office Supplies", wh:"OPERATIONS", pool:"O", h:1, cost:"$2,000"}
   ];
   var PLAN_H = 12, OPS_H = 8, RESERVE = 0;
@@ -280,16 +473,175 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     h += '<div class="tape"><div class="tape-p"><div class="tape-h">AFTER COMMIT</div>'+
       '<div class="tape-r" style="margin-top:8px">'+ic("money",24)+'<span class="k">Money</span><span class="v">'+money(S.money)+'</span></div>'+
       '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+money(cashOut)+'</span></div>'+
-      '<div class="tape-r tot sub"><span class="k">after</span><span class="v">'+money(S.money-cashOut)+'</span></div>'+
+      '<div class="tape-r tot sub"><span class="k">after costs</span><span class="v">'+money(S.money-cashOut)+'</span></div>'+
       '<div class="tape-gap"></div>'+
       '<div class="tape-r">'+ic("reputation",24)+'<span class="k">Reputation</span><span class="v">'+S.rep+'</span></div>'+
       '<div class="tape-r sub"><span class="k">plays</span><span class="v">-'+repOut+'</span></div>'+
-      '<div class="tape-r tot sub"><span class="k">after</span><span class="v">'+(S.rep-repOut)+'</span></div>'+
+      '<div class="tape-r tot sub"><span class="k">after costs</span><span class="v">'+(S.rep-repOut)+'</span></div>'+
       '<div class="tape-gap"></div>'+
       '<div class="tape-r warn">'+ic("research",24)+'<span class="k">Research</span><span class="v">'+S.research+'</span></div>'+
       '<div class="tape-foot warn">Below zero: research plays are blocked.</div>'+
       '</div></div>';
     return h;
+  }
+
+  // ---------- home: stations and the month card ----------
+  function bar(kind,total,left){ return '<span class="bar '+kind+'"><i style="width:'+(100*left/total)+'%"></i></span>'; }
+  function dockHTML(o){
+    o = o || {};
+    var items = [["A","ACTIONS","card file","st_actions"],["P","PLAN","the month ahead","st_plan"],["F","LAB FLOOR","staff, research quality","st_floor"],
+                 ["U","PROCUREMENT","upgrades","st_proc"],["L","RECORDS","ledger, feed, guide","st_records"]];
+    return '<div class="dock'+(o.hush?' hush':'')+'">'+items.map(function(t,i){
+      var cls = (o.lever === i ? ' lever' : '') + (o.locked && i < 2 ? ' locked' : '');
+      return '<div class="st'+cls+'"><span class="kc">'+t[0]+'</span>'+ic(t[3],48)+'<div class="nm">'+t[1]+'</div><div class="sb">'+t[2]+'</div></div>';
+    }).join("")+'</div>';
+  }
+  function monthCardHTML(){
+    var h = '<div class="mc"><div class="mc-h">'+ic("st_plan",28)+'THIS MONTH</div>'+
+      '<div class="mc-at"><span class="l p">PLANNING</span>'+bar("plan",12,12)+'<span class="v">12 left</span>'+
+      '<span class="l o">OPERATING</span>'+bar("ops",8,8)+'<span class="v">8 left</span></div>'+
+      '<div class="mc-q">Nothing queued yet.</div></div>';
+    return h;
+  }
+  // WATCH: the month card turns into the month so far
+  function dayCardHTML(){
+    var strip = '';
+    for (var i=1;i<=22;i++) strip += '<i class="'+(i<10?'done':(i===10?'now':''))+'"></i>';
+    return '<div class="mc"><div class="mc-h">'+ic("st_plan",28)+'THE MONTH SO FAR</div>'+
+      '<div class="mc-day"><b>TUE 14 NOV</b><span>workday 10 of 22</span></div><div class="strip">'+strip+'</div>'+
+      '<div class="mc-q" style="padding-top:6px">'+
+        '<div class="mc-row">'+ic("hours",24)+'<span class="k">Held for events</span><span>'+S.held+'h</span></div>'+
+        '<div class="mc-row">'+ic("hire_safety_researcher",24)+'<span class="k">At work</span><span>Safety Researcher</span></div>'+
+      '</div>'+
+      '<div class="sec">FEED</div><div class="feed">'+
+        '<div><span class="d">01 Nov</span>Networking (+3 reputation)</div>'+
+        '<div><span class="d">01 Nov</span>Tour Offices: three landlords will quote you terms.</div>'+
+        '<div><span class="d">01 Nov</span>Worked the room (+1.5 reputation). No leads you have room for.</div>'+
+        '<div><span class="d">01 Nov</span>Office supplies restocked (+50 stationery, now at 100)</div>'+
+        '<div class="more">+ 7 earlier lines in Records</div>'+
+      '</div></div>';
+  }
+  // first-run cue (state 1): the cold open's hand-off line, pointed at the station that holds Scouting
+  function advisorHTML(){
+    return '<div class="adv"><svg class="adv-arrow" viewBox="0 0 62 20"><path d="M60 10 H12" stroke="#F6A800" stroke-width="3"/><path d="M14 2 L2 10 L14 18 Z" fill="#F6A800"/></svg>'+
+      '<div class="adv-p"><div class="adv-h"><span>ADVISOR</span><span class="adv-x">x</span></div>'+
+      '<div class="adv-t">You do not know anything yet. Go and find out -- Scouting.</div>'+
+      '<div class="adv-s">Scouting is in Actions, the glowing station.</div></div></div>';
+  }
+
+  // ---------- ACTIONS station: the card file (state 2) ----------
+  function pc(k,t){ return '<span class="pchip '+k+'">'+t+'</span>'; }
+  function cardsHTML(){
+    var planLeft = 9, opsLeft = 8;       // three planning plays queued so far (run-state state 2)
+    var have = S.research;
+    function short(need){ return '<span class="why">&times; '+(need-have)+' research short</span>'; }
+    function C(id,nm,o){ o.id=id; o.nm=nm; return o; }
+    var colA = [
+      C("fundraise","Fundraising",{door:"4 choices"}),
+      C("hire_staff","Hire Staff",{door:"7 roles", each:pc("plan","1h PLAN")+'<span class="dim-txt">each</span>', stamp:"1 queued"}),
+      C("advertise","Advertise a Role",{off:"coming soon", l2:pc("ops","3h OPS")+pc("res","$8,000")}),
+      C("use_connections","Work Your Connections",{l2:pc("ops","2h OPS")+pc("res","6 rep")}),
+      C("onboard_next","Onboard New Hires",{off:"nobody hired yet", l2:'<span class="dim-txt">OPS hours + money, per step</span>'}),
+      C("safety_research","Safety Research",{l2:pc("plan","1h PLAN")+pc("res","10 research"), why:short(10), off:true}),
+      C("capability_research","Capability Research",{l2:pc("plan","1h PLAN")+pc("res","10 research"), why:short(10), off:true}),
+      C("publish_paper","Publish Safety Paper",{l2:pc("plan","1h PLAN")+pc("res","20 research"), why:short(20), off:true}),
+      C("audit_safety","Safety Audit",{l2:pc("ops","2h OPS")+pc("res","$40,000"), isNew:true, focus:true})
+    ];
+    var colB = [
+      C("travel","Travel & Conferences",{door:"4 choices", extra:'<span class="why">&times; Submit Paper: '+(15-have)+' research short</span>'}),
+      C("buy_compute","Purchase Compute",{l2:pc("res","$50,000")+pc("ghost","no hours")}),
+      C("operations","Operations",{door:"3 choices"}),
+      C("office","Office",{door:"4 choices"}),
+      C("publicity","Publicity",{door:"5 choices"}),
+      C("financing","Financing",{door:"7 choices"}),
+      C("scouting","Scouting",{door:"3 choices", stamp:"2 queued"}),
+      C("strategic","Strategic",{door:"4 choices", isNew:true})
+    ];
+    function card(a){
+      var off = !!a.off, blocker = typeof a.off === "string" ? '<span class="why">&times; '+a.off+'</span>' : (a.why || "");
+      var right = blocker || (a.stamp ? '<span class="stamp">'+a.stamp+'</span>' : '') || (a.isNew ? '<span class="new">NEW</span>' : '');
+      var l2 = a.door ? '<span class="dim-txt">door &middot; '+a.door+(a.each?' &middot;':'')+'</span>'+(a.each||'')+(a.extra||'') : a.l2;
+      var tab = a.focus ? '<div class="tab enter">Enter</div>' : (a.door ? '<div class="tab go">&gt;</div>' : '<div class="tab add">+</div>');
+      return '<div class="ac'+(a.door?' door':'')+(off?' off':'')+(a.focus?' focus':'')+'">'+ic(a.id,40)+
+        '<div class="l1"><span class="nm">'+a.nm+'</span>'+right+'</div><div class="l2">'+l2+'</div>'+tab+'</div>';
+    }
+    var neg = S.research < 0;
+    return '<div class="rk"><div class="rk-top"><span class="plate">'+ic("st_actions",28)+'ACTIONS</span><span class="back">[Esc] Back to desk</span></div>'+
+      '<div class="rk-res">'+
+        '<div class="rs">'+ic("money",36)+'<div><div class="k">MONEY</div><div class="v">'+money(S.money)+'</div></div></div>'+
+        '<div class="rs">'+ic("compute",36)+'<div><div class="k">COMPUTE</div><div class="v">'+S.compute+'</div></div></div>'+
+        '<div class="rs'+(neg?' neg':'')+'">'+ic("research",36)+'<div><div class="k">RESEARCH'+(neg?' &middot; BELOW ZERO':'')+'</div><div class="v">'+S.research+'</div></div></div>'+
+        '<div class="rs">'+ic("papers",36)+'<div><div class="k">PAPERS</div><div class="v">'+S.papers+'</div></div></div>'+
+        '<div class="rs rs-hrs">'+ic("hours",36)+'<div><div class="k">HOURS LEFT</div><div class="v">'+pc("plan",planLeft+" PLAN")+pc("ops",opsLeft+" OPS")+'</div></div></div>'+
+      '</div><div class="rk-grid"><div class="rk-col">'+colA.map(card).join("")+'</div><div class="rk-col">'+colB.map(card).join("")+'</div></div>'+
+      '<div class="rk-det">'+ic("audit_safety",48)+'<div class="tx"><div class="t1">Safety Audit -- Comprehensive safety review</div>'+
+        '<div class="t2">'+pc("ops","2h OPS")+pc("res","$40,000")+'<span>8 operating hours left &middot; new this month</span></div></div>'+
+        '<span class="go">[Enter] Add to plan</span></div></div>';
+  }
+
+  // ---------- WATCH: the event memo (state 4) ----------
+  function eventHTML(){
+    return '<div class="ev"><div class="ev-p"><div class="ev-hd"><span>ACROSS YOUR DESK</span><span>TUE 14 NOV 2017</span></div>'+
+      '<div class="ev-img"></div><div class="ev-t">Talent Opportunity</div>'+
+      '<div class="ev-tx">A brilliant researcher wants to join your lab at reduced cost!</div>'+
+      '<div class="ev-cash">'+ic("money",24)+'<span>Cash '+money(S.money)+'</span><span class="sp"></span>'+ic("hours",24)+'<span>Held for events '+S.held+'h</span></div>'+
+      '<div class="ev-opt focus"><span class="k">1</span><span class="o">'+ic("hire_safety_researcher",24)+'Fast-Track Hiring</span>'+
+        '<span class="cs">'+pc("res","$25,000")+pc("res","1h held")+'<span class="fx">+1 safety researcher</span></span><span class="ent">Enter</span></div>'+
+      '<div class="ev-opt"><span class="k">2</span><span class="o">'+ic("hire_safety_researcher",24)+'Standard Hiring</span>'+
+        '<span class="cs">'+pc("res","$25,000")+'<span class="fx">+1 safety researcher</span></span></div>'+
+      '<div class="ev-opt"><span class="k">3</span><span class="o">'+ic("decline",24)+'Decline Offer</span>'+
+        '<span class="cs">'+pc("ghost","free")+'</span></div>'+
+      '</div></div>';
+  }
+
+  // ---------- Month Review (state 5) ----------
+  function bandChip(d){ return '<span class="band-w" style="background:'+stroke(d)+'">'+bandOf(d)+'</span>'; }
+  function reviewHTML(){
+    var boxesP = '', boxesO = '';
+    for (var i=0;i<12;i++) boxesP += '<i></i>';
+    for (var j=0;j<8;j++) boxesO += '<i></i>';
+    var R = [
+      ["hire_safety_researcher","Hire: Safety Researcher","Safety Researcher hired."],
+      ["scout_read","Read the Literature x2","Read for a day (+3.0 research). Nobody noticed. (twice)"],
+      ["scout_shitpost","Post Online","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+      ["audit_safety","Safety Audit","Safety audit (+scrutiny, +3 reputation)"],
+      ["use_connections","Work Your Connections","Reached out through your network -- a pre-vetted lead may surface shortly."],
+      ["scout_meetups","Go to Meetups","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+      ["network","Networking","Networking (+3 reputation)"],
+      ["tour_offices","Tour Offices","Three landlords will quote you terms."],
+      ["scout_meetups","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
+      ["order_supplies","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"]
+    ];
+    var pl = R.map(function(r){ return '<div class="pl-r">'+ic(r[0],24)+'<span class="n">'+r[1]+'</span><span class="r">'+r[2]+'</span></div>'; }).join("");
+    pl += '<div class="pl-r evr">'+ic("hire_safety_researcher",24)+'<span class="n">Talent Opportunity<br>Fast-Track Hiring</span><span class="r">Fast-tracked hiring process! (+1 safety researcher)</span></div>';
+    return '<div class="rv"><div class="rv-h"><span class="t">MONTH REVIEW -- DECEMBER 2017</span><span class="s">December 2017 begins.</span></div>'+
+      '<div class="rv-cols"><div>'+
+        '<div class="sec">LAST MONTH\'S MOVEMENT</div>'+
+        '<div class="mv">'+
+          '<span class="k">Funds</span><span class="v"><b>$140,000 -&gt; $12,400</b><span class="dlt">(-$127,600)</span></span>'+
+          '<span class="k">Staff</span><span class="v"><b>0 -&gt; 2</b><span class="dlt">(+2)</span></span>'+
+          '<span class="k">Doom</span><span class="v">'+bandChip(40.2)+' <b>-&gt;</b> '+bandChip(56.7)+'<span class="dlt">crossed up</span></span>'+
+        '</div>'+
+        '<div class="sec" style="margin-top:26px">ATTENTION</div>'+
+        '<div class="rv-p">20 fresh hours this month: 12 planning, 8 operating.</div>'+
+        '<div class="pbx plan">'+boxesP+'</div><div class="pbx ops">'+boxesO+'</div>'+
+        '<div class="rv-p mute">November held 7 hours for events; 1 went to Talent Opportunity. The other 6 evaporated -- no banking.</div>'+
+      '</div><div>'+
+        '<div class="sec">NOVEMBER\'S PLAYS</div><div class="pl">'+pl+'</div>'+
+      '</div></div></div>';
+  }
+
+  // ---------- the doom layer (state 6): sky swap, monitor glow, smoke; the room keeps its shape ----------
+  function doomLayerHTML(){
+    var mons = [[472,452,66,46],[1068,437,52,40],[1222,414,34,34],[1228,546,90,60],[1489,538,80,60]];
+    var h = '<div class="dl"><div class="dl-sky"></div><div class="dl-sky2"></div>';
+    mons.forEach(function(m){
+      h += '<div class="dl-mon" style="left:'+m[0]+'px;top:'+m[1]+'px;width:'+m[2]+'px;height:'+m[3]+'px"></div>';
+      var g = m[2]*4.2; h += '<div class="dl-glow" style="left:'+(m[0]+m[2]/2-g/2)+'px;top:'+(m[1]+m[3]/2-g/2)+'px;width:'+g+'px;height:'+g+'px"></div>';
+    });
+    [[900,760,520,140],[1380,840,460,120],[620,880,380,110]].forEach(function(s){
+      h += '<div class="dl-smoke" style="left:'+s[0]+'px;top:'+s[1]+'px;width:'+s[2]+'px;height:'+s[3]+'px"></div>'; });
+    return h + '</div>';
   }
 
   // ---------- frame ----------
@@ -307,7 +659,7 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     return STOPS[STOPS.length-1][1];
   }
   function stroke(d){ // get_doom_stroke_color: lift dark tiers toward a bright magenta so they stay legible
-    var c = doomRGB(d), lum = .299*c[0]+.587*c[1]+.114*c[2], k = lum < .22 ? (.22-lum)/.22*.85 : 0, B=[.90,.40,.85];
+    var c = doomRGB(d), lum = .2126*c[0]+.7152*c[1]+.0722*c[2], k = lum < .22 ? (.22-lum)/.22*.8 : 0, B=[.90,.40,.85];
     return "rgb("+c.map(function(v,j){ return Math.round(255*(v+(B[j]-v)*k)); }).join(",")+")";
   }
   function bandOf(d){ for (var i=0;i<BANDS.length;i++) if (d < BANDS[i][0]) return BANDS[i][1]; return "TERMINAL"; }
@@ -322,10 +674,10 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     svg += '<path d="'+arc(cx,cy,r+17,0,d/100)+'" stroke="#fff1d6" stroke-width="5" fill="none" stroke-linecap="round"/>';
     svg += '<text x="'+(cx-r)+'" y="'+(cy+26)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="16" text-anchor="middle">0</text>';
     svg += '<text x="'+(cx+r)+'" y="'+(cy+26)+'" fill="#d9c7dc" font-family="IBM Plex Mono" font-size="16" text-anchor="middle">100</text></svg>';
-    var col = stroke(d);
+    var col = stroke(d), txt = d >= 74 ? "rgb(236,170,240)" : col;
     return '<div class="dm">'+svg+'<div class="dm-lab">'+ic("doom",22)+'P(DOOM)</div>'+(S.rising?'<div class="dm-rise">'+ic("rising",22)+'RISING</div>':'')+
-      '<div class="dm-val" style="color:'+col+';text-shadow:0 0 14px '+col.replace("rgb","rgba").replace(")",",.4)")+'">'+d.toFixed(1)+'%</div>'+
-      '<div class="dm-band" style="color:'+col+'">'+bandOf(d)+'</div></div>';
+      '<div class="dm-val" style="color:'+txt+';text-shadow:0 0 14px '+col.replace("rgb","rgba").replace(")",",.4)")+'">'+d.toFixed(1)+'%</div>'+
+      '<div class="dm-band" style="color:'+txt+'">'+bandOf(d)+'</div></div>';
   }
   function repHTML(){
     var v=S.rep, cx=66, cy=58, r=48, t=Math.PI*(1-v/100);
@@ -338,16 +690,27 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
     return '<div class="rp"><div class="rp-lab">'+ic("reputation",22)+'REPUTATION</div><div class="rp-val">'+v+'</div>'+svg+'</div>';
   }
   function frameHTML(){
-    return '<div class="cal"><div class="cal-band">'+S.year+'</div><div class="cal-mon">'+S.mon+'</div><div class="cal-no">'+S.day+' &middot; MONTH '+S.no+'</div></div>'+
-      doomHTML()+repHTML()+
-      '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span><span class="cm-key">Enter</span></div>';
+    var h = '<div class="cal"><div class="cal-band">'+S.year+'</div><div class="cal-mon">'+S.mon+'</div><div class="cal-no">'+S.day+' &middot; MONTH '+S.no+'</div></div>'+
+      doomHTML()+repHTML();
+    if (state === 4)        // WATCH: the Commit slot is playback; the open event stops it and owns the keys
+      h += '<div class="pb"><div class="pb-st">EVENT<br>PAUSED</div><span class="pb-b on">||</span><span class="pb-b">1x</span><span class="pb-b">2x</span><span class="pb-b">4x</span></div>';
+    else if (state === 5)   // Month Review: the same slot hands back to PLAN
+      h += '<div class="cm">'+ic("commit",36)+'<div style="text-align:center"><div class="cm-txt" style="line-height:30px">BEGIN PLANNING</div><div class="cm-sub" style="font:700 16px/20px \'IBM Plex Mono\',monospace;letter-spacing:2px">DECEMBER 2017</div></div><span class="cm-key">Enter</span></div>';
+    else                    // a focused card owns Enter in state 2, so Commit drops its key there
+      h += '<div class="cm">'+ic("commit",36)+'<span class="cm-txt">COMMIT THE MONTH</span>'+(state === 2 ? '' : '<span class="cm-key">Enter</span>')+'</div>';
+    return h;
   }
 
   // ---------- assemble ----------
   var stage = document.getElementById("stage");
-  stage.classList.add("band1");
-  var h = '<div class="sc-bg"></div><div class="sc-tint"></div><div class="sc-vign"></div><div class="sc-dim"></div>';
-  h += planHTML();
+  stage.classList.add("band"+S.band);
+  var h = '<div class="sc-bg"></div>'+(S.band === 3 ? doomLayerHTML() : '')+'<div class="sc-tint"></div><div class="sc-vign"></div>';
+  if (state === 1) h += dockHTML({lever:0}) + monthCardHTML() + advisorHTML();
+  if (state === 2) h += '<div class="sc-dim"></div>' + cardsHTML();
+  if (state === 3) h += '<div class="sc-dim"></div>' + planHTML();
+  if (state === 4) h += dockHTML({locked:true, hush:true}) + dayCardHTML() + '<div class="scrim"></div>' + eventHTML();
+  if (state === 5) h += '<div class="sc-dim"></div>' + reviewHTML();
+  if (state === 6) h += dockHTML() + monthCardHTML();
   h += frameHTML();
   stage.innerHTML = h;
 
@@ -374,6 +737,21 @@ body{font-family:"IBM Plex Mono",monospace;color:var(--off)}
       if (own && el.parentElement){ var pr = el.parentElement.getBoundingClientRect();
         if (r.right > pr.right + 1 || r.left < pr.left - 1) out.push("SPILLS-PARENT "+tag); }
     });
+    // text boxes that overlap other text boxes (outside ancestor chains)
+    var T = [];
+    stage.querySelectorAll("*").forEach(function(el){
+      var own = Array.prototype.some.call(el.childNodes, function(n){ return n.nodeType === 3 && n.textContent.trim(); });
+      if (!own || getComputedStyle(el).visibility === "hidden") return;
+      var rg = document.createRange(); rg.selectNodeContents(el);
+      var fs = parseFloat(getComputedStyle(el).fontSize) * (stage.getBoundingClientRect().width/1920);
+      Array.prototype.forEach.call(rg.getClientRects(), function(r){ if (r.width > 1){ var m=(r.top+r.bottom)/2; // glyph band, not the line box
+        T.push([el, {left:r.left, right:r.right, top:m-.4*fs, bottom:m+.4*fs}]); } });
+    });
+    for (var a=0;a<T.length;a++) for (var b=a+1;b<T.length;b++){
+      var e1=T[a][0], e2=T[b][0]; if (e1 === e2 || e1.contains(e2) || e2.contains(e1)) continue;
+      var r1=T[a][1], r2=T[b][1], w=Math.min(r1.right,r2.right)-Math.max(r1.left,r2.left), hh=Math.min(r1.bottom,r2.bottom)-Math.max(r1.top,r2.top);
+      if (w > 2 && hh > 2) out.push("TEXT-OVERLAP '"+e1.textContent.trim().slice(0,24)+"' / '"+e2.textContent.trim().slice(0,24)+"'");
+    }
     var pre = document.createElement("pre"); pre.id = "chk"; pre.textContent = "CHECK "+out.length+"\n"+out.join("\n");
     document.body.appendChild(pre);
   });

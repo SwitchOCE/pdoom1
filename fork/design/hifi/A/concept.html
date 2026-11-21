@@ -45,7 +45,7 @@ body{font-family:"Share Tech Mono",monospace;color:#E9F2F2}
 .dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 34% 50%,rgba(14,8,10,.62),rgba(14,8,10,.48) 70%)}
 
 /* ===== shared hardware ===== */
-.hw{border-radius:10px;background:linear-gradient(160deg,#4a4038,#2c2520);
+.hw{isolation:isolate;border-radius:10px;background:linear-gradient(160deg,#4a4038,#2c2520);
   box-shadow:0 14px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08),inset 0 -2px 0 rgba(0,0,0,.35)}
 .hw:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:url(assets/tex_painted_metal_panel.webp) 0 0/512px;opacity:.10;mix-blend-mode:overlay}
 .screw{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8d7f6c,#3b332b 70%);box-shadow:0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(0,0,0,.5)}
@@ -155,11 +155,11 @@ body{font-family:"Share Tech Mono",monospace;color:#E9F2F2}
 .q-tot span{color:var(--amber-soft)}
 
 /* at Commit: what the plan will leave */
-.ac{margin-top:auto;border:1px solid var(--amber-dim);display:grid;grid-template-columns:190px 340px 1fr 1fr;height:96px;position:relative}
+.ac{margin-top:auto;border:1px solid var(--amber-dim);display:grid;grid-template-columns:236px 330px 1fr 1fr;height:96px;position:relative}
 .ac>div{padding:16px 20px;display:flex;flex-direction:column;justify-content:center;gap:10px}
 .ac>div+div{border-left:1px dashed var(--amber-faint)}
 .ac .h{font-size:var(--t1);letter-spacing:2px;color:var(--amber-soft)}
-.ac .t{font-size:var(--t3);letter-spacing:3px;color:var(--amber)}
+.ac .t{font-size:var(--t3);letter-spacing:2px;color:var(--amber);white-space:nowrap}
 .ac .b{font-size:var(--t3);color:var(--amber-hi);white-space:nowrap}
 .ac .b em{font-style:normal;color:var(--amber-soft)}
 .ac .s{font-size:var(--t1);color:var(--amber-soft)}
@@ -171,6 +171,161 @@ body{font-family:"Share Tech Mono",monospace;color:#E9F2F2}
 .rq-sw span.on{background:linear-gradient(#d9b56a,#a8823e);color:#21180c}
 .esc-plate{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;color:#cbbda8;border:2px solid var(--brass-edge);border-radius:4px;padding:8px 14px;display:flex;gap:8px;align-items:center}
 .esc-plate .key{border-color:#8f7a52;color:#e0d2b6}
+
+/* ===== window sky (part of the doom layer; the frame stays) ===== */
+.sky{position:absolute;left:968px;top:300px;width:520px;height:190px;pointer-events:none;
+  -webkit-mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 52% 60% at 50% 50%,#000 55%,transparent 100%)}
+
+/* ===== wall calendar: the month ===== */
+.cal{left:56px;top:48px;width:236px;height:128px;background:#e4d8bd;color:var(--ink);border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.55);transform:rotate(-1deg)}
+.cal-head{height:76px;background:#7d3028;color:#f2e7d0;display:flex;align-items:center;justify-content:center;border-radius:3px 3px 0 0;font:700 var(--t5)/1 "Barlow Condensed",sans-serif;letter-spacing:2px}
+.cal-year{text-align:center;font:700 var(--t4)/52px "Barlow Condensed",sans-serif;color:#3a2e22}
+.cal-rings{position:absolute;top:-8px;left:0;right:0;display:flex;justify-content:space-around;padding:0 40px}
+.cal-rings i{width:8px;height:18px;border-radius:4px;background:#9b9184;box-shadow:inset 0 0 0 2px #5c554c}
+
+/* ===== the office cat's photo on the desk (Pip's cat art; the glow around it is the doom layer) ===== */
+.catf{left:652px;top:800px;width:124px;height:150px;padding:8px 8px 22px;background:linear-gradient(#e9dfc8,#d4c6a6);border-radius:2px;
+  box-shadow:0 10px 18px rgba(0,0,0,.6);transform:rotate(2deg)}
+.catf img{display:block;width:108px;height:120px;object-fit:cover;object-position:50% 30%}
+.cat-glow{position:absolute;pointer-events:none;border-radius:50%}
+
+/* ===== home terminal (plan at a glance) ===== */
+.term{left:56px;top:612px;width:560px;height:428px}
+.t-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--amber-dim);padding-bottom:8px}
+.t-title{font-size:var(--t3);letter-spacing:3px}
+.t-sub{font-size:var(--t1);color:var(--amber-soft)}
+.t-att{display:grid;grid-template-columns:118px 1fr auto;align-items:center;row-gap:10px;padding:14px 0 12px;border-bottom:1px dashed var(--amber-faint)}
+.t-att .l{font-size:var(--t1);letter-spacing:2px;color:var(--amber-soft)}
+.t-att .l.op{color:var(--op)}
+.t-att .v{font-size:var(--t2);color:var(--amber-hi);text-align:right}
+.t-att .v.op{color:var(--op-hi)}
+.t-att .pips{display:flex}
+.t-att .pip{width:12px;height:12px}
+.t-q{padding-top:12px;font-size:var(--t2);line-height:30px}
+.t-q .n{color:var(--amber-soft);display:inline-block;width:40px}
+.t-q .row{display:flex;justify-content:space-between}
+.t-q .dim2{color:var(--amber-soft)}
+.t-q .op{color:var(--op)}
+.mbar{position:relative;height:14px;margin:12px 0 6px;border:1px solid var(--amber-dim);background:repeating-linear-gradient(90deg,transparent 0 calc(100%/22 - 1px),rgba(138,98,36,.45) calc(100%/22 - 1px) calc(100%/22))}
+.mbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--amber-dim),var(--amber))}
+.mbar b{position:absolute;top:-6px;width:4px;height:24px;background:var(--amber-hi);box-shadow:0 0 8px var(--amber)}
+
+/* ===== menus: one frame (title plate, its own state, how to close it) ===== */
+.menu{left:56px;top:362px;width:1488px;height:678px;isolation:isolate}
+.rack-wood{background:linear-gradient(90deg,#4e3620,#6a4b2c 6%,#6a4b2c 94%,#4e3620);border-radius:8px;box-shadow:0 24px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08)}
+.rack-wood:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:url(assets/tex_plywood_stained.webp) 0 0/512px;opacity:.18;mix-blend-mode:multiply}
+.m-head{position:absolute;z-index:1;left:24px;right:24px;top:18px;height:48px;display:flex;align-items:center;gap:18px;white-space:nowrap}
+.m-title{height:44px;font-size:var(--t3);letter-spacing:3px;display:flex;align-items:center;gap:12px;padding:0 18px 0 8px}
+.ic-title{width:30px;height:30px}
+.m-res{display:flex;gap:12px;align-items:center;font:400 var(--t2)/1 "Share Tech Mono",monospace;color:#e6d6b8}
+.m-res>span{display:flex;align-items:center;gap:6px}
+.m-res b{font-weight:400;color:var(--amber)}
+.m-res b.bad{color:#ff7a5c}
+.m-res em{font-style:normal;color:#cbbda8;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1px}
+.ic-res{width:22px;height:22px}
+.m-hrs{display:flex;gap:8px;align-items:center;font:400 var(--t2)/1 "Share Tech Mono",monospace;color:var(--amber-hi)}
+.m-hrs em{font-style:normal;color:#cbbda8;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1px;margin-left:4px}
+.m-hrs .pips{display:flex;gap:2px}
+.m-hrs .pip{width:8px;height:8px;border-width:2px;box-shadow:none}
+.m-hrs .op-v{color:var(--op-hi)}
+.m-close{margin-left:auto;display:flex;gap:8px;align-items:center;color:#e0d2b6}
+.grid{position:absolute;z-index:1;left:24px;right:24px;top:84px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+
+/* slips (actions you add) and folders (doors you open) */
+.slip{position:relative;height:180px;border-radius:3px;color:var(--ink);padding:34px 12px 10px 14px;background:linear-gradient(180deg,#efe5cd,#e2d5b8);box-shadow:0 4px 8px rgba(0,0,0,.5)}
+.slip-tab{position:absolute;left:0;top:0;height:26px;padding:0 10px;border-radius:3px 0 3px 0;font:700 var(--t1)/26px "Barlow Condensed",sans-serif;letter-spacing:1px;color:#fff}
+.slip-n{font:700 var(--t2)/1.15 "Courier Prime",monospace;padding-right:46px}
+.ic-slip{position:absolute;right:12px;top:34px;width:36px;height:36px}
+.slip-c{font:400 var(--t1)/1.3 "Courier Prime",monospace;margin-top:6px;color:#3a3024}
+.slip-c .op{color:var(--teal-ink);font-weight:700}
+.slip-st{position:absolute;left:12px;right:12px;bottom:12px;border:2px solid var(--stamp);color:var(--stamp);border-radius:3px;white-space:nowrap;
+  font:700 var(--t1)/1.1 "Barlow Condensed",sans-serif;letter-spacing:.5px;text-align:center;padding:5px 2px;background:rgba(168,38,29,.06)}
+.slip.blocked{background:linear-gradient(180deg,#d9d0bd,#cbc1aa)}
+.slip.blocked .slip-n,.slip.blocked .slip-c{color:#4b4236}
+.slip.soon .slip-st{border-color:#5d5346;color:#4a4238;background:none}
+.slip.door{background:linear-gradient(180deg,#dcbd7d,#c9a764);border-radius:2px 4px 4px 4px}
+.slip.door:before{content:"";position:absolute;right:12px;top:-9px;width:70px;height:12px;background:#d7b673;border-radius:4px 4px 0 0}
+.slip.door .slip-c{color:#3e3220}
+.slip-go{position:absolute;left:14px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:center;
+  font:700 var(--t1)/1 "Courier Prime",monospace;color:#3e3220;border-top:1px solid rgba(62,50,32,.35);padding-top:8px}
+.slip-go b{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1px;background:#3e3220;color:#e9d6a6;padding:3px 8px;border-radius:2px}
+.clips{display:flex;gap:6px;margin-top:8px}
+.clip{display:inline-block;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:.5px;color:#1f4d46;background:#cfe5df;border:1px solid var(--teal-ink);border-radius:2px;padding:3px 6px}
+.clip.new{color:#5a3a06;background:#f6d98f;border-color:#a87a1c}
+.lit{box-shadow:0 0 0 3px var(--amber),0 0 22px rgba(246,168,0,.4),0 10px 22px rgba(0,0,0,.6)}
+.st-in{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:.5px;color:var(--stamp);border:2px solid var(--stamp);border-radius:3px;padding:3px 6px;background:rgba(168,38,29,.06)}
+.detail{height:180px;border-radius:3px;background:#f3ead4;color:var(--ink);padding:12px 14px;box-shadow:0 0 0 3px var(--amber),0 10px 22px rgba(0,0,0,.6);position:relative}
+.detail .k{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:1.5px;color:#7d3028}
+.detail h4{font:700 var(--t2)/1.15 "Courier Prime",monospace;margin:8px 0 6px}
+.detail p+p{margin-top:4px}
+.detail p{font:400 var(--t1)/1.3 "Courier Prime",monospace;color:#3a3024}
+.detail .go{position:absolute;left:14px;right:14px;bottom:12px;display:flex;justify-content:space-between;align-items:center;font:700 var(--t1)/1 "Courier Prime",monospace}
+.detail .go .key{color:#3e3220}
+
+/* ===== tutorial: the advisor's card (cold open hand-off) ===== */
+.adv{left:842px;top:618px;width:400px;padding:20px 22px 18px;background:linear-gradient(180deg,#f3ead4,#e6dabe);color:var(--ink);border-radius:3px;
+  box-shadow:0 0 0 3px var(--amber),0 16px 30px rgba(0,0,0,.6);transform:rotate(-.6deg)}
+.adv .k{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#7d3028}
+.adv p{font:400 var(--t2)/1.4 "Courier Prime",monospace;margin-top:12px;color:#2f261b}
+.adv .ptr{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px dashed #b4a582;font:700 var(--t1)/1 "Courier Prime",monospace;color:#3e3220}
+.adv .ptr .key{color:#3e3220}
+.adv:after{content:"";position:absolute;right:-26px;top:24px;border:13px solid transparent;border-left:16px solid var(--amber)}
+.kb.hint{background:linear-gradient(var(--brass-hi),var(--brass-lo));box-shadow:0 0 0 3px rgba(246,168,0,.85),0 0 26px rgba(246,168,0,.55),0 2px 3px rgba(0,0,0,.5)}
+
+/* ===== WATCH: the clock housing and the event slip ===== */
+.date-win{position:absolute;z-index:1;left:20px;right:20px;top:76px;height:96px;border-radius:6px;background:linear-gradient(#2a1f12,#1f170d);box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--amber);text-shadow:0 0 8px rgba(246,168,0,.4)}
+.date-win b{font:400 var(--t5)/1 "Share Tech Mono",monospace}
+.date-win span{font:400 var(--t1)/1 "Share Tech Mono",monospace;color:var(--amber-soft)}
+.paused{position:absolute;z-index:1;left:20px;right:20px;top:188px;height:56px;border-radius:6px;border:2px solid #e24a3b;color:#ffb3a6;
+  display:flex;align-items:center;justify-content:center;gap:10px;font:700 var(--t3)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;background:rgba(226,74,59,.12)}
+.paused i{width:12px;height:12px;border-radius:50%;background:#e24a3b;box-shadow:0 0 10px #e24a3b}
+.speed{position:absolute;z-index:1;left:20px;right:20px;top:262px;display:flex;gap:8px}
+.speed span{flex:1;text-align:center;font:700 var(--t1)/38px "Barlow Condensed",sans-serif;letter-spacing:1px;background:#1b1612;color:#a39686;border-radius:4px}
+.speed span.on{background:linear-gradient(#d9b56a,#a8823e);color:#21180c}
+.ev{left:668px;top:96px;width:640px;background:linear-gradient(180deg,#f2e9d4,#e6dabe);border-radius:3px;color:var(--ink);
+  box-shadow:0 22px 44px rgba(0,0,0,.65);transform:rotate(-.8deg);padding:26px 30px 24px}
+.ev:before{content:"";position:absolute;left:50%;top:-10px;width:90px;height:22px;margin-left:-45px;background:rgba(220,206,170,.75);transform:rotate(2deg);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.ev-k{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#7d3028;display:flex;justify-content:space-between}
+.ev-t{font:700 var(--t4)/1.1 "Courier Prime",monospace;margin:14px 0 10px}
+.ev-p{font:400 var(--t2)/1.4 "Courier Prime",monospace;color:#3a3024}
+.ev-o{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:52px;border:2px solid #5a4a38;border-radius:3px;padding:0 14px;font:700 var(--t2)/1 "Courier Prime",monospace;background:rgba(255,255,255,.25)}
+.ev-o>div.on{border-color:#2a1a04;background:#f8e6b0;box-shadow:0 0 0 3px var(--amber)}
+.ev-o i{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;font-style:normal;background:#3e3220;color:#e9d6a6;text-align:center;padding:4px 0;border-radius:2px;width:28px}
+.ev-o span{font:400 var(--t1)/1 "Courier Prime",monospace;color:#3a3024;display:flex;align-items:center;gap:12px}
+.ev-o span .key{color:#2a1a04}
+.ev-f{margin-top:14px;font:400 var(--t1)/1 "Courier Prime",monospace;color:#5a4a38;display:flex;justify-content:space-between}
+
+/* ===== month review: the printed report on the desk ===== */
+.rv{left:56px;top:200px;width:1184px;height:840px;background:linear-gradient(180deg,#f3ead5,#e7dcc1);color:var(--ink);border-radius:2px;
+  box-shadow:0 24px 50px rgba(0,0,0,.7);padding:30px 44px 28px;display:flex;flex-direction:column}
+.rv:before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(60,48,32,.18) 22px 30px);border-bottom:1px dashed rgba(60,48,32,.35)}
+.rv-k{display:flex;justify-content:space-between;font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#7d3028;margin-top:4px}
+.rv-head{display:flex;align-items:baseline;gap:24px;margin:12px 0 4px}
+.rv-t{font:700 var(--t4)/1.1 "Courier Prime",monospace}
+.rv-lede{font:400 var(--t2)/1.4 "Courier Prime",monospace;color:#2f261b}
+.rv-at{font:400 var(--t1)/1.4 "Courier Prime",monospace;color:#2f261b}
+.rv-cols{flex:1;display:grid;grid-template-columns:1fr 330px;gap:32px;margin-top:20px;min-height:0}
+.rv h5{font:700 var(--t1)/1 "Barlow Condensed",sans-serif;letter-spacing:2px;color:#5a4a38;padding-bottom:8px;border-bottom:2px solid #3e3220}
+.rv-res{column-gap:8px !important;display:grid;grid-template-columns:34px 240px 1fr;column-gap:10px;font:400 var(--t1)/1.3 "Courier Prime",monospace;color:#2f261b}
+.rv-res>span{padding:5px 0;border-bottom:1px dotted rgba(90,74,56,.45)}
+.rv-res .d{color:#7a6a52}
+.rv-res .n{font-weight:700}
+.rv-res .ok{color:#24564e;font-weight:700}
+.rv-res .evn{color:#7d3028;font-weight:700}
+.rv-res .last{border-bottom:none}
+.rv-right{display:flex;flex-direction:column}
+.rv-mv{display:grid;grid-template-columns:78px 1fr;font:400 var(--t2)/1.3 "Courier Prime",monospace}
+.rv-mv>span{padding:9px 0;border-bottom:1px dotted rgba(90,74,56,.45)}
+.rv-mv .s{font:700 var(--t1)/1.5 "Barlow Condensed",sans-serif;letter-spacing:1.5px;color:#5a4a38}
+.rv-mv .x{display:block;font-size:var(--t1);color:#7a6a52;margin-top:2px}
+.rv-mv .bad{color:#9c2a1e}
+.rv-slot{margin-top:10px;border:2px dashed rgba(90,74,56,.5);border-radius:3px;padding:12px 14px;font:400 var(--t1)/1.35 "Courier Prime",monospace;color:#7a6a52}
+.rv-go{margin-top:auto;padding-top:16px;border-top:1px dashed #b4a582;display:flex;flex-direction:column;gap:14px}
+.rv-go .note{font:400 var(--t1)/1.35 "Courier Prime",monospace;color:#5a4a38}
+.rv-btn{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px 0 16px;background:#3e3220;color:#f3e3b8;border-radius:3px;font:700 var(--t3)/1 "Barlow Condensed",sans-serif;letter-spacing:0;white-space:nowrap;gap:12px;box-shadow:0 0 0 3px var(--amber)}
+.rv-btn .key{color:#f3e3b8}
 
 /* self-check output (only with ?check=1) */
 #check{position:fixed;left:0;top:0;z-index:99;background:#000;color:#0f0;font:12px monospace;white-space:pre;max-height:100vh;overflow:auto}
@@ -209,7 +364,7 @@ var NOV_QUEUE = [
   ["Go to Meetups","Scouting","op",1,300,0],
   ["Networking","Publicity","op",1,0,0],
   ["Tour Offices","Office","op",1,0,0],
-  ["Office Maintenance","Operations","op",1,5000,0],
+  ["Go to Meetups","Scouting","op",1,300,0],
   ["Order Office Supplies","Operations","op",1,2000,0]
 ];
 var NOV = { month:"NOVEMBER", year:"2017", date:"Wed 1 Nov 2017", money:140000, compute:65, research:-12, papers:0,
@@ -243,10 +398,21 @@ var I = "assets/icons/";
 var ICON = {
   "ACTIONS":I+"ui_guide_actions_64.png", "PLAN":I+"ui_config_date_64.png", "STAFF":I+"ui_staff_management_64.png",
   "UPGRADES":I+"button_upgrade_normal_64.png", "LEDGER":I+"ui_budget_finance_64.png", "IN-TRAY":I+"new_inbox_tray.svg",
-  "GUIDE":I+"ui_guide_book_64.png",
-  "P(DOOM)":I+"doom.png", "REPUTATION":I+"reputation.png", "MONEY":I+"money.png"
+  "GUIDE":I+"ui_guide_book_64.png", "FEED":I+"new_feed_tape.svg",
+  "P(DOOM)":I+"doom.png", "REPUTATION":I+"reputation.png",
+  // readouts (the game's round resource set)
+  "MONEY":I+"money.png", "COMPUTE":I+"compute.png", "RESEARCH":I+"research.png", "PAPERS":I+"paper.png",
+  // the 17 top-level actions
+  "Fundraising":I+"ui_guide_resources_64.png", "Financing":I+"action_funding_loan_64.png", "Hire Staff":I+"button_hire_normal_64.png",
+  "Advertise a Role":I+"new_advertise_notice.svg", "Work Your Connections":I+"action_publicity_network_64.png",
+  "Onboard New Hires":I+"employee_status_training_64.png", "Safety Research":I+"resource_safety_small_64.png",
+  "Capability Research":I+"action_research_ml_fundamentals_64.png", "Publish Safety Paper":I+"paper.png",
+  "Safety Audit":I+"employee_role_auditor_64.png", "Travel & Conferences":I+"new_travel_suitcase.svg",
+  "Scouting":I+"employee_status_investigating_64.png", "Publicity":I+"new_publicity_megaphone.svg",
+  "Purchase Compute":I+"compute.png", "Operations":I+"ui_system_settings_64.png", "Office":I+"ui_infrastructure_facilities_64.png",
+  "Strategic":I+"ui_guide_strategy_64.png"
 };
-function ic(key, cls){ return ICON[key] ? '<img class="ic '+cls+'" src="'+ICON[key]+'" alt="">' : ""; }
+function ic(key, cls){ var k = String(key).replace(/&amp;/g,"&"); return ICON[k] ? '<img class="ic '+cls+'" src="'+ICON[k]+'" alt="">' : ""; }
 
 /* ------------------------------------------------------------------
    helpers
@@ -266,17 +432,45 @@ function screws(box, inset){
    The room and its doom layer ("doom is a layer, not a repaint":
    one ambient grade + one glow source; the room keeps its shape).
    ------------------------------------------------------------------ */
+// per art band (docs/art/PALETTE_AND_DOOM_INTENSITY.md): one ambient grade, one glow source
+// (the far monitor), the window sky, and the glow around the cat. Nothing else changes.
 var DOOM_LAYER = {
-  0:{ grade:"rgba(246,168,0,.05)", glow:"radial-gradient(ellipse 260px 180px at 1392px 486px,rgba(246,168,0,.16),transparent 70%)" },
-  1:{ grade:"rgba(233,117,46,.09)", glow:"radial-gradient(ellipse 280px 190px at 1392px 486px,rgba(233,117,46,.22),transparent 70%)" }
+  0:{ grade:"rgba(246,168,0,.05)", gradeMode:"screen", dark:0,
+      glow:"radial-gradient(ellipse 240px 170px at 1392px 486px,rgba(246,168,0,.16),transparent 70%)",
+      sky:"", cat:"radial-gradient(circle,rgba(246,168,0,.18),transparent 70%)" },
+  1:{ grade:"rgba(233,117,46,.09)", gradeMode:"screen", dark:.04,
+      glow:"radial-gradient(ellipse 280px 190px at 1392px 486px,rgba(233,117,46,.22),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(150,160,170,.10),rgba(120,130,140,.06))", cat:"radial-gradient(circle,rgba(233,117,46,.18),transparent 70%)" },
+  2:{ grade:"rgba(40,44,56,.30)", gradeMode:"multiply", dark:.12,
+      glow:"radial-gradient(ellipse 290px 200px at 1392px 486px,rgba(226,74,59,.30),transparent 70%)",
+      sky:"linear-gradient(180deg,rgba(92,122,195,.30),rgba(53,67,117,.25))", cat:"radial-gradient(circle,rgba(226,74,59,.22),transparent 70%)" },
+  3:{ grade:"rgba(120,16,26,.55)", gradeMode:"multiply", dark:.34,
+      glow:"radial-gradient(ellipse 330px 230px at 1392px 486px,rgba(122,59,143,.55),rgba(122,59,143,.14) 45%,transparent 72%)",
+      sky:"linear-gradient(180deg,rgba(122,59,143,.55),rgba(179,18,23,.45))", cat:"radial-gradient(circle,rgba(122,59,143,.62),rgba(122,59,143,.18) 45%,transparent 70%)" }
 };
 function room(d){
   var L = DOOM_LAYER[d.artBand] || DOOM_LAYER[0];
   add(el("div","room-bg"));
-  add(el("div","room-grade",null,"background:"+L.grade+";mix-blend-mode:screen"));
+  if (L.sky) add(el("div","sky",null,"background:"+L.sky+";mix-blend-mode:"+(d.artBand>=3?"color":"soft-light")));
+  add(el("div","room-grade",null,"background:"+L.grade+";mix-blend-mode:"+L.gradeMode));
+  if (L.dark) add(el("div","room-grade",null,"background:rgba(10,4,12,"+L.dark+")"));
   add(el("div","room-glow",null,"background:"+L.glow+";mix-blend-mode:screen"));
+  if (d.artBand>=3) add(el("div","room-glow",null,"background:radial-gradient(ellipse 1100px 700px at 60% 45%,transparent 40%,rgba(14,6,20,.55) 100%)"));
   add(el("div","room-shade"));
   add(el("div","desk"));
+}
+function officeCat(d){
+  var L = DOOM_LAYER[d.artBand] || DOOM_LAYER[0];
+  // band 3: smoke wisps rise from the cat's glow (the palette's "aura + smoke"); band 4 would add more
+  if (d.artBand>=3) add(el("div","room-glow",null,"background:radial-gradient(ellipse 40px 150px at 690px 690px,rgba(150,113,143,.20),transparent 70%),radial-gradient(ellipse 30px 120px at 742px 640px,rgba(150,113,143,.14),transparent 70%),radial-gradient(ellipse 50px 110px at 716px 560px,rgba(150,113,143,.08),transparent 70%);filter:blur(8px)"));
+  add(el("div","cat-glow",null,"left:594px;top:742px;width:240px;height:260px;background:"+L.cat+";mix-blend-mode:screen"));
+  var f = add(el("div","abs catf",'<img src="assets/office_cat_doom-cat.webp" alt="">'));
+  if (d.artBand>=3) f.style.boxShadow = "0 10px 18px rgba(0,0,0,.6),0 0 0 2px rgba(122,59,143,.7),0 0 30px rgba(122,59,143,.55)";
+}
+function calendar(d){
+  var c = add(el("div","abs cal"));
+  var rings = el("div","cal-rings"); for(var i=0;i<4;i++) rings.appendChild(el("i")); c.appendChild(rings);
+  c.appendChild(el("div","cal-head",d.month)); c.appendChild(el("div","cal-year",d.year));
 }
 
 /* P(Doom) dial: level and band only, never a delta (ADR-0015) */
@@ -377,7 +571,7 @@ function planScreen(p){
   inn.appendChild(el("div","q-tools","<span><span class=q-btn>Undo [Z]</span><span class=q-btn>Clear [C]</span></span>"+
     "<span class=q-tot><span>queued cost</span> "+money(p.qMoney)+(p.qRep?" + "+p.qRep+" rep":"")+"</span>"));
   inn.appendChild(el("div","ac",
-    "<div><span class=t>AT COMMIT</span><span class=s>Wed 1 Nov</span></div>"+
+    "<div><span class=t>AFTER COSTS</span><span class=s>Wed 1 Nov</span></div>"+
     "<div><span class=h>MONEY</span><span class=b>"+money(p.money)+" <em>-&gt;</em> "+money(p.moneyAfter)+"</span></div>"+
     "<div><span class=h>REPUTATION</span><span class=b>"+p.rep+" <em>-&gt;</em> "+p.repAfter+"</span></div>"+
     "<div><span class=h>HELD FOR EVENTS</span><span class=b>"+p.held+" hr <em>untyped</em></span></div>"));
@@ -389,6 +583,212 @@ function planScreen(p){
   rq.appendChild(sw); f.appendChild(rq);
   f.appendChild(el("div","esc-plate","<span class=key>P</span><span class=key>Esc</span><span>BACK TO DESK</span>"));
   t.appendChild(f);
+}
+
+/* ------------------------------------------------------------------
+   The other moments of the run
+   ------------------------------------------------------------------ */
+var JUL = { month:"JULY", year:"2017", date:"Tue 4 Jul 2017", money:245000, compute:100, research:0, papers:0,
+  rep:50, doom:20.0, band:"ELEVATED", trend:"", artBand:0, planTotal:12, opTotal:8, reserve:0 };
+var DEC = { month:"DECEMBER", year:"2017", date:"Fri 1 Dec 2017", money:12400, compute:65, research:-6, papers:0,
+  rep:34, doom:56.7, band:"SEVERE", trend:"", artBand:2, planTotal:12, opTotal:8, reserve:0 };
+var APR = { month:"APRIL", year:"2018", date:"Mon 2 Apr 2018", money:12300, compute:65, research:4, papers:0,
+  rep:21, doom:81.4, band:"CATASTROPHIC", trend:"", artBand:3, planTotal:12, opTotal:8, reserve:0 };
+
+function pips(free,total,round){ var s=""; for(var i=0;i<total;i++){ s+='<i class="pip'+(round?' o':'')+(i>=free?' used':'')+'"></i>'; } return s; }
+
+/* the desk terminal: Attention (its one home) and the plan at a glance */
+function terminal(p){
+  var t = add(el("div","abs crt term")); t.appendChild(el("div","crt-body")); screws(t, 12);
+  var scr = el("div","crt-screen",null,"left:28px;top:26px;right:28px;bottom:64px"); t.appendChild(scr);
+  var inn = el("div","crt-in",null,"padding:18px 24px"); scr.appendChild(inn); scr.appendChild(el("div","crt-scan")); scr.appendChild(el("div","crt-glass"));
+  inn.appendChild(el("div","t-head","<span class=t-title>"+p.month+" PLAN</span><span class=t-sub>"+(p.rows.length? p.rows.length+" plays" : "nothing queued")+"</span>"));
+  inn.appendChild(el("div","t-att",
+    "<span class=l>PLANNING</span><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span class=v>"+p.planLeft+" of "+p.planTotal+" left</span>"+
+    "<span class='l op'>OPERATING</span><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class='v op'>"+p.opLeft+" of "+p.opTotal+" left</span>"));
+  var qh = "";
+  if (p.rows.length){
+    p.rows.slice(0,3).forEach(function(q,i){ qh += "<div><span class=n>"+pad2(i+1)+"</span>"+q.name+"</div>"; });
+    if (p.rows.length>3) qh += "<div class='row dim2'><span>+ "+(p.rows.length-3)+" more</span><span>[P]</span></div>";
+  } else {
+    qh = "<div class='row dim2'><span>Plan is empty</span><span>[A]</span></div>";
+  }
+  inn.appendChild(el("div","t-q",qh));
+  t.appendChild(el("div","crt-foot","<div class=crt-brand><i class=crt-led></i>LAB TERMINAL 1</div>","left:34px;right:34px;bottom:18px;height:28px"));
+  return inn;
+}
+function home(p, opts){
+  opts = opts || {};
+  room(p); calendar(p); officeCat(p); doomDial(p); repMeter(p); terminal(p);
+  shortcutRack(opts.active, opts.rack); commit(p, !!opts.menuOpen);
+}
+
+/* ---------- STATE 1: month 1, the first screen after the cold open ---------- */
+function firstScreen(){
+  var p = book(JUL, []);
+  home(p);
+  // the advisor hand-off from the cold open (cold_open_sequence.gd HANDOFF_HINT_TEXT); the glowing
+  // control is ACTIONS here, because Scouting lives in the hand
+  document.querySelector(".kb").classList.add("hint");
+  add(el("div","abs adv",
+    "<div class=k>ADVISOR</div>"+
+    "<p>You do not know anything yet.<br>Go and find out -- scouting<br>(the glowing button).</p>"+
+    "<div class=ptr><span>ACTIONS &gt; Scouting</span><span class=key>A</span></div>"));
+}
+
+/* ---------- STATE 2: the hand (Actions), adding Safety Audit ---------- */
+var TAB = {FUNDING:"#55703a", PEOPLE:"#93552a", RESEARCH:"#3f5d73", OUTREACH:"#7a5d1c", LAB:"#56636f", STRATEGIC:"#7d3028"};
+function count(p, test){ return p.rows.filter(test).length; }
+function hand(p){
+  var from = function(door){ return count(p, function(r){ return r.from===door; }); };
+  var short = function(need){ return "SHORT "+(need - p.research)+" RESEARCH"; };
+  // [name, tab, kind, cost line, state, stamp, clips]
+  return [
+    ["Fundraising","FUNDING","door","4 choices","","",[]],
+    ["Financing","FUNDING","door","7 choices","","",[]],
+    ["Hire Staff","PEOPLE","door","7 roles<br>1 plan hr each","","",from("Hire Staff")?[[from("Hire Staff")+" in plan",""]]:[]],
+    ["Advertise a Role","PEOPLE","slip","","soon","COMING SOON",[]],
+    ["Work Your Connections","PEOPLE","slip","<span class=op>2 op hr</span> &middot; 6 rep","","",[]],
+    ["Onboard New Hires","PEOPLE","slip","<span class=op>op hr</span> + money<br>varies by step","blocked","NO HIRES WAITING",[]],
+    ["Safety Research","RESEARCH","slip","1 plan hr<br>10 research","blocked",short(10),[]],
+    ["Capability Research","RESEARCH","slip","1 plan hr<br>10 research","blocked",short(10),[]],
+    ["Publish Safety Paper","RESEARCH","slip","1 plan hr<br>20 research","blocked",short(20),[]],
+    ["Safety Audit","RESEARCH","slip","<span class=op>2 op hr</span><br>$40,000","lit","",[["NEW","new"]]],
+    ["Travel &amp; Conferences","OUTREACH","door","4 choices","","SUBMIT PAPER: "+short(15).replace(" RESEARCH",""),[]],
+    ["Scouting","OUTREACH","door","3 choices","","",from("Scouting")?[[from("Scouting")+" in plan",""]]:[]],
+    ["Publicity","OUTREACH","door","5 choices","","",[]],
+    ["Purchase Compute","LAB","slip","$50,000<br>no hours","","",[]],
+    ["Operations","LAB","door","3 choices","","",[]],
+    ["Office","LAB","door","4 choices","","",[]],
+    ["Strategic","STRATEGIC","door","4 choices","","",[["NEW","new"]]]
+  ];
+}
+function slip(s){
+  var name=s[0], cat=s[1], kind=s[2], cost=s[3], state=s[4], stamp=s[5], clips=s[6];
+  var e = el("div","slip"+(kind==="door"?" door":"")+(state && state!=="lit"?" "+state:"")+(state==="lit"?" lit":""));
+  e.appendChild(el("div","slip-tab",cat,"background:"+TAB[cat]));
+  e.appendChild(el("div","slip-n",name));
+  e.insertAdjacentHTML("beforeend", ic(name,"ic-slip"));
+  if (cost) e.appendChild(el("div","slip-c",cost));
+  if (clips.length) e.appendChild(el("div","clips",clips.map(function(c){ return "<span class='clip "+c[1]+"'>"+c[0]+"</span>"; }).join("")));
+  if (stamp && kind==="door") e.appendChild(el("div","slip-go","<span class=st-in>"+stamp+"</span><b>&gt;</b>"));
+  else if (stamp) e.appendChild(el("div","slip-st",stamp));
+  else e.appendChild(el("div","slip-go","<span>"+(kind==="door"?"open":"add")+"</span><b>"+(kind==="door"?"&gt;":"+")+"</b>"));
+  return e;
+}
+function menuFrame(title, closeKey, parts, icKey){
+  var m = add(el("div","abs rack-wood menu"));
+  var h = el("div","m-head");
+  h.appendChild(el("div","plate m-title",ic(icKey,"ic-title")+"<span>"+title+"</span>"));
+  parts.forEach(function(x){ h.appendChild(x); });
+  h.appendChild(el("div","m-close","<span class=key>"+closeKey+"</span><span class=key>Esc</span>"));
+  m.appendChild(h);
+  return m;
+}
+function resources(p){
+  var r = function(k,v,bad){ return "<span>"+ic(k,"ic-res")+"<em>"+k+"</em><b class='"+(bad?"bad":"")+"'>"+v+"</b></span>"; };
+  return el("div","m-res", r("MONEY",money(p.money))+r("COMPUTE",p.compute)+r("RESEARCH",p.research+(p.research<0?" [!]":""),p.research<0)+r("PAPERS",p.papers));
+}
+function hoursLeft(p){
+  return el("div","m-hrs","<em>PLANNING</em><span class=pips>"+pips(p.planLeft,p.planTotal,false)+"</span><span>"+p.planLeft+"/"+p.planTotal+" left</span>"+
+    "<em>OPERATING</em><span class=pips>"+pips(p.opLeft,p.opTotal,true)+"</span><span class=op-v>"+p.opLeft+"/"+p.opTotal+" left</span>");
+}
+function handScreen(){
+  var p = book(NOV, NOV_QUEUE.slice(0,3));
+  home(p, {active:"ACTIONS", menuOpen:true});
+  add(el("div","dim"));
+  var m = menuFrame("THE HAND", "A", [resources(p), hoursLeft(p)], "ACTIONS");
+  var g = el("div","grid"); m.appendChild(g);
+  hand(p).forEach(function(s){ g.appendChild(slip(s)); });
+  // the 18th place: the focused slip's detail card (the same place for any focused slip)
+  g.appendChild(el("div","detail",
+    "<div class=k>FOCUSED</div><h4>Safety Audit</h4>"+
+    "<p><span style='color:var(--teal-ink);font-weight:700'>2 op hr</span> &middot; $40,000</p><p>Comprehensive safety review</p>"+
+    "<div class=go><span>add to plan</span><span class=key>Enter</span></div>"));
+}
+
+/* ---------- STATE 4: WATCH, an event that asks for a choice ---------- */
+function watchScreen(){
+  var p = book(NOV, NOV_QUEUE);
+  var w = {}; for (var k in p) w[k] = p[k]; w.rep = 34;   // 32 - 6 - 1 + 1.5 + 1.5 + 3 + 3 (actions.gd fixed results at Commit)
+  room(w); calendar(w); officeCat(w); doomDial(w); repMeter(w);
+  // the terminal plays the month back: position, the feed so far, who is working
+  var t = add(el("div","abs crt term")); t.appendChild(el("div","crt-body")); screws(t, 12);
+  var scr = el("div","crt-screen",null,"left:28px;top:26px;right:28px;bottom:64px"); t.appendChild(scr);
+  var inn = el("div","crt-in",null,"padding:18px 24px"); scr.appendChild(inn); scr.appendChild(el("div","crt-scan")); scr.appendChild(el("div","crt-glass"));
+  inn.appendChild(el("div","t-head","<span class=t-title>NOVEMBER</span><span class=t-sub>workday 10 of 22</span>"));
+  inn.appendChild(el("div","mbar","<i style='width:"+(10/22*100)+"%'></i><b style='left:calc("+(10/22*100)+"% - 2px)'></b>"));
+  inn.appendChild(el("div","t-q",
+    "<div><span class=n>01</span>11 plays run at Commit</div>"+
+    "<div><span class=n>01</span>Safety Researcher hired</div>"+
+    "<div><span class=n>01</span>Networking (+3 reputation)</div>"+
+    "<div><span class=n>14</span>Talent Opportunity [!]</div>"+
+    "<div class='row'><span><span class=n></span><span class=op>at work: 1 safety researcher</span></span></div>"+
+    "<div class='row dim2'><span><span class=n></span>Feed and results</span><span>[F]</span></div>","padding-top:6px"));
+  t.appendChild(el("div","crt-foot","<div class=crt-brand><i class=crt-led></i>LAB TERMINAL 1</div>","left:34px;right:34px;bottom:18px;height:28px"));
+  shortcutRack(null, [["FEED","F"],["STAFF","E"],["LEDGER","L"],["GUIDE","F1"],["ACTIONS","A",1],["PLAN","P",1],["UPGRADES","U",1]]);
+  // the clock housing takes Commit's place while the month runs
+  var cm = add(el("div","abs hw cmt"));
+  cm.appendChild(el("div","plate cmt-plate","THE MONTH"));
+  cm.appendChild(el("div","date-win","<b>TUE 14 NOV</b><span>workday 10 of 22</span>"));
+  cm.appendChild(el("div","paused","<i></i>PAUSED FOR YOU"));
+  var sp = el("div","speed"); ["Pause","1x","2x","4x"].forEach(function(x,i){ sp.appendChild(el("span",i===0?"on":"",x)); }); cm.appendChild(sp);
+  cm.appendChild(el("div","cmt-note","Held for events<br><b>"+p.held+" hr</b>"));
+  // the event: core_events.json talent_recruitment, its own words and costs
+  var ev = add(el("div","abs ev"));
+  ev.appendChild(el("div","ev-k","<span>ACROSS YOUR DESK</span><span>TUE 14 NOV 2017</span>"));
+  ev.appendChild(el("div","ev-t","Talent Opportunity"));
+  ev.appendChild(el("div","ev-p","A brilliant researcher wants to join your lab at reduced cost!"));
+  var o = el("div","ev-o");
+  [["1","Fast-Track Hiring","$25,000 + 1 held hr",1],["2","Standard Hiring","$25,000",0],["3","Decline Offer","free",0]].forEach(function(x){
+    o.appendChild(el("div",x[3]?"on":"","<i>"+x[0]+"</i>"+x[1]+"<span>"+x[2]+(x[3]?"<span class=key>Enter</span>":"")+"</span>"));
+  });
+  ev.appendChild(o);
+  ev.appendChild(el("div","ev-f","<span>in hand "+money(p.moneyAfter)+"</span><span>held for events "+p.held+" hr</span>"));
+}
+
+/* ---------- STATE 5: the month review, before December's plan ---------- */
+function reviewScreen(){
+  var p = book(DEC, []);
+  home(p, {menuOpen:true});
+  add(el("div","dim"));
+  var r = add(el("div","abs rv"));
+  r.appendChild(el("div","rv-k","<span>FROM THE TELEPRINTER</span><span>FRI 1 DEC 2017</span>"));
+  r.appendChild(el("div","rv-head","<span class=rv-t>Month Review -- December 2017</span><span class=rv-lede>December 2017 begins.</span>"));
+  r.appendChild(el("div","rv-at","Attention: 20 fresh decisions this month (last month's unspent reserve evaporated -- no banking)."));
+  var res = [
+    ["01","Hire: Safety Researcher","<span class=ok>Safety Researcher hired.</span>"],
+    ["02","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
+    ["03","Read the Literature","Read for a day (+3.0 research). Nobody noticed."],
+    ["04","Post Online","Posted (+4.0 hype, -1.0 reputation). Investors read hype; researchers read the replies."],
+    ["05","Safety Audit","Safety audit (+scrutiny, +3 reputation)"],
+    ["06","Work Your Connections","Reached out through your network -- a pre-vetted lead may surface shortly."],
+    ["07","Go to Meetups","Worked the room (+1.5 reputation). Someone unvetted is now in your candidate pool."],
+    ["08","Networking","Networking (+3 reputation)"],
+    ["09","Tour Offices","Three landlords will quote you terms."],
+    ["10","Go to Meetups","Worked the room (+1.5 reputation). No leads you have room for."],
+    ["11","Order Office Supplies","Office supplies restocked (+50 stationery, now at 100)"],
+    ["14","<span class=evn>Talent Opportunity</span>","<span class=ok>Fast-tracked hiring process! (+1 safety researcher)</span>"],
+    ["","Held for events","7 hr held: 1 went to Talent Opportunity, 6 evaporated."]
+  ];
+  var cols = el("div","rv-cols");
+  var left = el("div"); left.appendChild(el("h5",null,"NOVEMBER 2017 -- WHAT HAPPENED"));
+  left.appendChild(el("div","rv-res",res.map(function(x,i){ var c = i===res.length-1 ? " last" : "";
+    return "<span class='d"+c+"'>"+x[0]+"</span><span class='n"+c+"'>"+x[1]+"</span><span class='"+c+"'>"+x[2]+"</span>"; }).join("")));
+  var right = el("div","rv-right"); right.appendChild(el("h5",null,"LAST MONTH'S MOVEMENT"));
+  right.appendChild(el("div","rv-mv",
+    "<span class=s>FUNDS</span><span>$140,000 -&gt; $12,400 <span class=x>(-$127,600)</span></span>"+
+    "<span class=s>STAFF</span><span>0 -&gt; 2 <span class=x>(+2)</span></span>"+
+    "<span class=s>DOOM</span><span class=bad>HIGH -&gt; SEVERE <span class=x>(crossed up)</span></span>"));
+  // rivals: the game prints this section only when a rival is visible; none in the source run, so it is left out
+  right.appendChild(el("div","rv-go","<span class=note>Queue this month's actions, then press COMMIT THE MONTH to play the month out.</span>"+
+    "<span class=rv-btn>Begin planning December 2017<span class=key>Enter</span></span>"));
+  cols.appendChild(left); cols.appendChild(right); r.appendChild(cols);
+}
+
+/* ---------- STATE 6: late game, CATASTROPHIC (art band 3, Eldritch) ---------- */
+function lateScreen(){
+  home(book(APR, []));
 }
 
 /* ------------------------------------------------------------------
@@ -407,14 +807,17 @@ function selfCheck(){
     if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+txt);
     var r = e.getBoundingClientRect();
     if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+txt);
-    var box = e.closest(".crt-screen,.cmt,.keys,.repw,.kb,.q-row,.ac");
+    var box = e.closest(".crt-screen,.cmt,.keys,.repw,.kb,.q-row,.ac,.slip,.detail,.m-head,.menu,.rv,.ev,.adv,.date-win,.paused");
     if (box && box!==e){ var b=box.getBoundingClientRect();
       if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+txt); }
     if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+txt);
   });
+  function root(e){ while (e.parentNode && e.parentNode!==S) e = e.parentNode; return e; }
   var R = leaves.map(function(e){ return e.getBoundingClientRect(); });
   for (var i=0;i<leaves.length;i++) for (var j=i+1;j<leaves.length;j++){
     if (leaves[i].contains(leaves[j])||leaves[j].contains(leaves[i])) continue;
+    // only objects on the same layer can collide; a menu laid over the desk covers it whole (checked by eye)
+    if (root(leaves[i])!==root(leaves[j]) || leaves[i].closest(".cal")) continue;
     var a=R[i], b=R[j], w=Math.min(a.right,b.right)-Math.max(a.left,b.left), h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
     if (w>2&&h>2) out.push("OVERLAP '"+leaves[i].textContent.trim().slice(0,24)+"' x '"+leaves[j].textContent.trim().slice(0,24)+"'");
   }
@@ -427,7 +830,12 @@ function selfCheck(){
    ------------------------------------------------------------------ */
 var NOV_PLAN = book(NOV, NOV_QUEUE);
 var VIEWS = {
-  "3": function(){ planScreen(NOV_PLAN); }
+  "1": firstScreen,
+  "2": handScreen,
+  "3": function(){ planScreen(NOV_PLAN); },
+  "4": watchScreen,
+  "5": reviewScreen,
+  "6": lateScreen
 };
 (VIEWS[STATE] || VIEWS["3"])();
 if (Q.get("check")) document.fonts.ready.then(function(){ setTimeout(selfCheck, 200); });

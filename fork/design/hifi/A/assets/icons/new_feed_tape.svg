@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><radialGradient id="bg" cx=".5" cy=".45" r=".7"><stop offset="0" stop-color="#1f3a3d"/><stop offset=".7" stop-color="#11201f"/><stop offset="1" stop-color="#0a1112"/></radialGradient>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9cfb4"/><stop offset="1" stop-color="#8d8570"/></linearGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a6236"/><stop offset="1" stop-color="#4e3620"/></linearGradient></defs>
+<rect width="64" height="64" fill="url(#bg)"/><g filter="url(#glow)"><rect x="18" y="8" width="28" height="34" rx="1" fill="url(#stone)" stroke="#2b2a22" stroke-width="1.2"/>
+<path d="M22 15 H40 M22 21 H38 M22 27 H41 M22 33 H36" stroke="#3a3a30" stroke-width="2.2"/>
+<path d="M22 15 H27" stroke="#a8261d" stroke-width="2.2"/><path d="M22 27 H27" stroke="#a8261d" stroke-width="2.2"/></g>
+<rect x="8" y="38" width="48" height="18" rx="3" fill="#3f3f36" stroke="#1a1a15" stroke-width="1.5"/>
+<rect x="15" y="38" width="34" height="4" fill="#0d0d0a"/>
+<path d="M14 49 H40" stroke="#5fe0d4" stroke-width="2.4" stroke-linecap="round" filter="url(#glow)"/>
+<circle cx="48" cy="49" r="2.6" fill="#e8a33d"/></svg>

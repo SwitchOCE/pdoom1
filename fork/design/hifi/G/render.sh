@@ -13,7 +13,7 @@ for s in "$@"; do
   "$H" --no-sandbox --headless --disable-gpu --window-size=1920,1080 --virtual-time-budget=5000 \
     --user-data-dir="$SCR/prof" --dump-dom "file://$PWD/concept.html?state=$s&check=1" 2>/dev/null \
     | grep -o 'data-check="[^"]*"' | sed "s/^/state $s: /"
-  python3 -c "from PIL import Image;Image.open('s$s.png').convert('RGB').save('s$s.webp',quality=80,method=6)"
+  python3 -c "from PIL import Image;Image.open('s$s.png').convert('RGB').save('s$s.webp',quality=88,method=6)"
 done
 rm -rf "$SCR/prof"
 ls -la s*.png s*.webp

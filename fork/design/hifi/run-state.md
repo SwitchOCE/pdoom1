@@ -57,6 +57,8 @@ Source: game-shots/main.png.
 
 ## States 2-5 -- November 2017 (month 5), one month played through
 
+**Read REVISION 2 at the end of this file: it replaces row 10 and the November money, reputation and research figures below.**
+
 Source for the opening numbers: game-shots/m5_plan_queued.png.
 
 ### Opening of November (before anything is queued)
@@ -205,3 +207,60 @@ same run, all **fixture**:
 - (Designer A) The spill refusal is in today's UI pre-checks only
   (main_ui.gd ~1737, submenu_controller.gd ~143); the core
   (month_plan.gd can_spend_hours / _debit_hours) already allows the spill.
+
+## REVISION 2 (2026-11-22) -- supersedes the November numbers above
+
+Two errors in the first version, found by designer E and the orchestrator:
+
+1. **Office Maintenance does nothing**: the code note says it "charged $5000
+   and did nothing; taken OFF the board" (v0.13.1; godot/scripts/ui/
+   action_bar_renderer.gd HIDDEN_FROM_ACTION_BAR_IDS). It is hidden from the
+   action bar but still listed in the Operations menu (GameActions.
+   get_operations_options reads all of operations.json), so Operations still
+   shows 3 choices -- a bug for Pip. The showcase should not queue a no-op.
+   Row 10 becomes a **second Go to Meetups** (Scouting, operating, 1 hr,
+   $300). The two Meetups plays are a repeated play: each keeps its own edit
+   target.
+2. **Several plays have fixed results** in godot/scripts/core/actions.gd
+   (not random), applied at Commit:
+   - Read the Literature: "Read for a day (+3.0 research). Nobody noticed."
+   - Post Online: "Posted (+4.0 hype, -1.0 reputation). Investors read
+     hype; researchers read the replies."
+   - Go to Meetups: "Worked the room (+1.5 reputation). Someone unvetted is
+     now in your candidate pool." (the other variant: "... No leads you have
+     room for."; use the first for the first Meetups play and the second for
+     the second -- **fixture**, it depends on the candidate pool)
+   - Networking: "Networking (+3 reputation)"
+   - Safety Audit: "Safety audit (+scrutiny, +3 reputation)"
+   - Order Office Supplies: "Office supplies restocked (+50 stationery, now
+     at 100)" (stationery caps at 100)
+   - Work Your Connections spends 6 reputation + 2 operating hours for a
+     lead (hiring_pipeline.gd use_connections); use the game's message if
+     you show one, else "done".
+
+### Corrected November numbers (use these everywhere)
+
+- Queue (11 plays): 1 Hire: Safety Researcher (plan 1, $60,000);
+  2-3 Read the Literature x2 (plan 1 each); 4 Post Online (plan 1);
+  5 Safety Audit (op 2, $40,000); 6 Work Your Connections (op 2, 6 rep);
+  7 Go to Meetups (op 1, $300); 8 Networking (op 1); 9 Tour Offices (op 1);
+  10 Go to Meetups (op 1, $300); 11 Order Office Supplies (op 1, $2,000).
+- Hours unchanged: 4 planning work, 9 operating work = 8 operating + 1
+  spilled into planning; planning left 7, operating left 0; held for events
+  at Commit 7.
+- **Queued cost: $102,600 + 6 reputation.**
+- State 2 is unchanged (its three plays are the same).
+- If PLAN shows an after-Commit preview, label it "after costs" and show
+  costs only: money $140,000 -> **$37,400**, reputation 32 -> **26**. (The
+  game has no such preview today: fixture, and an open question.)
+- **State 4 (WATCH, Tue 14 Nov):** money **$37,400** . reputation **34**
+  (32 - 6 - 1 + 1.5 + 1.5 + 3 + 3) . research **-6** (-12 + 3 + 3) .
+  P(Doom) 40.2% (fixture hold) . held for events 7 hr.
+- **State 5 (Month Review):** Funds $140,000 -> **$12,400 (-$127,600)** =
+  plays $102,600 + Fast-Track $25,000. Staff 0 -> 2. Doom HIGH -> SEVERE
+  (56.7% on Fri 1 Dec 2017). Reputation 34. Research -6 (fixture: research
+  the new staff produce during playback is not modelled; payroll likewise).
+- Rivals: the game prints its rivals section only when a rival is visible;
+  you may leave it out (say so in notes).
+- Doom band to art band (designers' reading, an open question for Pip):
+  ELEVATED 0-1, HIGH 1, SEVERE and EXTREME 2, CATASTROPHIC 3, TERMINAL 4.
