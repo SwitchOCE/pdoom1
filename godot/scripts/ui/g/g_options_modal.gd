@@ -50,7 +50,6 @@ func _build() -> void:
 	_panel.add_theme_stylebox_override("panel", sb)
 	add_child(_panel)
 	_panel.custom_minimum_size = Vector2(560, 0)
-	_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 
@@ -160,6 +159,7 @@ func _build() -> void:
 	close.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
 	close.pressed.connect(_request_close)
 	foot.add_child(close)
+	_center_panel()
 
 
 ## Room effects choices: GPrefs value, shown name.
@@ -176,6 +176,13 @@ static func _room_index(value: String) -> int:
 func _on_room_selected(i: int) -> void:
 	if i >= 0 and i < ROOM_CHOICES.size():
 		GPrefs.set_room_effects(String(ROOM_CHOICES[i][0]))
+
+
+func _center_panel() -> void:
+	"""Centre the panel on screen at its content size. set_anchors_preset() alone keeps the
+	panel's old position as offsets, which left its top-left quarter (title, x and the G desk
+	switch) off screen."""
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 
 
 func _label(text: String, size_name: String, color: Color) -> Label:
@@ -196,6 +203,7 @@ func show_panel() -> void:
 	if motion_toggle != null:
 		motion_toggle.set_pressed_no_signal(GPrefs.reduced_motion())
 	visible = true
+	_center_panel()
 	_barrier.mouse_filter = Control.MOUSE_FILTER_STOP
 
 

@@ -366,6 +366,28 @@ func test_settings_board_carries_the_g_row_inside_the_frame() -> void:
 			board.get_global_rect(), row.get_global_rect()])
 
 
+func test_g_options_panel_is_on_screen() -> void:
+	# The panel opened centred on the screen's top-left corner, so its title, x and the G desk
+	# switch (the way back to classic) were off screen.
+	var menu: Control = load(SETTINGS_SCENE).instantiate()
+	add_child_autofree(menu)
+	menu.call("_show_board")
+	await get_tree().process_frame
+	(menu.get_node(G_ROW + "/Button") as Button).pressed.emit()
+	for _i in range(3):
+		await get_tree().process_frame
+	var modal: Control = menu.get("_g_options")
+	var screen := modal.get_viewport().get_visible_rect()
+	var panel: Control = modal.get_node("Panel")
+	var r := panel.get_global_rect()
+	assert_true(screen.encloses(r), "the panel %s lies inside the screen %s" % [r, screen])
+	var mid := screen.get_center()
+	assert_almost_eq(r.get_center().x, mid.x, 2.0, "centred across")
+	assert_almost_eq(r.get_center().y, mid.y, 2.0, "centred down")
+	var desk: Control = modal.get("desk_toggle")
+	assert_true(screen.encloses(desk.get_global_rect()), "the G desk switch can be reached")
+
+
 func test_settings_g_row_opens_options_with_only_the_working_switches() -> void:
 	var menu: Control = load(SETTINGS_SCENE).instantiate()
 	add_child_autofree(menu)
