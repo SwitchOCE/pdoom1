@@ -1,0 +1,16 @@
+You are making resource icons for a dark, satirical strategy game about running an AI safety lab. Use your built-in image generation tool. For EACH item below, generate exactly one image, then copy the PNG into the current working folder under the given filename, overwriting any existing file. One item at a time. Do not write code or other files. No logos, watermarks, titles or captions. Every design is original: do not depict or closely imitate any existing game's icons. Reply with just the saved filenames.
+
+Every item: a square 1:1 image of one game icon: a single object, centred, filling most of the frame, on a transparent background (if the tool cannot make one transparent, a plain flat black background). The five items are one set: the same things growing from nothing to plenty, seen from the same three-quarter angle and lit the same way, so they read as steps when placed side by side at 48 pixels.
+
+No numerals, text, currency signs or lettering anywhere.
+
+Look: painted, chunky and readable at small size, like the icons of a moody management game: weathered metal, worn paper and brass, a little grime, warm low light from one side, deep shadows. Not photoreal and not fussy.
+
+The design, the same for every item: things found in a cramped lab office late at night, lit by an amber monitor glow. Warm amber is the only strong colour; red appears only in the empty one.
+
+Items:
+1. money-0.png -- An empty, dented metal cash box with its lid open and nothing inside, a faint red glow along its rim.
+2. money-1.png -- A single worn coin, lying almost flat.
+3. money-2.png -- Three coins, loosely scattered.
+4. money-3.png -- A neat stack of coins with a folded banknote leaning on it.
+5. money-4.png -- A heap of coins and banded banknotes spilling over each other.

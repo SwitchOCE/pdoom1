@@ -1,0 +1,8 @@
+.godot/
+assets/
+*.import
+*.uid
+*.avi
+*.log
+*.wav
+__pycache__/
