@@ -40,6 +40,12 @@ extends Node
 ##   and the 2 ms budget verdict. Needs no
 ##   seed in the profile; run it in an isolated profile (APPDATA / XDG_DATA_HOME) on the PC
 ##   being measured, at 1920x1080.
+## dateline (g only, phase 4): the parity fixture, watching the dateline. It asserts the new
+##   game types once, the boundary state types the new month as the review appears, and the
+##   WATCH day changes in between type nothing; it prints a timing log line per letter, the
+##   carriage return and the end (DLTIME: scheduled ms, fired ms on the wall clock, frame), and
+##   with --out=DIR saves dl_01_midtype, dl_02_typed, dl_03_month_change (mid-type over the
+##   review) and dl_04_month_typed. Without --out the timing log is not disturbed by captures.
 ##
 ## Output lines start with "G_CAPTURE". Exit code 0 = every assert passed, 1 = a failure.
 
@@ -58,6 +64,7 @@ var no_handoff := false   # shots: leave the first-lever hand-off off (month 1 a
 var _fail := false
 var _events_seen: Array = []     # ids from GameManager.event_triggered, in arrival order
 var _main_ui: Node = null
+var _dl_mid_shot := false      # dateline mode: the boot type-on's mid-type shot is taken
 
 
 func _ready() -> void:
@@ -153,6 +160,10 @@ func _key(code: int) -> void:
 # --- the run ------------------------------------------------------------------------------
 
 func _run() -> void:
+	if mode == "dateline" and layout != "g":
+		_check(false, "--mode=dateline needs --layout=g")
+		_finish()
+		return
 	if mode in ["shots", "room", "tiers"] and out_dir == "":
 		_check(false, "--out=DIR is required for %s" % mode)
 		_finish()
@@ -177,8 +188,15 @@ func _run() -> void:
 		var cs := get_tree().current_scene
 		if _main_ui == null and cs != null and cs.scene_file_path == MAIN_SCENE:
 			_main_ui = cs.find_child("MainUI", true, false)
+		if mode == "dateline" and out_dir != "" and not _dl_mid_shot and _main_ui != null \
+				and _desk() != null:
+			# The new game's type-on starts with the first state, before the boot settles.
+			var dl0 = _desk().get("dateline")
+			if dl0 != null and bool(dl0.call("typing")) and int(dl0.get("visible_count")) >= 7:
+				_dl_mid_shot = true
+				await _shot("dl_01_midtype", true)
 		if _main_ui != null and GameManager.is_initialized and GameManager.state != null \
-				and _phase() == "ACTION_SELECTION":
+				and _phase() == "ACTION_SELECTION" and _boot_shots_done():
 			break
 		if Time.get_ticks_msec() - t0 > BOOT_TIMEOUT_S * 1000.0:
 			_check(false, "boot reached action_selection")
@@ -199,6 +217,8 @@ func _run() -> void:
 	if layout == "g":
 		_check(_desk() != null, "the G desk is up")
 	_say("boot hash %s" % state_hash())
+	if mode == "dateline":
+		await _dateline_watch("boot", 1, "dl_01_midtype", "dl_02_typed")
 
 	if mode == "room" or mode == "roomcost":
 		if layout != "g" or _desk() == null or _desk().get("room") == null:
@@ -334,6 +354,8 @@ func _run() -> void:
 				if not event_shot:
 					_say("note: no event shot (no event this month)")
 				await _shot("07_review")
+			if mode == "dateline":
+				await _dateline_watch("month", 2, "dl_03_month_change", "dl_04_month_typed")
 			if mode == "mouse":
 				var nav: Button = _main_ui.active_dialog_buttons[0]
 				await _click(nav)
@@ -370,6 +392,10 @@ func _run() -> void:
 	_check(int(GameManager.state.turn) > start_turn, "the turn advanced (%d -> %d)" % [start_turn, int(GameManager.state.turn)])
 	await _frames(5)
 	_say("events answered %d: %s" % [answered, str(_events_seen)])
+	if mode == "dateline":
+		var dl = _desk().get("dateline")
+		_check(int(dl.get("type_count")) == 2,
+			"the next month's plan opens with no third type-on (type_count %d)" % int(dl.get("type_count")))
 	_say("HASH layout=%s seed=%s turn=%d %s" % [layout, SEED, int(GameManager.state.turn), state_hash()])
 
 	if mode == "tiers":
@@ -469,6 +495,48 @@ static func _stats(xs: Array) -> Dictionary:
 	for v in s:
 		total += float(v)
 	return {"mean": total / float(s.size()), "p95": float(s[mini(s.size() - 1, int(floor(0.95 * s.size())))])}
+
+
+func _boot_shots_done() -> bool:
+	"""Dateline mode with --out: the boot waits for its mid-type shot (or the type-on's end)."""
+	if mode != "dateline" or out_dir == "" or _dl_mid_shot:
+		return true
+	var d := _desk()
+	return d != null and not bool(d.get("dateline").get("busy"))
+
+
+func _dateline_watch(tag: String, count: int, mid_name: String, done_name: String) -> void:
+	"""Phase 4: the dateline's type-on number `count` is running; shoot it mid-type and set
+	(with --out), and print its timing log."""
+	var dl = _desk().get("dateline")
+	_check(int(dl.get("type_count")) == count,
+		"%s: type-on number %d (type_count %d)" % [tag, count, int(dl.get("type_count"))])
+	_say("dateline %s text '%s' busy %s visible %d" % [tag, String(dl.get("text")),
+		str(dl.get("busy")), int(dl.get("visible_count"))])
+	var t0 := Time.get_ticks_msec()
+	if out_dir != "" and tag == "boot" and not _dl_mid_shot:
+		_check(false, "boot: the mid-type shot was taken while the boot settled")
+	if out_dir != "" and tag != "boot":
+		while bool(dl.call("typing")) and int(dl.get("visible_count")) < 7 \
+				and Time.get_ticks_msec() - t0 < 5000:
+			await _frames(1)
+		_check(bool(dl.call("typing")), "%s: still typing for the mid-type shot" % tag)
+		await _shot(mid_name, true)
+	while bool(dl.get("busy")) and Time.get_ticks_msec() - t0 < 10000:
+		await _frames(1)
+	_check(not bool(dl.get("busy")), "%s: the type-on ended" % tag)
+	var sch: Dictionary = dl.get("current_schedule")
+	var times: Array = sch.get("letter_times", [])
+	for e in dl.get("type_log"):
+		var i := int(e.get("i", -9))
+		var at_s := float(times[i]) if i >= 0 and i < times.size() else \
+			(float(sch.get("cr_time", 0.0)) if i == -1 else float(sch.get("end_time", 0.0)))
+		_say("DLTIME %s i=%d ch='%s' sched_ms=%.1f fired_ms=%.1f late_ms=%.1f frame=%d pick=%d pitch=%.4f db=%.3f" % [
+			tag, i, String(e.get("ch", "")), at_s * 1000.0, float(e.get("at", 0.0)) * 1000.0,
+			(float(e.get("at", 0.0)) - at_s) * 1000.0, int(e.get("frame", 0)),
+			int(e.get("pick", -1)), float(e.get("pitch", 1.0)), float(e.get("db", 0.0))])
+	if out_dir != "":
+		await _shot(done_name, true)
 
 
 func _slot_container() -> Container:

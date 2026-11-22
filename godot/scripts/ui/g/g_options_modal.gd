@@ -1,7 +1,8 @@
 extends Control
 ## G desk options (fork/design/godot-g/spec.md 2.1), opened from the Settings board's
 ## "G desk options" row. It shows only the switches that do something today: the G desk on/off
-## switch and, since phase 3a, room effects (full / simple / off, spec 5.14). Reduced motion and
+## switch, since phase 3a room effects (full / simple / off, spec 5.14), and since phase 4 the
+## typewriter sound on/off (Alex: "include a mute option for it"). Reduced motion and
 ## the resources take join them in the phases that make them work (phases 7 and 6). Applies on
 ## next game load, like today's layout checkbox.
 ##
@@ -11,6 +12,7 @@ extends Control
 signal closed
 
 var desk_toggle: CheckButton
+var typewriter_toggle: CheckButton
 var room_picker: OptionButton
 var _panel: PanelContainer
 var _barrier: ColorRect
@@ -109,6 +111,25 @@ func _build() -> void:
 	rcap.custom_minimum_size = Vector2(500, 0)
 	vb.add_child(rcap)
 
+	var tw_row := HBoxContainer.new()
+	tw_row.name = "TypewriterRow"
+	tw_row.add_theme_constant_override("separation", 16)
+	vb.add_child(tw_row)
+	var tl := _label("Typewriter sound", "body", Color("#d6cebd"))
+	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tw_row.add_child(tl)
+	typewriter_toggle = CheckButton.new()
+	typewriter_toggle.name = "TypewriterToggle"
+	typewriter_toggle.tooltip_text = "On: the date types in with typewriter strikes. Off: it types in silently."
+	typewriter_toggle.set_pressed_no_signal(GPrefs.typewriter_sound())
+	typewriter_toggle.toggled.connect(_on_typewriter_toggled)
+	tw_row.add_child(typewriter_toggle)
+	var tcap := _label("The strikes as each new month's date types in. Applies at once.",
+		"small", Color("#aaa08e"))
+	tcap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tcap.custom_minimum_size = Vector2(500, 0)
+	vb.add_child(tcap)
+
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	vb.add_child(foot)
@@ -150,6 +171,8 @@ func show_panel() -> void:
 		desk_toggle.set_pressed_no_signal(GPrefs.desk())
 	if room_picker != null:
 		room_picker.select(_room_index(GPrefs.room_effects()))
+	if typewriter_toggle != null:
+		typewriter_toggle.set_pressed_no_signal(GPrefs.typewriter_sound())
 	visible = true
 	_barrier.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -181,3 +204,7 @@ func _input(event: InputEvent) -> void:
 
 func _on_desk_toggled(on: bool) -> void:
 	GPrefs.set_desk(on)
+
+
+func _on_typewriter_toggled(on: bool) -> void:
+	GPrefs.set_typewriter_sound(on)

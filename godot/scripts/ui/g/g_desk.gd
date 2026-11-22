@@ -20,6 +20,9 @@ extends Control
 ## size is set here in code through ThemeManager.get_font_size(), by rank (spec 4.4).
 ## Phase 5, tier icons (spec 5.1.2 take a): each resource cell is a GResourceCell (tier icon
 ## from GTiers, crossfade on a tier change, tags, reputation's "0 ends the run").
+## Phase 4, the dateline (spec 5.1.1, 7): GDateline draws the date on its worn ribbon and types
+## it in, with GTypeSound's strikes, when a run or a month begins (dateline_action); inside a
+## month, on a load and on a resume it shows the date set.
 ##
 ## VIEW-ONLY: reads the state dicts main_ui already receives, writes no game state, draws no
 ## random number (spec 7.4), creates no timers (spec 6.1).
@@ -73,7 +76,13 @@ var _modal_open_cache := -1        # -1 unknown, 0 closed, 1 open (keycap visibi
 
 # Built nodes (public so tests and the capture harness can reach them).
 var top_strip: PanelContainer
-var dateline: Label
+var dateline: GDateline
+var type_sound: GTypeSound
+## Phase 4 (spec 5.1.1): how this desk's first date arrives ("new" | "load" | "resume" |
+## "live", dateline_boot_kind, read in setup before the boot runs) and the (year, month) of
+## the last date shown ((-1, -1) = none yet).
+var dateline_boot := ""
+var _dateline_ym := Vector2i(-1, -1)
 var resource_values: Dictionary = {}   # key -> Label (value)
 var resource_cells: Dictionary = {}    # key -> Control (cell)
 ## EE-7 "last turn" change chips, copied from main_ui._delta_labels (money, compute and
@@ -84,6 +93,7 @@ var resource_strip: HBoxContainer      # the five GResourceCells and their rules
 const RESOURCE_SEP := 24
 const RESOURCE_SEP_MIN := 8
 var menu_button: Button
+const MENU_DIMMED := Color(0.4, 0.4, 0.4, 1.0)  # the MENU plate while a dialog waits
 var banner: PanelContainer
 var mode_label: Label
 var view_plan_button: Button
@@ -175,6 +185,10 @@ func setup(main_ui: Node) -> void:
 	_connect()
 	visible = host.visible
 	_last_state = host._last_state if host.get("_last_state") is Dictionary else {}
+	var gm = _gm()
+	dateline_boot = dateline_boot_kind(not _last_state.is_empty(),
+		gm != null and bool(gm.get("pending_resume")) and bool(gm.get("is_initialized")),
+		String(GameConfig.pending_load_path))
 	if not _last_state.is_empty():
 		_on_state(_last_state)
 	_refresh_mode()
@@ -188,6 +202,8 @@ func detach() -> void:
 	"""Stop listening before LayoutController restores classic (spec 2.2 leaving g): the
 	restore re-applies the PLAN/WATCH visibility, which must not re-hide the chrome."""
 	_detached = true
+	if dateline != null:
+		dateline.stop_typing()
 	_close_guide()
 	close_g_sheets()
 	_stop_advisor_pulse()
@@ -259,6 +275,8 @@ func _connect() -> void:
 func _build() -> void:
 	room = GRoom.new()
 	add_child(room)
+	type_sound = GTypeSound.new()
+	add_child(type_sound)
 	_build_top_strip()
 	_build_banner()
 	_build_rail()
@@ -342,12 +360,11 @@ func _build_top_strip() -> void:
 	top_strip.offset_top = 0
 	top_strip.offset_bottom = 56
 	var hb := _margin_hbox(top_strip, 24, 24, 24)
-	# The dateline slot keeps today's turn label text until phase 4 (GDateline); it already
-	# takes the dateline's face, Courier Prime Bold, tracked (spec 5.1.1). 420 wide at least.
-	dateline = make_label("", "header", C.dateline, "GDateline")
-	dateline.name = "Dateline"
-	dateline.custom_minimum_size = Vector2(420, 0)
-	dateline.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# The dateline (spec 5.1.1): Courier Prime Bold at `header`, drawn glyph by glyph, 420 wide.
+	dateline = GDateline.new()
+	set_step(dateline, "header")
+	set_ink(dateline, C.dateline)
+	dateline.sound = type_sound
 	hb.add_child(dateline)
 	var cells := HBoxContainer.new()
 	cells.name = "ResourceStrip"
@@ -613,8 +630,7 @@ func _on_state(state: Dictionary) -> void:
 	_last_state = state
 	_state_seq += 1
 	_note_month_snapshot(state)
-	if host != null and host.has_method("_format_turn_datetime"):
-		dateline.text = host._format_turn_datetime(state)
+	_refresh_dateline(state)
 	for key in RESOURCE_KEYS:
 		(resource_cells[key] as GResourceCell).set_amount(float(state.get(key, 0)))
 	plate_staff.set_status(str(int(state.get("total_staff", 0))))
@@ -629,6 +645,47 @@ func _on_state(state: Dictionary) -> void:
 	_refresh_sheets()
 	_refresh_playback()
 	feed_panel.set_month(month_label_of(state))
+
+
+static func dateline_boot_kind(has_state: bool, pending_resume: bool, pending_load: String) -> String:
+	"""How the desk's first date arrives (spec 5.1.1), read in setup, before main_ui._boot_game
+	runs: "live" (the desk came up over a run already on screen: F9), "resume" (back from a
+	conference, main_ui.gd _boot_game's resume_in_place branch), "load" (a queued save) or
+	"new" (start_new_game)."""
+	if has_state:
+		return "live"
+	if pending_resume:
+		return "resume"
+	if pending_load != "":
+		return "load"
+	return "new"
+
+
+static func dateline_action(last_ym: Vector2i, ym: Vector2i, boot: String) -> String:
+	"""Spec 5.1.1: "type" for the first date of a new game and for a (year, month) other than
+	the last shown; "set" for everything else (a day change inside the month, the first date
+	after a load, a resume or an F9 flip)."""
+	if last_ym.x < 0:
+		return "type" if boot == "new" else "set"
+	return "type" if ym != last_ym else "set"
+
+
+func _refresh_dateline(state: Dictionary) -> void:
+	dateline.reduced_motion = GPrefs.reduced_motion()
+	var cal = state.get("calendar", {})
+	var t := GDateline.date_text(cal) if cal is Dictionary else ""
+	if t == "":
+		# No calendar in the state: today's turn label text, set (no type-on).
+		if host != null and host.has_method("_format_turn_datetime"):
+			dateline.set_text(String(host._format_turn_datetime(state)).to_upper())
+		return
+	var ym := Vector2i(int(cal.get("year", 0)), int(cal.get("month", 0)))
+	var act := dateline_action(_dateline_ym, ym, dateline_boot)
+	_dateline_ym = ym
+	if act == "type":
+		dateline.type_text(t)
+	else:
+		dateline.set_text(t)
 
 
 func _refresh_delta_chips() -> void:
@@ -1152,6 +1209,10 @@ func _refresh_modal_keycaps(force: bool) -> void:
 	var show_keys := open == 0
 	var rail_keys := top == "" or top.begins_with("g_")
 	menu_button.get_meta("keycap").visible = show_keys
+	# The top strip stays lit under event dims (H spec 3.3), but the MENU plate cannot be used
+	# while a dialog waits (the barrier takes the click, Esc is refused): dim it so a lit button
+	# that does nothing does not read as broken.
+	menu_button.modulate = Color.WHITE if show_keys else MENU_DIMMED
 	feedback_keycap.visible = show_keys
 	plate_actions.set_keycap_visible(rail_keys and not skipped_binds.has("g_actions"))
 	plate_upgrades.set_keycap_visible(rail_keys and not skipped_binds.has("g_upgrades"))

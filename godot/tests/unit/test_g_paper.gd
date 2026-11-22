@@ -204,6 +204,55 @@ func test_review_on_paper_keeps_its_door() -> void:
 	await _frames(2)
 
 
+func _blocker() -> ColorRect:
+	"""The event presenter's root-level click blocker (z 999, stops input)."""
+	var found: ColorRect = null
+	for c in get_tree().root.get_children():
+		if c is ColorRect and c.z_index == 999 and c.mouse_filter == Control.MOUSE_FILTER_STOP:
+			found = c
+	return found
+
+
+func test_g_dim_leaves_the_top_strip_lit() -> void:
+	# Phase 4 (H spec 3.3): the dateline sits above every dim layer, so a new month's date types
+	# in where the player can read it. The blocker still stops input over the whole screen.
+	var main_ui: Node = await _boot()
+	var ed = main_ui.event_dialog
+	_hold_choices(main_ui, ed)
+	ed.present(_review_event())
+	await _frames(3)
+	var blocker := _blocker()
+	assert_not_null(blocker, "the click blocker is up")
+	assert_eq([blocker.anchor_left, blocker.anchor_top, blocker.anchor_right, blocker.anchor_bottom],
+		[0.0, 0.0, 1.0, 1.0], "input is blocked everywhere")
+	assert_eq(blocker.color.a, 0.0, "the blocker itself draws nothing")
+	var dim: ColorRect = blocker.get_node_or_null("GDim")
+	assert_not_null(dim, "the dim is its own layer")
+	var strip: Control = main_ui.get_g_desk().top_strip
+	assert_almost_eq(dim.offset_top, strip.get_global_rect().end.y, 0.5, "the dim starts below the strip")
+	assert_almost_eq(dim.color.a, MonthReviewPanel.BACKDROP_ALPHA, 0.001, "the review's dim is kept below it")
+	assert_eq(dim.mouse_filter, Control.MOUSE_FILTER_IGNORE)
+	var menu: Control = main_ui.get_g_desk().menu_button
+	assert_eq(menu.modulate, GDesk.MENU_DIMMED, "the MENU plate, unusable under an event, is dimmed")
+	ed._showing_dialog.queue_free()
+	await _frames(4)
+	assert_eq(menu.modulate, Color.WHITE, "lit again once the event is gone")
+
+
+func test_classic_dim_still_covers_the_whole_screen() -> void:
+	var main_ui: Node = await _boot(false)
+	var ed = main_ui.event_dialog
+	_hold_choices(main_ui, ed)
+	ed.present(_event("classic"))
+	await _frames(3)
+	var blocker := _blocker()
+	assert_not_null(blocker)
+	assert_almost_eq(blocker.color.a, 0.6, 0.001, "today's dim, full screen")
+	assert_null(blocker.get_node_or_null("GDim"), "no G dim layer in classic")
+	ed._showing_dialog.queue_free()
+	await _frames(2)
+
+
 func test_classic_keeps_todays_event_and_review() -> void:
 	var main_ui: Node = await _boot(false)
 	var ed = main_ui.event_dialog

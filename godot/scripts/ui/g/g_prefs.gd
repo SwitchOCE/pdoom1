@@ -10,9 +10,12 @@ extends RefCounted
 ## Keys:
 ##   desk           bool   -- G on or off (default DESK_DEFAULT)
 ##   room_effects   String -- "full" | "simple" | "off" (default "full"; spec 5.14, phase 3a)
-##   reduced_motion bool   -- default false (spec 6.5). Read by the room since phase 3a; the
-##                            switch joins the options modal in phase 7, when every G motion
-##                            honours it.
+##   reduced_motion bool   -- default false (spec 6.5). Read by the room (phase 3a), the tier
+##                            icons (phase 5) and the dateline (phase 4: shown set, no sound);
+##                            the switch joins the options modal in phase 7, when every G
+##                            motion honours it.
+##   typewriter_sound bool -- the dateline's typewriter strikes; default true (Alex, 2026-11-23:
+##                            "include a mute option for it"). Off: the date still types, silently.
 ## (resources arrives with its reader in phase 6.)
 
 ## THE one place that decides whether G is on when nothing is saved yet. Alex's decision for
@@ -26,6 +29,7 @@ static var _loaded := false
 static var _desk: bool = DESK_DEFAULT
 static var _room_effects: String = "full"
 static var _reduced_motion: bool = false
+static var _typewriter_sound: bool = true
 
 const ROOM_EFFECTS := ["full", "simple", "off"]
 
@@ -35,12 +39,14 @@ static func reload_prefs(path: String = PATH) -> void:
 	_desk = DESK_DEFAULT
 	_room_effects = "full"
 	_reduced_motion = false
+	_typewriter_sound = true
 	var cf := ConfigFile.new()
 	if cf.load(path) == OK:
 		_desk = bool(cf.get_value(SECTION, "desk", DESK_DEFAULT))
 		var re := String(cf.get_value(SECTION, "room_effects", "full"))
 		_room_effects = re if re in ROOM_EFFECTS else "full"
 		_reduced_motion = bool(cf.get_value(SECTION, "reduced_motion", false))
+		_typewriter_sound = bool(cf.get_value(SECTION, "typewriter_sound", true))
 	_loaded = true
 
 
@@ -51,6 +57,7 @@ static func save_prefs(path: String = PATH) -> int:
 	cf.set_value(SECTION, "desk", _desk)
 	cf.set_value(SECTION, "room_effects", _room_effects)
 	cf.set_value(SECTION, "reduced_motion", _reduced_motion)
+	cf.set_value(SECTION, "typewriter_sound", _typewriter_sound)
 	return cf.save(path)
 
 
@@ -76,6 +83,11 @@ static func reduced_motion() -> bool:
 	return _reduced_motion
 
 
+static func typewriter_sound() -> bool:
+	_ensure_loaded()
+	return _typewriter_sound
+
+
 # --- setters (persist = false keeps the change in memory only, for tests) ---------------
 
 static func set_desk(on: bool, persist: bool = true) -> void:
@@ -95,5 +107,12 @@ static func set_room_effects(m: String, persist: bool = true) -> void:
 static func set_reduced_motion(on: bool, persist: bool = true) -> void:
 	_ensure_loaded()
 	_reduced_motion = on
+	if persist:
+		save_prefs()
+
+
+static func set_typewriter_sound(on: bool, persist: bool = true) -> void:
+	_ensure_loaded()
+	_typewriter_sound = on
 	if persist:
 		save_prefs()

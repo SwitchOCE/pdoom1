@@ -366,7 +366,7 @@ func test_settings_board_carries_the_g_row_inside_the_frame() -> void:
 			board.get_global_rect(), row.get_global_rect()])
 
 
-func test_settings_g_row_opens_options_with_only_the_desk_switch() -> void:
+func test_settings_g_row_opens_options_with_only_working_switches() -> void:
 	var menu: Control = load(SETTINGS_SCENE).instantiate()
 	add_child_autofree(menu)
 	menu.call("_show_board")
@@ -378,8 +378,10 @@ func test_settings_g_row_opens_options_with_only_the_desk_switch() -> void:
 	assert_true(modal.visible, "the modal is shown")
 	var checks: Array = modal.find_children("*", "BaseButton", true, false).filter(
 		func(b): return b is CheckButton or b is CheckBox)
-	assert_eq(checks.size(), 1, "only the switch that works today is shown")
-	assert_eq(checks[0], modal.get("desk_toggle"), "that switch is the G desk toggle")
+	# Only switches that work today: the G desk toggle and (phase 4) the typewriter sound.
+	assert_eq(checks.size(), 2, "only the switches that work today are shown")
+	assert_eq(checks[0], modal.get("desk_toggle"), "the first is the G desk toggle")
+	assert_eq(checks[1], modal.get("typewriter_toggle"), "the second is the typewriter sound")
 	GPrefs.set_desk(true, false)
 	modal.call("show_panel")
 	assert_true((checks[0] as CheckButton).button_pressed, "the switch reflects GPrefs")

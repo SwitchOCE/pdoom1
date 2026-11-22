@@ -205,6 +205,19 @@ func _show_next_event() -> void:
 	click_blocker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	click_blocker.z_index = 999  # Just below dialog but above all other UI
 	click_blocker.z_as_relative = false  # Absolute z-index
+	# G (spec 5.1.1; H spec 3.3 "the dateline sits above every dim layer"): the top strip stays
+	# lit, so a new month's date types in where the player can read it. The blocker still stops
+	# input over the whole screen; only its dim starts below the strip. Look only.
+	var strip_bottom := _g_strip_bottom() if use_g else 0.0
+	if strip_bottom > 0.0:
+		var dim := ColorRect.new()
+		dim.name = "GDim"
+		dim.color = click_blocker.color
+		dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		dim.offset_top = strip_bottom
+		click_blocker.color = Color(0.0, 0.0, 0.0, 0.0)
+		click_blocker.add_child(dim)
 	# Add to viewport root to cover entire screen and all UI
 	get_tree().root.add_child(click_blocker)
 
@@ -491,6 +504,20 @@ func _g_layout() -> bool:
 	tests, other screens) is classic."""
 	var host := get_parent()
 	return host != null and host.has_method("is_g_layout") and bool(host.call("is_g_layout"))
+
+
+func _g_strip_bottom() -> float:
+	"""The G top strip's bottom edge on screen, or 0 when there is no live G desk."""
+	var host := get_parent()
+	if host == null or not host.has_method("get_g_desk"):
+		return 0.0
+	var desk = host.call("get_g_desk")
+	if desk == null or not is_instance_valid(desk):
+		return 0.0
+	var strip = desk.get("top_strip")
+	if strip == null or not (strip is Control) or not (strip as Control).is_visible_in_tree():
+		return 0.0
+	return (strip as Control).get_global_rect().end.y
 
 
 func _on_choice_pressed(event: Dictionary, choice_id: String, dialog: Control, blocker: Control) -> void:
