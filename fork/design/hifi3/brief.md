@@ -173,50 +173,111 @@ Alex's decisions on it:
 > inspiration from it, one without"
 
 (One = clearer hierarchy, two = stronger doom colour, four = a meter per
-resource.) So:
+resource.) Then, on how to show resources:
+
+> "Can we instead have some sort of, instead of a meter then for the
+> attention and reputation, perhaps have some sort of like progression of
+> iconography, kind of representing larger amounts with like changes in
+> either color state or size or amounts, perhaps. Like often, like when you
+> see a money icon in a game, there's like a coin. And then when you have a
+> lot of money, when you have like multiple coins, or you can see a big
+> pile of coins when you get to larger numbers and stuff, right? That could
+> be some way of representing the changes on these like meter-like things.
+> Basically, like at a glance, you can kind of tell when you're poor and
+> non, and kind of or rich and kind of in a resource, it kind of like
+> builds flavor. Another way of doing it potentially is almost like in
+> terms of like how like a heartbeat monitor or something works. Basically,
+> we have an unanchored window that kind of follows the x and y axes of
+> these things, right? Of these, I'm not sure how we would show it and
+> present it in a window or something, but yeah, if we could build an
+> interactive artifact that lets me pick specific elements from these
+> designs and overlay them and stuff. After these passes, then I think
+> we're good to go"
+
+(Reading: the game sets no maximum for money, compute, research or
+papers, so a fill meter has nothing to fill against. Alex's two
+alternatives replace the meter for those resources. Attention keeps its
+hour bars and reputation keeps H's tachometer, since both have real
+limits; either may also take a tier icon if it reads well.)
+
+So:
 
 1. **H, revised** (fork/design/hifi3/H/, replacing the current renders):
    - **Hierarchy.** Rank what matters for this month's decision and show
-     it: P(Doom) first, then Attention left and money, then the plan; the
-     rest recedes (smaller, dimmer, lower contrast but still 4.5:1 for
-     text). A first-time viewer should see where to look in one glance.
+     it. Proposed order (the council may adjust it): P(Doom) first, then
+     Attention left and money, then the plan; the rest recedes (smaller,
+     dimmer, still 4.5:1 for text). A first-time viewer should see where
+     to look in one glance.
    - **Stronger doom colour.** Alex, after reading the feedback: "I
      definitely agree with a lot of what he said, especially with the
      screen darkening or changing texture and color palettes as time goes
      on and the chance of doom gets worse. I think it should start off
      maybe even a little bit brighter than it does now and maybe can
-     darken over time." So month 1 (the lowest band) starts a little
-     brighter than now (still a dim, grimy office, not cheerful; paper
-     stays the lightest thing), and each band darkens and shifts the
-     palette and texture further, so pressure rises visibly from band to
-     band (still "a layer,
-     not a repaint"; controls stay put and readable). Show it across the
-     six states, and add a strip of the same screen at each doom band to
-     the page.
-   - **A meter per resource.** Money, compute, research, papers and
-     reputation each get a small always-visible meter in G's meter style
-     (a bar or small dial; what full means must come from the game's data
-     or be stated, never invented). This adds to the screen, so keep it
-     compact and below P(Doom) in the hierarchy: Alex's "much less on one
-     screen" steer still holds. Respect ADR-0001/ADR-0015 (no new hidden
-     information, no printed doom deltas).
+     darken over time." The colour follows the doom band only (never the
+     month or time): the lowest band starts a little brighter than now
+     (still a dim, grimy office, never cheerful; paper stays the only light
+     thing), and each band darkens and shifts palette and texture further,
+     so pressure rises visibly from band to band ("a layer, not a repaint";
+     controls stay put and readable). Show it across the six states, and
+     add a strip of the same screen at each of the 7 bands to the page.
+   - **Resources, two takes** for money, compute, research and papers
+     (reputation: reuse H's tachometer, never draw it twice):
+     a. **Tier icons**: each resource's icon changes with the amount, e.g.
+        money from one coin to a few coins to a stack to a pile; compute,
+        research and papers likewise in Pip's icon style, dark-plated. 3 to
+        5 tiers each. The tier thresholds are a proposal, stated in the
+        spec, and must not reveal anything the game hides (ADR-0001); use
+        the plain amount shown today, not a forecast. The number stays
+        beside the icon.
+     b. **Trace window**: a small "heartbeat monitor" panel per resource
+        (or one shared panel): a line tracing the amount over the past
+        months, with an unanchored, auto-scaling y-axis so the line always
+        fills the window. Only history the player has already seen; no
+        forecast, no doom trace (ADR-0015).
+     Build H with take (a) as the default renders; render states 1, 3 and
+     6 also with take (b). Keep both compact: if they crowd the art or
+     push anything aside, they shrink first.
 2. **H-HF, the HighFleet-inspired take**: the same revised H (same layout,
-   hierarchy, colour and meters) with texture drawn from HighFleet and
-   amber Soviet-style control panels: worn painted metal, analogue dials
-   and needles, stencilled labels, rivets, warning plates. Texture only:
-   not HighFleet's density, no extra controls. Build in
-   fork/design/hifi3/H-HF/. References: find 4 to 8 HighFleet screenshots
-   (Steam store page, press kit) and save them, never committed, in
-   fork/design/research/reference-games/shots/highfleet-*.jpg; add them
-   to .git/info/exclude and to the grim gallery. If fetches fail, work
-   from notes.
-3. Update spec.md for the revised H (hierarchy order, resource meters,
-   colour by band) and note H-HF as a texture variant in one short
+   hierarchy, colour, resources take a) with texture drawn from HighFleet
+   and amber Soviet-style control panels: worn painted metal, analogue
+   dials and needles, stencilled labels, rivets, warning plates. Texture
+   only: not HighFleet's density, no extra controls. Build in
+   fork/design/hifi3/H-HF/, three states only (1 first screen, 4 WATCH
+   event, 5 end of month). References: find 4 to 8 HighFleet screenshots
+   (Steam store page, press kit), save them uncommitted in
+   fork/design/research/reference-games/shots/highfleet-*.jpg and add them
+   to .git/info/exclude. If fetches fail, work from notes.
+3. **The mixer**: fork/design/hifi3/mixer/index.html, an interactive page
+   where Alex picks elements from the designs and overlays them on one
+   1920x1080 screen:
+   - Slots for each element: P(Doom) meter, reputation, resources (tier
+     icons / trace window / the plain numbers), dateline, menu rack, plan
+     panel, Commit and held-for-events, action menu, event card, month
+     review, feed. Each slot offers that element from H, H-HF, C, E and G
+     where the design has one, or "none".
+   - A background picker (the office art) and a doom-band slider that
+     applies the band colour layer.
+   - Elements can be dragged to move them and toggled on and off; a reset
+     button restores H's layout.
+   - Built from cut-out renders of each element (transparent WebP,
+     rendered from each design's concept.html in isolation), so it is
+     honest to the designs, not redrawn. Same page rules: self-contained,
+     relative paths, under 16 MB, Google Fonts only, keyboard usable.
+   - The current arrangement can be saved in the page (localStorage, with
+     try/catch) and shown as a short text code Alex can copy and paste
+     back to us.
+4. Update spec.md for the revised H (hierarchy order, resources take a and
+   b with thresholds, colour by band) and add H-HF as a short texture
    section.
-4. The page: H first, then H-HF as "the same design, heavier texture",
-   then C, E and G. Add the doom-band strip.
-5. Council: one round on the revised H and H-HF (did hierarchy, colour
-   and meters land; does H-HF keep the layout and stay readable; the usual
-   defect and 4.5:1 checks; Neon also listens to the sound if it
-   changed), one fix round, Opus and Sol then Neon. Then the report and
-   push as briefed.
+5. The page: H first, then H-HF ("the same design, heavier texture"),
+   then C, E and G with a line saying they show the earlier texture (no
+   hierarchy, resource or colour changes). Add the doom-band strip, the
+   resource takes side by side, and a link to the mixer (the PC session
+   publishes the mixer too).
+6. Council: one round on the revised H, H-HF and the mixer (did
+   hierarchy, colour and resources land; does H-HF keep the layout and
+   stay readable; does the mixer work and stay honest to the designs; the
+   usual defect and 4.5:1 checks; Neon listens if the sound changed), one
+   fix round, Opus and Sol then Neon. Then the report and push as briefed.
+   Alex: "After these passes, then I think we're good to go", so this is
+   the last design round: make the report a clean hand-off.
