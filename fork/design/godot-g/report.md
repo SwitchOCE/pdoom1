@@ -6,15 +6,17 @@ committed.
 
 ## Summary
 
-- **The spec is written and has passed two council fix rounds; three small
-  items are still open.** `spec.md` covers G with all five of H's upgrades.
-  At the end, Opus said GOOD TO GO (9/10) and Sol said CHANGES NEEDED
-  (9/10), with three small new items. The brief allows two fix rounds, so
-  the run stopped there. The three items are written into spec section 19
-  with Sol's proposed fixes. The build prompt makes settling them the build
-  orchestrator's first job. Neon reviewed round 1 but was not asked to
-  re-check, because the council skill sends Neon a re-check only once Opus
-  and Sol both pass.
+- **All three council members agree the spec will work: GOOD TO GO, 9/10
+  each.** `spec.md` covers G with all five of H's upgrades. It took three
+  fix rounds: two under the brief, then one more that Alex asked for from
+  his PC session ("one more short round rather than leaving the three items
+  to the build"). In that round:
+  - Sol's three last items were fixed.
+  - Opus and Sol re-checked and passed.
+  - Neon then reviewed the whole spec last and passed it.
+
+  Nothing blocking is open. Neon left three non-blocking notes (Council,
+  below).
 - **The three riskiest parts run in Godot 4.5.1** (the official 4.5.1
   binary, downloaded to `/data/godot-4.5.1`; this box's own `godot` is
   4.7.2):
@@ -42,14 +44,14 @@ committed.
   layer from values the UI already shows. Nothing is written to game state
   or saved, and a loaded save starts with no history.
 - **Alex approves the build prompt before anything starts.** It pins the
-  design inputs to commit `505d0db9`.
+  design inputs to commit `5e540c1c`, the spec the council passed.
 
 ## Deliverables
 
 | File | What |
 |---|---|
-| `spec.md` | The build spec. Sections 1-16 are the spec; 17-18 list the council changes; 19 lists the three open items. |
-| `build-prompt.md` | The prompt for the build orchestrator. It quotes Alex verbatim, pins design inputs to `505d0db9` and starts nothing by itself. |
+| `spec.md` | The build spec. Sections 1-16 are the spec; 17-19 list the changes from each council fix round. |
+| `build-prompt.md` | The prompt for the build orchestrator. It quotes Alex verbatim, pins design inputs to `5e540c1c` and starts nothing by itself. |
 | `spikes/` | Spike sources, `RESULTS.md` and five screenshots. Rerun with `bash fork/design/godot-g/spikes/run.sh all`. |
 | `art-trial.png`, `art-trial-prompt.txt` | The contact sheet of both runs, with Pip's money icon beside them, and the prompt. |
 | `council/` | Every round's findings verbatim, the vote sheet and the agreed lists. |
@@ -119,14 +121,19 @@ Money needs no re-run: each tier is picked from trial-1 or trial-2.
 
 Low sensitivity: Claude Opus 5.5 (effort high), GPT gpt-6.2-sol (reasoning
 high), Gemini 4 Neon (thought level high). Neon was signed in and worked.
-There were three review passes and two fix rounds. The members settled each
-change list among themselves, with a vote on seven points in round 1.
+There were four review passes and three fix rounds. The members settled
+each change list among themselves, with a vote on seven points in round 1.
+Neon re-checked last, after Opus and Sol had both passed.
 
-| Delegate | Round 1 | Round 2 (re-check) | Round 3 (re-check) |
-| --- | --- | --- | --- |
-| Claude Opus | 7/10, changes | 8/10, changes | 9/10, GOOD TO GO |
-| GPT Sol | 7/10, changes | 8/10, changes | 9/10, changes (3 items) |
-| Gemini Neon | 7/10, changes | not asked | not asked |
+| Delegate | Round 1 | Round 2 (re-check) | Round 3 (re-check) | Round 4 (re-check) |
+| --- | --- | --- | --- | --- |
+| Claude Opus | 7/10, changes | 8/10, changes | 9/10, GOOD TO GO | 9/10, GOOD TO GO |
+| GPT Sol | 7/10, changes | 8/10, changes | 9/10, changes (3 items) | 9/10, GOOD TO GO |
+| Gemini Neon | 7/10, changes | not asked | not asked | 9/10, GOOD TO GO |
+
+Sol's round 4 first answer had one blocker: the build prompt still pinned
+the old spec commit. I moved the pin to `5e540c1c`, and Sol then confirmed
+GOOD TO GO.
 
 **What the rounds fixed.** Round 1's list (A1-A11, V1-V7) had the most
 weight:
@@ -147,14 +154,21 @@ Round 2 fixed:
 - the provenance command;
 - the icon surfaces.
 
-**Still open (spec section 19), each with a proposed fix:**
-1. Booting straight into G still races the first game state when `main.tscn`
-   is the startup scene. Fix: apply G after the existing one-frame wait,
-   just before the game boots.
-2. The phase 1a parity test would press a disabled "coming soon" action.
-   Fix: use three presses of Purchase Compute.
-3. The icon screenshot check asks for icons on screens where they can never
-   appear. Fix: check each icon only where it can appear.
+Round 3's fixes, in spec section 19:
+1. G is applied after the existing one-frame wait, just before the game
+   boots. Opus and Sol each proved in 4.5.1 that this works on both launch
+   paths.
+2. The phase 1a parity test presses Purchase Compute three times. The old
+   pick was a disabled "coming soon" action.
+3. Each icon is checked only on the screens where it can appear.
+
+**Neon's non-blocking notes:**
+- The section 9 summary table still names `window_attention_for_option`
+  for the Attention card. Section 5.5, which is authoritative, says
+  `costs_with_window_attention`.
+- Old events without a window block correctly get no price summary.
+- The read-only design copy needs `chmod -R u+w` on `fork/` before it can be
+  removed with `git worktree remove`.
 
 ## Open questions for Alex
 
@@ -208,8 +222,8 @@ detail.
   folder, no reference image, no git, a disk report, then the prompt). They
   did not get Alex's quoted words, because extra text in an image prompt
   changes the pictures. Every other brief quoted Alex verbatim.
-- **Fix rounds.** The run stopped after two fix rounds as the brief says,
-  with Sol's three round 3 items recorded, not fixed (spec section 19).
+- **Fix rounds.** The brief allowed two. The third was added at Alex's
+  request, relayed from his PC session.
 - **A reviewer wrote into `godot/`.** Opus, reviewing in round 3, left two
   untracked scratch files there (`boot.tscn`, `switcher.gd`) after a failed
   `cd`. I removed them. No tracked file changed, and its Godot runs used an
