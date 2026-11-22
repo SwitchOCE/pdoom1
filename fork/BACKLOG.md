@@ -12,6 +12,7 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 - [in-lean] ui -- build E from Alex's build D notes: no floor smoke (5358478d); research and papers at 0 read neutral, no red warning on turn 1 (3e348af5); paper with clean straight edges (2f3da71b) -- -- ui/g-no-smoke, ui/g-tier-zero-neutral, ui/g-paper-straight (deleted)
 - [in-lean] bug -- G's feed showed raw lines like 'FEED | unknown -- Talent Opportunity'; now the item's name only; squash 56f845f6 -- -- fix/g-feed-source (deleted)
 - [in-lean] bug -- in G the build badge covered the reputation note ('0 ends the r...') and MENU; it now sits in G's bottom strip; squash f03deb42 -- -- fix/g-badge-strip (deleted)
+- [todo] ui -- G's Actions sheet says 'choices' with no count on the Travel & Conferences and Financing doors (seen in shot 3): their submenus are built bespoke, so option_count is -1 and g_actions_panel.gd door_line falls back to 'choices'; found by the council (Neon) --
 - [todo] ui -- G at 1600x900: a few small labels lose contrast; scaling the compact layout to about 0.85 would fix it (Alex has not answered) --
 - [in-lean] bug -- G desk options opened half off screen, hiding the switch back to classic; squash 0648a54d -- -- fix/g-options-offscreen (deleted)
 - [todo] bug -- test_music_player_controls.gd fails on a slow machine (the conductor-nudge timer leaks between tests; test isolation) -- Refs #1385 --
