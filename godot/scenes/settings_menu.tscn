@@ -516,6 +516,22 @@ theme_override_colors/font_color = Color(0.7, 0.78, 0.86, 1)
 theme_override_font_sizes/font_size = 12
 text = "edit all bindings and profiles"
 
+[node name="GDeskRow" type="HBoxContainer" parent="Board/BoardVBox/Columns/Col3"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Label" type="Label" parent="Board/BoardVBox/Columns/Col3/GDeskRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "The G desk main screen: turn it on or off. Applies on next game load."
+mouse_filter = 0
+text = "G desk options"
+
+[node name="Button" type="Button" parent="Board/BoardVBox/Columns/Col3/GDeskRow"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = ">> OPEN"
+
 [node name="HSeparator2" type="HSeparator" parent="Board/BoardVBox"]
 layout_mode = 2
 

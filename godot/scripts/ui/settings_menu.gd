@@ -64,6 +64,7 @@ const SAVE_DEBOUNCE_SECONDS := 0.75
 @onready var board_leaderboard_checkbox: CheckButton = $Board/BoardVBox/Columns/Col3/LeaderboardRow/CheckBox
 @onready var board_launch_ping_checkbox: CheckButton = $Board/BoardVBox/Columns/Col3/LaunchPingRow/CheckBox
 @onready var board_keybindings_button: Button = $Board/BoardVBox/Columns/Col3/KeybindingsButton
+@onready var board_g_desk_button: Button = $Board/BoardVBox/Columns/Col3/GDeskRow/Button
 @onready var front_card_button: Button = $Board/BoardVBox/FooterRow/FrontCardButton
 @onready var board_saved_label: Label = $Board/BoardVBox/FooterRow/SavedLabel
 
@@ -131,6 +132,7 @@ func _connect_signals():
 	front_card_button.pressed.connect(_show_front_card)
 	fc_keybindings_button.pressed.connect(_open_keybindings)
 	board_keybindings_button.pressed.connect(_open_keybindings)
+	board_g_desk_button.pressed.connect(_open_g_desk_options)
 	back_button.pressed.connect(_on_back_pressed)
 
 
@@ -433,6 +435,18 @@ func _on_back_pressed():
 	else:
 		print("[SettingsMenu] Returning to welcome screen...")
 		SceneTransition.go_to("res://scenes/welcome.tscn")
+
+
+const G_OPTIONS_SCENE := "res://scenes/ui/g_options_modal.tscn"
+var _g_options: Control = null
+
+func _open_g_desk_options() -> void:
+	"""G desk options (fork/design/godot-g/spec.md 2.1): a small modal over the board. It saves
+	to G's own file (user://g_ui.cfg), never to GameConfig's; applies on next game load."""
+	if _g_options == null or not is_instance_valid(_g_options):
+		_g_options = load(G_OPTIONS_SCENE).instantiate()
+		add_child(_g_options)
+	_g_options.show_panel()
 
 
 func _live_run_active() -> bool:

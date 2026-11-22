@@ -169,7 +169,15 @@ func render(actions: Array) -> void:
 		host._populate_upgrades()
 		return
 
-	_render_flat(categories, category_order, category_colors, current_state)
+	var ordered := _render_flat(categories, category_order, category_colors, current_state)
+
+	# G desk (fork/design/godot-g/spec.md 5.7.1): hand the Actions sheet the SAME list the flat
+	# grid was just built from -- same order, same filters, same slot indexes. The grid stays
+	# built (hidden) so keys 1-9 work exactly as today.
+	if host._ui_layout == "g" and host.has_method("get_g_desk"):
+		var g_desk = host.get_g_desk()
+		if g_desk != null:
+			g_desk.set_action_rows(ordered)
 
 	# Also populate upgrades
 	host._populate_upgrades()
@@ -181,7 +189,7 @@ func render(actions: Array) -> void:
 
 # --- LAYOUT: classic single-column icon grid (was inline in _on_actions_available) ---------
 
-func _render_flat(categories: Dictionary, category_order: Array, category_colors: Dictionary, current_state: Dictionary) -> void:
+func _render_flat(categories: Dictionary, category_order: Array, category_colors: Dictionary, current_state: Dictionary) -> Array:
 	# WRAPPING icon grid (playtest 2026-08-05 / #1043 item 1). The old single VBox column put
 	# ~15 70px tiles (~1,065px) inside a ~550px scroll viewport, with the scrollbar at the FAR
 	# RIGHT of the panel, ~470px away from the 70px-wide tile column it scrolls -- an invisible
@@ -196,6 +204,7 @@ func _render_flat(categories: Dictionary, category_order: Array, category_colors
 
 	# Create icon buttons - single column layout
 	var action_index = 0  # Track index for keyboard shortcuts
+	var ordered: Array = []  # the actions in tile order (the G desk reads it; display only)
 
 	for category_key in category_order:
 		if not categories.has(category_key):
@@ -209,8 +218,10 @@ func _render_flat(categories: Dictionary, category_order: Array, category_colors
 		for action in category_actions:
 			var icon_button := _build_action_tile(action, category_key, category_colors, current_state, action_index)
 			action_index += 1
+			ordered.append(action)
 			# Add to stack
 			icon_stack.add_child(icon_button)
+	return ordered
 
 
 ## The hover tooltip for one action tile/row. PLAIN TEXT ONLY -- Godot tooltips render BBCode

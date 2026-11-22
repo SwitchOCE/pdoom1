@@ -22,6 +22,10 @@ const INACTIVE_COLOR := Color(0.7, 0.7, 0.7)
 var _buttons := {}
 var _tradeoff_label: Label
 var _current_mode: String = "standard"
+## G desk (fork/design/godot-g/spec.md 5.8, A4): while the selector sits in the G Plan drawer,
+## skip the per-button font_color override (it outranks any theme variation) and use the
+## GQualityButton type variation at ThemeManager's body size. Same buttons, same signal.
+var g_style := false
 
 func _ready():
 	var title := Label.new()
@@ -57,7 +61,8 @@ func _set_active(mode: String, user_initiated: bool):
 	_current_mode = mode
 	for m in MODES:
 		_buttons[m].button_pressed = (m == mode)
-		_buttons[m].add_theme_color_override("font_color", ACTIVE_COLOR if m == mode else INACTIVE_COLOR)
+		if not g_style:
+			_buttons[m].add_theme_color_override("font_color", ACTIVE_COLOR if m == mode else INACTIVE_COLOR)
 	_tradeoff_label.text = TRADEOFFS[mode]
 	if user_initiated:
 		quality_selected.emit(mode)
@@ -67,3 +72,19 @@ func update_from_state(state: Dictionary):
 	var mode: String = state.get("research_quality_mode", "standard")
 	if mode != _current_mode:
 		_set_active(mode, false)
+
+func set_g_style(on: bool) -> void:
+	"""Switch the G style on (in the G Plan drawer) or off (back in classic). Display only."""
+	g_style = on
+	for m in MODES:
+		if not _buttons.has(m):
+			continue
+		var b: Button = _buttons[m]
+		if on:
+			b.remove_theme_color_override("font_color")
+			b.theme_type_variation = &"GQualityButton"
+			b.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
+		else:
+			b.theme_type_variation = &""
+			b.remove_theme_font_size_override("font_size")
+	_set_active(_current_mode, false)

@@ -88,6 +88,18 @@ var keybinds: Dictionary = {
 	# invisible to the rebind screen -- #602 principle P4 cuts both ways: an advertised key
 	# must work, and a working key must be advertised.
 	"toggle_view": {"key": KEY_V, "category": Category.UI, "description": "Toggle PLAN / WATCH View"},
+
+	# G desk (the fork's test layout, fork/design/godot-g/spec.md 8.1). Read only by GKeys
+	# (scripts/ui/g/g_keys.gd) while the G desk is on; inert in classic by design while G is a
+	# test layout. Presentation-only: each opens or closes a view or runs today's handler.
+	# No version bump: a saved profile keeps its own keys and gains these alongside, and a
+	# saved bind on the same key wins over a G bind (GKeys.skipped_binds, V7).
+	"g_actions": {"key": KEY_A, "category": Category.UI, "description": "Actions sheet (G desk)"},
+	"g_upgrades": {"key": KEY_U, "category": Category.UI, "description": "Upgrades sheet (G desk)"},
+	"g_staff": {"key": KEY_E, "category": Category.UI, "description": "Staff screen (G desk)"},
+	"g_plan": {"key": KEY_Q, "category": Category.UI, "description": "Plan drawer (G desk)"},
+	"g_reserve": {"key": KEY_R, "category": Category.UI, "description": "Reserve 1 hour, in the plan drawer (G desk)"},
+	"g_guide": {"key": KEY_F1, "category": Category.UI, "description": "Player Guide (G desk)"},
 }
 
 ## Keys the game answers to that are deliberately NOT rebindable, with the reason. This

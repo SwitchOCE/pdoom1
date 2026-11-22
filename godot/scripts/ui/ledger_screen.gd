@@ -27,6 +27,8 @@ const _LEDGER_INK_SECRET := Color(1.0, 0.80, 0.45)       # warm amber -- secrets
 const _LEDGER_WARN_RED := Color(0.93, 0.24, 0.20)
 
 var _summary_button: Button
+var _summary_word: String = "clean"  # read-only short status for the G rail (summary_word)
+var _summary_due_soon: bool = false  # read-only #578 due-soon flag for the G rail
 var _ledger_due_soon_logged: bool = false  # #578: only log the "payment due" reminder on entry, not every frame
 
 static func _make_leather_box(bg: Color) -> StyleBoxFlat:
@@ -101,9 +103,16 @@ func update_summary(ledger_data: Dictionary, turn: int = 0,
 	var soonest: int = int(ledger_data.get("soonest_fuse", -1))
 	var secrets: int = int(ledger_data.get("secret_count", 0))
 	if ledger_data.is_empty() or (owed <= 0.0 and secrets == 0):
+		_summary_word = "clean"
+	elif owed > 0.0:
+		_summary_word = "%s owed" % GameConfig.format_money(owed)
+	else:
+		_summary_word = "%d secret" % secrets
+	if ledger_data.is_empty() or (owed <= 0.0 and secrets == 0):
 		_summary_button.text = " Liability Ledger -- clean  (click / L)"
 		_summary_button.add_theme_color_override("font_color", _LEDGER_INK_CLEAN)
 		_ledger_due_soon_logged = false
+		_summary_due_soon = false
 		return
 	var due_txt := _due_text(soonest, turn, start_year, start_month, start_day) if soonest >= 0 else "no due"
 	var secret_txt := ("  |  %d secret" % secrets) if secrets > 0 else ""
@@ -112,6 +121,7 @@ func update_summary(ledger_data: Dictionary, turn: int = 0,
 	# warned things are coming due, not just left to notice on their own.
 	var due_soon := soonest >= 0 and soonest <= 2 and owed > 0.0
 	var prefix := "[!] " if due_soon else " "
+	_summary_due_soon = due_soon
 	_summary_button.text = "%sLedger: %s owed  |  %s%s" % [prefix, GameConfig.format_money(owed), due_txt, secret_txt]
 	if due_soon:
 		# Urgent: warm red (legible on brown leather), and log once on entry into the window.
@@ -123,6 +133,20 @@ func update_summary(ledger_data: Dictionary, turn: int = 0,
 		_ledger_due_soon_logged = false
 		# Warm parchment when only owed; warm amber as secret liabilities mount (exposure pressure).
 		_summary_button.add_theme_color_override("font_color", _LEDGER_INK_CLEAN if secrets == 0 else _LEDGER_INK_SECRET)
+
+func summary_word() -> String:
+	"""Read-only short status for the G desk's Ledger plate (spec 5.3): "clean" or "$N owed",
+	the same words and number the summary button already shows."""
+	return _summary_word
+
+func summary_due_soon() -> bool:
+	"""Read-only: true while the summary shows the #578 due-soon warning ([!] prefix)."""
+	return _summary_due_soon
+
+func summary_text() -> String:
+	"""Read-only: the summary button's own text, e.g. "[!] Ledger: $40k owed  |  due ...".
+	The G desk shows it as the Ledger plate's tooltip, so the full warning is one hover away."""
+	return _summary_button.text.strip_edges() if _summary_button else ""
 
 func build_screen(ledger, viewport_size: Vector2, on_close: Callable = Callable(),
 		turn: int = 0,

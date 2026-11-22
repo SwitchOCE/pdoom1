@@ -42,6 +42,20 @@ var _orig_upgrades_scroll_min: Vector2 = Vector2.ZERO
 # The proposed-mode upgrades dock (a framed panel built on demand; freed on restore).
 var _dock_panel: PanelContainer = null
 
+# --- "g": the G desk (fork/design/godot-g/spec.md 2.1-2.2) ---------------------------------
+# A third arrangement. apply_layout("g") restores classic, then _apply_g(): the desk node is
+# built and seeded from the live UI first, then the classic chrome is hidden. Leaving g puts
+# the chrome back (recorded visibility), re-applies the current PLAN/WATCH visibility, and
+# frees the desk last. toggle() is unchanged (classic <-> proposed).
+const G_DESK_SCENE := "res://scenes/ui/g/g_desk.tscn"
+const G_CHROME_PATHS := ["TopBar", "HSeparator1", "ContentArea", "HSeparator2", "InfoBar", "BottomBar"]
+var _host: Node = null                 # MainUI (set by register_g_host)
+var g_desk: Control = null             # the live GDesk while the layout is g
+var _g_hidden: Dictionary = {}         # node -> visibility before g hid it
+# Live nodes moved into the G sheets (spec 2.2 step 4), with where they came from:
+# [{node, parent, index, size_flags_v, min_size}], restored in reverse before the desk is freed.
+var _g_moved: Array = []
+
 # Proposed column split: tighten the instrument column (D5/D6 dead-zone) and hand the reclaimed
 # width to WATCH so the office floor breathes (P11). PLAN holds so the hand doesn't reflow.
 const _PROPOSED_PLAN_RATIO := 0.30
@@ -81,17 +95,29 @@ func _capture_defaults() -> void:
 	_captured = true
 
 
+func register_g_host(host: Node) -> void:
+	"""Hand the controller MainUI so the g arrangement can build its desk next to it."""
+	_host = host
+
+
 func is_proposed() -> bool:
 	return current == "proposed"
 
 
+func is_g() -> bool:
+	return current == "g"
+
+
 func apply_layout(name: String) -> void:
-	"""Set the arrangement. Idempotent: restore classic, then (for proposed) layer the deltas.
-	Unknown names coerce to classic so a bad flag can never leave the UI half-reflowed."""
-	var target := name if name == "proposed" else "classic"
+	"""Set the arrangement. Idempotent: restore classic, then (for proposed) layer the deltas,
+	or (for g) build the G desk. Unknown names coerce to classic so a bad flag can never leave
+	the UI half-reflowed."""
+	var target := name if (name == "proposed" or name == "g") else "classic"
 	_restore_classic()
 	if target == "proposed":
 		_apply_proposed()
+	elif target == "g":
+		_apply_g()
 	current = target
 	layout_changed.emit(current)
 
@@ -105,6 +131,7 @@ func toggle() -> String:
 # --- classic (restore captured scene defaults) --------------------------------------------
 
 func _restore_classic() -> void:
+	_leave_g()
 	if not _captured:
 		return
 	if _plan_col != null:
@@ -176,3 +203,124 @@ func _undock_upgrades() -> void:
 		_upgrades_scroll.custom_minimum_size = _orig_upgrades_scroll_min
 	_dock_panel.queue_free()
 	_dock_panel = null
+
+
+# --- g (the G desk) -------------------------------------------------------------------------
+
+func _g_chrome() -> Array:
+	"""Classic chrome the desk replaces: the top bar, separators, the content area, the info
+	and bottom bars, plus ScreenModeController's banner and WATCH strip (spec 2.2 step 2)."""
+	var out: Array = []
+	if _host == null or not is_instance_valid(_host):
+		return out
+	for p in G_CHROME_PATHS:
+		var n = _host.get_node_or_null(p)
+		if n != null:
+			out.append(n)
+	var sm = _host.get("screen_mode")
+	if sm != null:
+		if sm.banner != null:
+			out.append(sm.banner)
+		if sm.watch_bar != null:
+			out.append(sm.watch_bar)
+	return out
+
+
+func _apply_g() -> void:
+	"""Spec 2.2, in order: the desk exists and is seeded before anything is hidden."""
+	if _host == null or not is_instance_valid(_host) or g_desk != null:
+		return
+	var tm: Node = _host.get_parent()
+	if tm == null:
+		return
+	# 1. Instance the desk directly after MainUI (later modals on TabManager draw above it).
+	var desk: Control = load(G_DESK_SCENE).instantiate()
+	tm.add_child(desk)
+	tm.move_child(desk, _host.get_index() + 1)
+	g_desk = desk
+	var chrome := _g_chrome()
+	desk.chrome_nodes = chrome
+	desk.setup(_host)
+	# 2. Hide the classic chrome, recording what was visible.
+	_g_hidden.clear()
+	for n in chrome:
+		_g_hidden[n] = (n as CanvasItem).visible
+		(n as CanvasItem).visible = false
+	# 3. The room (Backdrop modulate/material, scrim) is phase 3a. Until the room layer exists
+	#    the desk keeps today's room, which is G's own "room effects: off" (spec 5.14).
+	# 4. Reparent four live nodes into the persistent G sheets, exactly as _dock_upgrades does,
+	#    recording parent and index: the upgrades label and scroll -> the Upgrades sheet; the
+	#    research-quality selector and the in-flight hiring box -> the Plan drawer.
+	_g_moved.clear()
+	var up = desk.get("upgrades_panel")
+	var pl = desk.get("plan_panel")
+	if up != null:
+		_g_move(_upgrades_label, up.body_slot, false)
+		_g_move(_upgrades_scroll, up.body_slot, true)
+	if pl != null:
+		var rqs = _host.get("research_quality_selector")
+		if _g_move(rqs, pl.quality_slot, false) and rqs.has_method("set_g_style"):
+			rqs.set_g_style(true)
+		_g_move(_host.get("_inflight_hiring_box"), pl.underway_slot, false)
+
+
+func _g_move(node, target: Node, expand: bool) -> bool:
+	if node == null or not is_instance_valid(node) or target == null or node.get_parent() == null:
+		return false
+	var c := node as Control
+	_g_moved.append({"node": c, "parent": c.get_parent(), "index": c.get_index(),
+		"size_flags_v": c.size_flags_vertical, "min_size": c.custom_minimum_size})
+	c.reparent(target, false)
+	if expand:
+		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return true
+
+
+func _g_restore_moved() -> void:
+	for i in range(_g_moved.size() - 1, -1, -1):
+		var e: Dictionary = _g_moved[i]
+		var c = e["node"]
+		var parent = e["parent"]
+		if c == null or not is_instance_valid(c) or parent == null or not is_instance_valid(parent):
+			continue
+		c.reparent(parent, false)
+		parent.move_child(c, mini(int(e["index"]), parent.get_child_count() - 1))
+		c.size_flags_vertical = int(e["size_flags_v"])
+		c.custom_minimum_size = e["min_size"]
+		if c.has_method("set_g_style"):
+			c.set_g_style(false)
+	_g_moved.clear()
+
+
+func _leave_g() -> void:
+	"""Spec 2.2 leaving g, in order: G-owned modals closed, chrome back, current PLAN/WATCH
+	visibility re-applied, then the desk freed."""
+	if g_desk == null:
+		return
+	var desk := g_desk
+	g_desk = null
+	if is_instance_valid(desk):
+		desk.detach()   # 1. stop listening; closes the embedded guide through ModalStack
+	if _host != null and is_instance_valid(_host) and _host.get("modal_stack") != null:
+		var guard := 0
+		while String(_host.modal_stack.top_kind()).begins_with("g_") and guard < 8:
+			_host.modal_stack.dismiss(_host.modal_stack.top_node())
+			guard += 1
+	# 2. Reparent the sheet nodes back, before anything is freed.
+	_g_restore_moved()
+	# 3. (3a: restore Backdrop modulate/material and the scrim.)
+	# 4. Chrome back, then the CURRENT mode's visibility (a flip in WATCH keeps WATCH).
+	for n in _g_hidden:
+		if n != null and is_instance_valid(n):
+			(n as CanvasItem).visible = bool(_g_hidden[n])
+	_g_hidden.clear()
+	if _host != null and is_instance_valid(_host):
+		var sm = _host.get("screen_mode")
+		if sm != null:
+			sm.set_mode(sm.current_mode)
+	# 5. Free the desk.
+	if is_instance_valid(desk):
+		var parent := desk.get_parent()
+		if parent != null:
+			parent.remove_child(desk)
+		desk.queue_free()

@@ -226,7 +226,9 @@ func _build_grid_submenu(id: String) -> void:
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_filter = Control.MOUSE_FILTER_PASS
 
-		var icon_texture = IconLoader.get_action_icon(opt_id)
+		# G desk (spec 5.7.1, R2-7): when the layout is g the option grid takes its icon from
+		# the G map (GIcons), so a choice keeps one icon on every G surface. Texture only.
+		var icon_texture = GIcons.for_action(opt_id) if host._ui_layout == "g" else IconLoader.get_action_icon(opt_id)
 		if icon_texture:
 			btn.icon = icon_texture
 			btn.expand_icon = true
@@ -300,6 +302,14 @@ func _build_grid_submenu(id: String) -> void:
 	dialog.visible = true
 	dialog.z_index = 1000
 	dialog.z_as_relative = false
+
+
+func option_count(id: String) -> int:
+	"""Read-only: how many choices a grid submenu lists (the G Actions sheet's "N choices").
+	-1 for the bespoke builders that have no option list (hiring, financing, travel)."""
+	if GRID_CONFIG.has(id):
+		return _options_for(id).size()
+	return -1
 
 
 func _options_for(id: String) -> Array:

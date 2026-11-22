@@ -83,6 +83,10 @@ func present_error(error_msg: String) -> void:
 	# is hidden unless PLAN is the active screen, so this is additive, not duplicate noise.
 	if host.plan_screen != null and is_instance_valid(host.plan_screen):
 		host.plan_screen.flash_error(error_msg)
+	# G desk (spec 5.6.1, A5): G hides the PLAN screen, so its toast is never seen there; the
+	# desk shows the same message in its own toast. Display only.
+	if host.has_signal("rejection_reported"):
+		host.rejection_reported.emit(error_msg)
 
 
 # --- Backend verdict for the BESPOKE submenu panels (hiring / travel) ----------------------

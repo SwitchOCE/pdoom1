@@ -1,6 +1,13 @@
 extends VBoxContainer
 ## Main UI controller - connects UI elements to GameManager
 
+# G desk (fork/design/godot-g/spec.md 9): view signals the G layer listens to. All are
+# emitted from existing view functions; none carries or changes game state.
+signal queue_view_changed                 # end of update_queued_actions_display
+signal first_lever_cleared                # _clear_first_lever_nudge ran
+signal rejection_reported(message: String)  # EventResultPresenter.present_error ran
+signal feed_changed                       # a feed line was stored, or the feed was re-rendered
+
 # References to UI elements (TopBar now has all resources in one line)
 # --- Shared top/bottom chrome (resource readouts + control bar; not screen-specific) ---
 @onready var turn_label = $TopBar/TurnLabel
@@ -88,6 +95,7 @@ var layout_controller: LayoutController  # A/B layout harness (classic | propose
 var queue_gantt: QueueGantt              # P10 committed-queue gantt (proposed layout only; pure view)
 var _last_actions: Array = []            # last actions payload, re-rendered when the layout flips
 var _ui_layout: String = "classic"       # active A/B layout; gates P9 grouped hand + P10 gantt
+var _last_state: Dictionary = {}         # last state dict handled here (seeds the G desk on a live flip)
 var _inflight_hiring_box: VBoxContainer  # in-flight hiring jobs + progress, mounted under the queue (VIEW-only)
 # EE-7 (ADR-0012 loss legibility): per-resource "last turn" delta chips beside the
 # money/compute/reputation/doom readouts. Snapshot at each turn boundary; a chip shows
@@ -359,6 +367,12 @@ func _ready():
 
 	# Boot the game on next frame to ensure everything is ready
 	await get_tree().process_frame
+	# G desk (spec 2.1, R3-1): applied here -- after the await, so TabManager has finished
+	# setting up its children and accepts the desk as a sibling, and strictly before
+	# _boot_game(), so the desk is listening before the first game state on either launch path.
+	# The persisted classic/proposed layout was already applied in _setup_plan_watch_scaffold.
+	if GPrefs.desk():
+		_apply_ui_layout("g")
 	_boot_game()
 
 func _setup_plan_watch_scaffold() -> void:
@@ -428,6 +442,7 @@ func _setup_plan_watch_scaffold() -> void:
 	layout_controller.register_targets(
 		plan_screen, instruments, watch_screen,
 		instruments.office_cat, plan_screen, plan_screen.upgrades_label, plan_screen.upgrades_scroll)
+	layout_controller.register_g_host(self)
 
 	# P10 gantt: mount under the shared queue panel in the instrument column (visible only in
 	# proposed). Pure view -- driven read-only from state via _refresh_gantt().
@@ -480,8 +495,8 @@ func _input(event: InputEvent):
 			get_viewport().set_input_as_handled()
 			return
 
-		# DEBUG: flip the A/B UI layout live (classic<->proposed) for Pip's iteration loop.
-		# Debug builds only -- release players use the Settings toggle. Persists the choice.
+		# DEBUG: cycle the UI layout live (classic -> proposed -> g -> classic) for the iteration
+		# loop. Debug builds only -- release players use Settings. Persists the choice.
 		if OS.is_debug_build() and event.keycode == KEY_F9:
 			_toggle_ui_layout()
 			get_viewport().set_input_as_handled()
@@ -499,6 +514,16 @@ func _input(event: InputEvent):
 				_show_ledger_screen()
 			get_viewport().set_input_as_handled()
 			return
+
+		# G desk (fork/design/godot-g/spec.md 8.2): G's own keys (A U E Q F1, and Z C R / 1-9
+		# inside its sheets) are decided by GKeys here -- after the text-focus gate and the
+		# ledger block, before the Esc and dialog blocks. GKeys returns "" whenever a modal
+		# that is not G's own is on top, so events, the review and submenus keep every key.
+		if _ui_layout == "g":
+			var g_desk = get_g_desk()
+			if g_desk != null and g_desk.handle_key(event):
+				get_viewport().set_input_as_handled()
+				return
 
 		# ESC key for pause menu (highest priority - before dialogs)
 		if event.keycode == KEY_ESCAPE:
@@ -558,6 +583,11 @@ func _input(event: InputEvent):
 				if modal_stack.handle_escape():
 					get_viewport().set_input_as_handled()
 					return
+
+			# G desk (spec 2.4, V3): inside a G sheet, Tab and Shift+Tab move focus between the
+			# sheet's rows, so they are not marked handled here. Every other key stays blocked.
+			if event.keycode == KEY_TAB and String(modal_stack.top_kind()).begins_with("g_"):
+				return
 
 			# IMPORTANT: Block ALL other keys when dialog is active to prevent:
 			# - ENTER from triggering skip turn
@@ -674,10 +704,18 @@ func _open_submenu(submenu_id: String) -> void:
 	any future audit can ask a live panel WHAT it is), and align + decorate it. Both entry
 	paths -- the action-bar button and the hotkey -- go through here, so a panel reached by
 	key and a panel reached by click are the same panel in the same state (principle P1)."""
+	# G desk (spec 5.7.4, A2): the anchor is the Actions sheet row, asked BEFORE the submenu
+	# opens (opening it pops the sheet off ModalStack); null when the sheet is closed.
+	var g_desk = get_g_desk() if _ui_layout == "g" else null
+	var g_anchor = g_desk.submenu_anchor_for(submenu_id) if g_desk != null else null
 	submenu_controller.open(submenu_id)
 	if active_dialog != null and is_instance_valid(active_dialog):
 		active_dialog.set_meta("submenu_id", submenu_id)
-	_decorate_active_submenu(_find_action_button(submenu_id))
+	if g_desk != null:
+		_decorate_active_submenu(g_anchor)
+		g_desk.on_submenu_opened(submenu_id, active_dialog)
+	else:
+		_decorate_active_submenu(_find_action_button(submenu_id))
 
 func _unhandled_input(event: InputEvent):
 	"""Handle keyboard shortcuts that weren't handled by UI elements"""
@@ -747,7 +785,7 @@ func _apply_ui_layout(name: String) -> void:
 	cat clamp + P11 column split + upgrades dock); here we swap the classic one-line queue hint
 	for the P10 gantt and re-render the action hand grouped (P9) vs flat. Zero writes to game
 	state, zero RNG, no turn-logic -- pure presentation."""
-	var target := name if name == "proposed" else "classic"
+	var target := name if (name == "proposed" or name == "g") else "classic"
 	_ui_layout = target
 	if layout_controller:
 		layout_controller.apply_layout(target)
@@ -763,12 +801,38 @@ func _apply_ui_layout(name: String) -> void:
 	_refresh_gantt()
 
 func _toggle_ui_layout() -> void:
-	"""Dev hotkey: flip classic<->proposed live and persist the choice (same iteration loop as
-	the debug doom-nudge). Debug-build gated at the call site."""
-	var next := "classic" if _ui_layout == "proposed" else "proposed"
+	"""Dev hotkey: cycle classic -> proposed -> g -> classic live and persist the choice (same
+	iteration loop as the debug doom-nudge). Debug-build gated at the call site. Classic and
+	proposed persist through GameConfig as before; g persists in GPrefs (user://g_ui.cfg), so
+	GameConfig.ui_layout keeps whatever it held while g is on (spec 2.1)."""
+	var next := next_ui_layout(_ui_layout)
 	_apply_ui_layout(next)
-	GameConfig.set_setting("ui_layout", next, true)  # persist so the choice survives a restart
+	if next == "g":
+		GPrefs.set_desk(true)
+	else:
+		if GPrefs.desk():
+			GPrefs.set_desk(false)
+		GameConfig.set_setting("ui_layout", next, true)  # persist so the choice survives a restart
 	log_message("[color=cyan]UI layout -> %s[/color]" % next)
+
+static func next_ui_layout(current: String) -> String:
+	"""The F9 cycle: classic -> proposed -> g -> classic."""
+	match current:
+		"classic":
+			return "proposed"
+		"proposed":
+			return "g"
+		_:
+			return "classic"
+
+func is_g_layout() -> bool:
+	return _ui_layout == "g"
+
+func get_g_desk() -> Control:
+	"""The live G desk, or null when the layout is not g."""
+	if layout_controller == null or layout_controller.g_desk == null:
+		return null
+	return layout_controller.g_desk if is_instance_valid(layout_controller.g_desk) else null
 
 func _refresh_gantt() -> void:
 	"""Rebuild the P10 gantt rows from live state (committed strategic WIP + in-flight hiring +
@@ -1110,6 +1174,7 @@ func _on_research_quality_selected(mode: String):
 	game_manager.set_research_quality(mode)
 
 func _on_game_state_updated(state: Dictionary):
+	_last_state = state
 	print("[MainUI] State updated: ", state)
 
 	if research_quality_selector:
@@ -1520,6 +1585,7 @@ func log_message(text: String, channel: String = "normal"):
 	# applies within whatever lines remain stored.
 	if _feed_lines.size() > FEED_MAX_LINES:
 		_feed_lines = _feed_lines.slice(_feed_lines.size() - FEED_MAX_LINES)
+	feed_changed.emit()  # the G desk's feed renders from _feed_lines (spec 5.10, N3)
 	if not _feed_passes_filter(channel):
 		return  # recorded but hidden under the current filter
 	message_log.text += "\n" + line
@@ -1548,6 +1614,7 @@ func _render_feed() -> void:
 		if _feed_passes_filter(String(entry.get("channel", "normal"))):
 			text += "\n" + String(entry.get("text", ""))
 	message_log.text = text
+	feed_changed.emit()  # filters changed: the G feed re-renders too (spec 5.10)
 	await get_tree().process_frame
 	var scroll = message_log.get_parent() as ScrollContainer
 	if scroll:
@@ -1601,6 +1668,7 @@ func _clear_first_lever_nudge() -> void:
 	if _first_lever_pulse_tween != null and _first_lever_pulse_tween.is_valid():
 		_first_lever_pulse_tween.kill()
 	_first_lever_pulse_tween = null
+	first_lever_cleared.emit()  # the G advisor note listens (spec 5.13)
 
 func _populate_upgrades():
 	"""Populate upgrades list"""
@@ -1620,8 +1688,18 @@ func _populate_upgrades():
 		# Check if already purchased
 		var is_purchased = current_state.get("purchased_upgrades", []).has(upgrade_id)
 
-		# Create button
-		var button = ThemeManager.create_button(upgrade_name)
+		# Create button. G desk (spec 5.9.1, A4): create_button sets per-node stylebox, colour
+		# and a literal font size that would outrank G's look, so G builds its row on its own
+		# path -- same text, disabled state, tooltip and handler as below, no modulate.
+		var g_row: bool = _ui_layout == "g"
+		var button: Button
+		if g_row:
+			button = Button.new()
+			button.theme_type_variation = &"GUpgradeRow"
+			button.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
+			GDesk.style_upgrade_row(button)
+		else:
+			button = ThemeManager.create_button(upgrade_name)
 		# Uniform full-width LIST rows (playtest 2026-08-05: "fix the upgrade button layout").
 		# The previous SIZE_SHRINK_END sized each button to its own text (200..283px measured)
 		# and right-aligned the stack, so the column floated mid-screen with ragged left edges.
@@ -1635,7 +1713,8 @@ func _populate_upgrades():
 		if is_purchased:
 			button.text = "[OK] " + upgrade_name
 			button.disabled = true
-			button.modulate = Color(0.5, 1.0, 0.5)  # Green tint
+			if not g_row:
+				button.modulate = Color(0.5, 1.0, 0.5)  # Green tint
 		else:
 			button.text = "%s (%s)" % [upgrade_name, GameConfig.format_money(upgrade_cost)]
 
@@ -1643,7 +1722,8 @@ func _populate_upgrades():
 			var can_afford = current_state.get("money", 0) >= upgrade_cost
 			if not can_afford:
 				button.disabled = true
-				button.modulate = Color(0.6, 0.6, 0.6)
+				if not g_row:
+					button.modulate = Color(0.6, 0.6, 0.6)
 
 		# Tooltip
 		var tooltip = upgrade_desc + "\n\nCost: %s" % GameConfig.format_money(upgrade_cost)
@@ -1893,6 +1973,20 @@ func _show_doom_trend_expanded() -> void:
 	vbox.add_child(graph)
 	var state = game_manager.get_game_state()
 	graph.set_history(state.get("doom_history", []))
+
+	# G (spec 5.4, 10.9): the desk shows no per-source breakdown, so the trend dialog carries
+	# today's breakdown below the graph -- nothing the classic home screen shows is lost.
+	if _ui_layout == "g":
+		dialog.custom_minimum_size = Vector2(560, 560)
+		dialog.size = Vector2(560, 560)
+		dialog.position.y = (get_viewport().get_visible_rect().size.y - 560) / 2.0
+		var g_breakdown = preload("res://scripts/ui/doom_breakdown.gd").new()
+		g_breakdown.name = "GTrendBreakdown"
+		vbox.add_child(g_breakdown)
+		g_breakdown.set_sources(
+			state.get("doom_system", {}).get("doom_sources", {}),
+			state.get("frontier_capability", {}),
+			state.get("rival_labs_full", []))
 
 	_add_submenu_close_affordance(dialog)
 	active_dialog = dialog
@@ -2148,6 +2242,7 @@ func update_queued_actions_display():
 
 	# P10 gantt: mirror the tentative plan-time queue into the operations tracker. No-op in classic.
 	_refresh_gantt()
+	queue_view_changed.emit()  # the G desk's Attention card and Commit plate listen (spec 9)
 
 func _on_event_dialog_opened(dialog: Control, buttons: Array) -> void:
 	"""EventDialog put its modal up (#622) -- route MainUI keyboard shortcuts to it.
