@@ -380,6 +380,76 @@
       "confidence": "high",
       "author": "unattributed",
       "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_01.wav": {
+      "sha256": "650abb258707e68f04757935145bb74d7a44fafe0017b82d48d9e0c746877854",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-0.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_02.wav": {
+      "sha256": "0a196f7e376edf1c7a02d7184ac4d43f8cf27a87540163e201736bae8fe92e83",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-1.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_03.wav": {
+      "sha256": "74e9abae2118cf75ba78af7c88350e15a2136c984daa60a41ee48b72d183153e",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-2.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_04.wav": {
+      "sha256": "0e1603f7c6c50bb40246b2c727c26d0e70576033175ac78d46a5a77efdad2286",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-3.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_05.wav": {
+      "sha256": "daf90741b054709b4ab0f1cafe48f520be85bf7bcad40e1ad1ce8260e1559b38",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-4.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/strike_06.wav": {
+      "sha256": "1f1e46b3d15f5f4e4b34f4fcf7ea4859542a831d5a2e9ea7abe116925f46a676",
+      "bytes": 68838,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: one key strike (contact, slap, thump, rattle, escapement tick); numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output key-5.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "audio/sfx/typewriter/carriage_return.wav": {
+      "sha256": "27648f1beb6d1beb426d63170caf61bfacaf7edd94fe419f3845ff7c16b69007",
+      "bytes": 113820,
+      "origin": "procedural_render",
+      "origin_detail": "rendered by script: fork/design/godot-g/tools/synthesize.py (sha256 695832b5ddf2d81e4ce1ad01afd2c54892207a3a5782a7a9d0e59d9c7dbd614b; NumPy synthesis of H's TypeSound recipe, H spec 3.3: carriage-return slide and stop, no bell; numpy default_rng(1917), room tail and compressor baked in; H's reference WAV fork/design/hifi3/H/dateline-sound.wav sha256 bb032939114eb7655e7474944544a9b4ed03c3d1c847df69f4122ccd82a53066 read only to check its format); synth output carriage.wav renamed; fork tool, not committed on ui/g-dateline",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
     }
   }
 }
