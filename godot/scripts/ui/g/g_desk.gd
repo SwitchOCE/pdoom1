@@ -71,6 +71,9 @@ const RESOURCE_CAPS := {
 var host: Node = null              # MainUI (untyped, as ModalStack/SubmenuController do)
 var chrome_nodes: Array = []       # classic chrome LayoutController hid; re-hidden on mode change
 var _detached := false
+var _badge_dock_pending := false
+## Space kept between the build badge and the bottom strip's plates (px).
+const BADGE_GAP := 16.0
 var _last_state: Dictionary = {}
 var _modal_open_cache := -1        # -1 unknown, 0 closed, 1 open (keycap visibility)
 
@@ -208,6 +211,7 @@ func detach() -> void:
 	"""Stop listening before LayoutController restores classic (spec 2.2 leaving g): the
 	restore re-applies the PLAN/WATCH visibility, which must not re-hide the chrome."""
 	_detached = true
+	DevBuildBadge.undock()
 	if dateline != null:
 		dateline.stop_typing()
 	_close_guide()
@@ -601,6 +605,38 @@ func _build_bottom_strip() -> void:
 	commit_keycap_label = commit_keycap.get_meta("label")
 	chb.add_child(commit_keycap)
 	hb.add_child(commit_plate)
+	# The build badge sits in this strip's free middle in G (its top-right corner holds the
+	# MENU plate and the reputation note); re-dock whenever the plates around it move.
+	for c in [bottom_strip, feedback_button, held_plate, commit_plate]:
+		(c as Control).item_rect_changed.connect(_queue_badge_dock)
+	held_plate.visibility_changed.connect(_queue_badge_dock)
+	commit_plate.visibility_changed.connect(_queue_badge_dock)
+
+
+func _queue_badge_dock() -> void:
+	if _badge_dock_pending:
+		return
+	_badge_dock_pending = true
+	_dock_badge.call_deferred()
+
+
+func _dock_badge() -> void:
+	"""Dock the build badge (DevBuildBadge) in the bottom strip, centred between FEEDBACK and
+	the first visible right-hand plate. Display only."""
+	_badge_dock_pending = false
+	if _detached or not is_inside_tree() or bottom_strip == null:
+		return
+	var strip := bottom_strip.get_global_rect()
+	var left := feedback_button.get_global_rect().end.x + BADGE_GAP
+	var right := strip.end.x - BADGE_GAP
+	for p in [held_plate, commit_plate]:
+		if (p as Control).visible:
+			right = minf(right, (p as Control).get_global_rect().position.x - BADGE_GAP)
+	DevBuildBadge.dock_in(Rect2(left, strip.position.y, maxf(right - left, 1.0), strip.size.y))
+
+
+func _exit_tree() -> void:
+	DevBuildBadge.undock()
 
 
 func _copy_lose_line() -> void:

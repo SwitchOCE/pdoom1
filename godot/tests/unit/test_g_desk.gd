@@ -366,6 +366,37 @@ func test_settings_board_carries_the_g_row_inside_the_frame() -> void:
 			board.get_global_rect(), row.get_global_rect()])
 
 
+func _badge_rect(main_ui: Node) -> Rect2:
+	for b in main_ui.find_children("*", "DevBuildBadge", true, false):
+		return (b.find_child("BuildBadgePanel", true, false) as Control).get_global_rect()
+	return Rect2()
+
+
+func test_build_badge_sits_in_gs_bottom_strip_and_goes_back_top_right() -> void:
+	# The badge covered the reputation note ("0 ends the r...") and the MENU plate in G's top
+	# strip. In G it docks in the bottom strip's free middle; classic keeps the corner.
+	var main_ui: Node = await _boot(true)
+	var desk = main_ui.get_g_desk()
+	for _i in range(3):
+		await get_tree().process_frame
+	var badge := _badge_rect(main_ui)
+	assert_true(badge.has_area(), "the badge is there")
+	var top: Rect2 = desk.top_strip.get_global_rect()
+	var bottom: Rect2 = desk.bottom_strip.get_global_rect()
+	assert_false(badge.intersects(top), "clear of the top strip (%s against %s)" % [badge, top])
+	assert_true(bottom.encloses(badge), "inside the bottom strip (%s in %s)" % [badge, bottom])
+	assert_gt(badge.position.x, desk.feedback_button.get_global_rect().end.x, "right of FEEDBACK")
+	assert_lt(badge.end.x, desk.held_plate.get_global_rect().position.x, "left of the held plate")
+	main_ui.layout_controller.apply_layout("classic")
+	for _i in range(3):
+		await get_tree().process_frame
+	assert_false(DevBuildBadge.dock_rect.has_area(), "leaving G undocks it")
+	badge = _badge_rect(main_ui)
+	var view: Rect2 = main_ui.get_viewport().get_visible_rect()
+	assert_almost_eq(badge.end.x, view.end.x - DevBuildBadge.EDGE_MARGIN, 1.0, "classic: right edge")
+	assert_almost_eq(badge.position.y, DevBuildBadge.EDGE_MARGIN, 1.0, "classic: top edge")
+
+
 func test_g_options_panel_is_on_screen() -> void:
 	# The panel opened centred on the screen's top-left corner, so its title, x and the G desk
 	# switch (the way back to classic) were off screen.

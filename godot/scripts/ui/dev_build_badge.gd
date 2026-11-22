@@ -20,6 +20,12 @@ class_name DevBuildBadge
 ## the label ellipsizes instead of overflowing the left edge.
 ##
 ## Usage: `add_child(DevBuildBadge.new())` from any screen's _ready().
+##
+## Docking: a layout that needs the top-right corner can dock every badge into a free
+## rectangle of its own (DevBuildBadge.dock_in), where the badge sits centred; undock() puts
+## it back top-right. The G desk docks it in its bottom strip, between FEEDBACK and the held /
+## Commit plates, because G's MENU plate and the reputation note live in the top-right corner.
+## Classic never docks, so it keeps today's corner.
 
 ## High layer so the badge sits above normal UI and other CanvasLayers (e.g. overlays).
 const BADGE_LAYER := 200
@@ -27,11 +33,39 @@ const BADGE_LAYER := 200
 ## Gap kept between the badge and the screen edges.
 const EDGE_MARGIN := 8.0
 
+const GROUP := "dev_build_badge"
+
+## The docking rectangle in viewport pixels, or an empty Rect2 for today's top-right corner.
+## Static, so a badge made after the dock (or before it) lands in the same place.
+static var dock_rect := Rect2()
+
 var _panel: PanelContainer
 var _label: Label
 
+
+static func dock_in(rect: Rect2) -> void:
+	"""Centre every badge in `rect` (viewport pixels) instead of the top-right corner."""
+	dock_rect = rect
+	_refit_all()
+
+
+static func undock() -> void:
+	"""Put every badge back in today's top-right corner."""
+	dock_rect = Rect2()
+	_refit_all()
+
+
+static func _refit_all() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	for b in tree.get_nodes_in_group(GROUP):
+		if b is DevBuildBadge:
+			(b as DevBuildBadge)._fit_to_viewport()
+
 func _ready() -> void:
 	layer = BADGE_LAYER
+	add_to_group(GROUP)
 	_build_badge(BuildInfo.is_dev_build())
 	get_viewport().size_changed.connect(_fit_to_viewport)
 	_fit_to_viewport()
@@ -102,8 +136,27 @@ func _fit_to_viewport() -> void:
 		return
 	_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	var need := _panel.get_combined_minimum_size().x
-	var max_w := get_viewport().get_visible_rect().size.x - 2.0 * EDGE_MARGIN
+	var docked := dock_rect.size.x > 0.0 and dock_rect.size.y > 0.0
+	var max_w := dock_rect.size.x if docked else get_viewport().get_visible_rect().size.x - 2.0 * EDGE_MARGIN
 	if need > max_w:
 		_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		need = max_w
+	if docked:
+		# Centred in the dock rectangle, anchored to the top-left of the viewport.
+		var h := _panel.get_combined_minimum_size().y
+		var c := dock_rect.get_center()
+		_panel.anchor_left = 0.0
+		_panel.anchor_right = 0.0
+		_panel.grow_horizontal = Control.GROW_DIRECTION_END
+		_panel.offset_left = roundf(c.x - need * 0.5)
+		_panel.offset_right = _panel.offset_left + need
+		_panel.offset_top = roundf(c.y - h * 0.5)
+		_panel.offset_bottom = _panel.offset_top + h
+		return
+	_panel.anchor_left = 1.0
+	_panel.anchor_right = 1.0
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_panel.offset_right = -EDGE_MARGIN
+	_panel.offset_top = EDGE_MARGIN
+	_panel.offset_bottom = 0.0
 	_panel.offset_left = _panel.offset_right - need
