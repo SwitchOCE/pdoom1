@@ -1,8 +1,8 @@
 # G with all upgrades: Godot build spec
 
 Status: first full draft, 2026-11-22, with the spike results
-(`spikes/RESULTS.md`) and the money art trial (11.1) folded in. Council
-review not yet run.
+(`spikes/RESULTS.md`) and the money art trial (11.1) folded in, and the
+council round 1 change list applied (table at the end).
 
 ## 0. How to read this
 
@@ -43,6 +43,7 @@ Sections:
 14. Risks
 15. Open questions
 16. Not in this build
+17. Council round 1 changes
 
 ---
 
@@ -145,17 +146,32 @@ autoload, bug fixes only):
 - **LayoutController** learns a third name, `"g"`: `apply_layout("g")` restores
   classic, then calls `_apply_g()` (2.2). `toggle()` is left exactly as it is,
   so the existing test still holds.
-- **Boot:** `_apply_ui_layout(GPrefs.desk ? "g" : GameConfig.ui_layout)`
-  (replaces the call at `main_ui.gd:444`). With G on, `GameConfig.ui_layout`
-  keeps whatever it held; G does not overwrite it.
+- **Both dispatchers accept "g" (A1).** Today `_apply_ui_layout` turns any
+  name other than "proposed" into "classic" (`main_ui.gd:750`), and
+  `LayoutController.apply_layout` does the same (`layout_controller.gd:88-96`).
+  Both learn "g"; any other unknown name still falls back to classic.
+- **Boot order (A1).** Today the persisted layout is applied inside
+  `_setup_plan_watch_scaffold` (`main_ui.gd:444`), which runs at
+  `main_ui.gd:304`, before `_inflight_hiring_box` is built
+  (`main_ui.gd:309-317`). So:
+  - the call at `main_ui.gd:444` stays and applies `GameConfig.ui_layout`
+    (classic or proposed) exactly as today;
+  - if `GPrefs.desk` is true, one more call, `_apply_ui_layout("g")`, runs
+    after `_inflight_hiring_box` is in the tree (right after
+    `main_ui.gd:316-317`), so every node G moves already exists.
+  With G on, `GameConfig.ui_layout` keeps whatever it held; G does not
+  overwrite it.
 - **F9 (debug builds):** cycles classic -> proposed -> g -> classic. Classic and
   proposed persist through `GameConfig.set_setting` as today; entering g sets
   `GPrefs.desk = true`; leaving g sets it false.
 - **Release builds:** Settings gets one new row, "G desk options", which opens
   a small modal with four toggles (desk on/off, reduced motion, room effects,
-  resources take). It applies on next game load, like today's checkbox.
-  Check `tests/unit/test_audio_defaults_and_settings_layout.gd`
-  (`test_nothing_can_hide_below_a_fold`) still passes after the row is added.
+  resources take). It applies on next game load, like today's checkbox. The
+  row goes in the board's `Col3` (`scenes/settings_menu.tscn`, `Board/BoardVBox/
+  Columns`), not the full `Col2`. Check that
+  `tests/unit/test_audio_defaults_and_settings_layout.gd`
+  `test_nothing_can_hide_below_a_fold` and
+  `test_board_fits_the_frame_without_overflow` (`:180-202`) still pass.
 - **Alex's test builds** can use either `--mode debug` (F9 works) or the
   Settings row. See open question Q1 for whether lean builds should start with
   G on.
@@ -182,17 +198,25 @@ would be laid out as a row. Keeping `MainUI` visible but emptying it keeps
 `MainUI._input` running (it returns early when `MainUI` is hidden,
 `main_ui.gd:468`), so every key and every handler stays exactly today's.
 
-`_apply_g()` in LayoutController, in this order:
+`_apply_g()` in LayoutController, in this order (A1: the destinations exist
+before anything moves):
 
-1. Hide the classic chrome: `TopBar`, `HSeparator1`, `ContentArea`,
+1. Instance `GDesk` and call `GDesk.setup(main_ui)`. Setup builds the
+   persistent sheets and **seeds itself from the live UI**, not from the next
+   signal: `screen_mode.current_mode`, `main_ui.current_turn_phase`,
+   `modal_stack.top_kind()`, the queue, and the last state dict `main_ui`
+   handled (a new `_last_state` var set at the top of
+   `_on_game_state_updated`, `main_ui.gd:1112`). A live flip in WATCH or with
+   an event up therefore draws the right face at once.
+2. Hide the classic chrome: `TopBar`, `HSeparator1`, `ContentArea`,
    `HSeparator2`, `InfoBar`, `BottomBar`, the mode banner and the WATCH strip.
    `screen_mode.set_mode` re-shows registered nodes on every mode change
    (`scripts/ui/screen_mode.gd:150-160`, the banner and strip are registered
    at `main_ui.gd:395-402`), so `GDesk` connects to
    `screen_mode.mode_changed` and re-hides them after each change.
-2. Hide `BackdropScrim`; set `Backdrop.modulate` to white (today 0.35,
+3. Hide `BackdropScrim`; set `Backdrop.modulate` to white (today 0.35,
    `scenes/main.tscn:48`) and give `Backdrop` the room material (5.14).
-3. Reparent four live nodes into G sheets, exactly as `_dock_upgrades` already
+4. Reparent four live nodes into G sheets, exactly as `_dock_upgrades` already
    does (`layout_controller.gd:142-163`), and record their old parent and index:
    - `plan_screen.upgrades_label` and `plan_screen.upgrades_scroll` -> the
      Upgrades sheet body;
@@ -202,12 +226,21 @@ would be laid out as a row. Keeping `MainUI` visible but emptying it keeps
      UNDER WAY block.
    Because the G sheets are persistent (never freed while G is on), the
    reparented nodes are never freed with a sheet.
-4. Instance `GDesk` and call `GDesk.setup(main_ui)`.
 
-`_restore_classic()` undoes all of it in reverse (put nodes back at their
-recorded index, restore `Backdrop.modulate` and material, show the scrim and
-chrome, free `GDesk`). Flip, flip, flip must never drift, as today
-(`layout_controller.gd:88-96`).
+Leaving g (`_restore_classic()`), in this order:
+
+1. dismiss any `g_*` modal through ModalStack;
+2. **reparent the four nodes back** to their recorded parent and index
+   (before anything is freed);
+3. restore `Backdrop.modulate` and material, show the scrim;
+4. show the chrome, then re-apply the **current** PLAN/WATCH visibility with
+   `screen_mode.set_mode(screen_mode.current_mode)` (so a flip in WATCH does
+   not leave PLAN parts showing);
+5. free `GDesk`.
+
+Flip, flip, flip must never drift, as today (`layout_controller.gd:88-96`).
+Tests (phase 1a): boot directly into a persisted G; F9 from classic and from
+proposed into g and back; a flip in PLAN, in WATCH and with an event up.
 
 Visibility: `GDesk` follows `MainUI.visibility_changed`, so it hides when the
 Employee screen takes over (`scripts/ui/tab_manager.gd:41-53`) and returns with
@@ -253,8 +286,11 @@ are never moved to `TabManager`. Each sheet's
 root is a full-rect Control that holds its own input barrier (a full-rect
 `ColorRect`, `MOUSE_FILTER_STOP`, colour `dim` token) under the sheet panel,
 so they do not need `_present_modal_dialog`. Modals mounted on `TabManager`
-(events, the review, today's submenus) are later siblings of `GDesk` and so
-draw above every G sheet.
+(today's submenus, the ledger, the trend dialog, the embedded guide) are later
+siblings of `GDesk`, and event dialogs and the review are mounted on
+`get_tree().root` (`scripts/ui/event_dialog.gd:197, 451`); both draw above
+every G sheet. Because events sit outside `GDesk`, they do not inherit
+`g_theme.tres`; `GPaper` applies it to the event panel itself (5.11, A7).
 
 ### 2.4 Talking to ModalStack
 
@@ -266,16 +302,36 @@ The G sheets register with the existing chokepoint so Esc, priorities and
   `sheet.show_panel()`. If `present` returns false (an unanswered event holds
   the top, `modal_stack.gd:90-128`), the sheet does not open.
 - Close: `modal_stack.dismiss(sheet)`; ModalStack calls `sheet.hide_panel()`
-  (`modal_stack.gd:205-215`). Every sheet also attaches
-  `EscToClose.attach(sheet, func(): main_ui.modal_stack.dismiss(sheet))`
-  (`scripts/ui/esc_to_close.gd:18-23`) for the escape contract.
+  (`modal_stack.gd:205-215`).
+- **Standalone-safe Esc (A3).** `tests/unit/test_ui_no_dead_ends.gd`
+  instantiates every `*_panel.tscn` / `*_modal.tscn` with no host, calls
+  `show_panel()`, sends Esc, waits two frames and needs the panel hidden
+  (`test_ui_no_dead_ends.gd:117-215`). So `GSheet._ready()` attaches
+  `EscToClose` (`scripts/ui/esc_to_close.gd:18-23`) and the `x` button to one
+  callback, `_request_close()`:
+  - if the sheet is not visible, return at once (the sheets are persistent,
+    so their Esc listener stays live while closed);
+  - if `GDesk.setup` gave the sheet a modal stack, `modal_stack.dismiss(self)`;
+  - otherwise (standalone, as in the test) `hide_panel()`.
+- **`hide_panel()` is immediate (V6).** It sets `visible = false`, sets the
+  barrier's `mouse_filter` to `MOUSE_FILTER_IGNORE`, and releases keyboard
+  focus if the focus owner is inside the sheet
+  (`get_viewport().gui_release_focus()`), all in the same call. No fade keeps a
+  closed sheet visible, focusable or taking input (6.2).
+- **Tab inside a sheet (V3).** Today the dialog block eats every key it does
+  not recognise while a modal is up, Tab included (`main_ui.gd:567-569`). G
+  adds one exception there: when `modal_stack.top_kind()` starts with
+  `"g_"`, Tab and Shift+Tab are not marked handled, so Godot moves focus. Each
+  sheet keeps focus inside itself: its first and last focusable controls set
+  `focus_previous` / `focus_next` to each other, and `show_panel()` gives
+  focus to the first row.
 - `active_dialog_buttons` is `[]` for every G sheet, so today's dialog router
   maps no letter to a row (`main_ui.gd:521-569`). G's own keys inside a sheet
   are routed before that block (8.2).
 - A newcomer pops the whole stack (`modal_stack.gd:111`): opening a door's
-  submenu from the Actions sheet hides the sheet. G re-presents the Actions
-  sheet when that submenu leaves the tree, if it was opened from the sheet
-  (5.7.4).
+  submenu from the Actions sheet hides the sheet, and an event arriving over
+  an open sheet hides it the same way. G re-presents the Actions sheet when a
+  door's submenu leaves the tree, under the guards in 5.7.4.
 
 ### 2.5 Files
 
@@ -297,14 +353,15 @@ New (all pure UI paths):
 | `scripts/ui/g/g_advisor_note.gd` | advisor paper note (5.13) |
 | `scripts/ui/g/g_room.gd` | room layer controller (5.14) |
 | `scripts/ui/g/g_paper.gd` | paper styling helper for event and review (5.11, 5.12) |
-| `scripts/ui/g/g_sheet.gd` | shared base for the three sheets (show/hide, barrier, tween) |
+| `scripts/ui/g/g_sheet.gd` | shared base for the three sheets (show/hide, barrier, tween, standalone Esc, focus loop) |
+| `scripts/ui/g/g_toast.gd` | G's refusal toast (5.6.1, A5) |
 | `scenes/ui/g_actions_panel.tscn`, `g_plan_panel.tscn`, `g_upgrades_panel.tscn`, `g_options_modal.tscn` | sheets and the options modal; the `_panel` / `_modal` suffix lets `tests/unit/test_ui_no_dead_ends.gd` find them (`docs/game-design/UI_ESCAPE_CONTRACT.md`) |
 | `theme/g_theme.tres` | G's fonts, colours and styleboxes; **no font sizes** |
 | `assets/shaders/g_room_doom.gdshader` | the one room shader (5.14) |
-| `assets/fonts/<family>/*.ttf` + `OFL.txt` | four families (4.2) |
+| `assets/fonts/<family>/*.ttf` + `OFL.txt` + `SOURCE.txt` | four families (4.2); `SOURCE.txt` holds each file's pinned URL and SHA-256 (from `spikes/assets.tsv`) |
 | `assets/audio/sfx/typewriter/*.wav` | strikes and carriage return (7) |
 | `assets/icons/g_tiers/*.png` | 25 tier icons (11) |
-| `assets/icons/g_new/*.png` | six new action icons (11) |
+| `assets/icons/g_new/*.png` | six new action icons (11), mapped to action ids in `GActionsPanel` (5.7.1) |
 | `assets/textures/g/*.png` | grime, hatch, paper, masks (11) |
 | `tests/unit/test_g_*.gd` | per phase (12) |
 | `tests/visual/g_capture.gd` (+ `.tscn`) | screenshot and text-box dump harness (12.1) |
@@ -313,22 +370,33 @@ Changed (existing files):
 
 | Path | Change | Why it is safe |
 |---|---|---|
-| `scripts/ui/main_ui.gd` | create/free GDesk via LayoutController; F9 cycle; call `GKeys` in `_input` before the dialog block; `signal queue_view_changed` emitted at the end of `update_queued_actions_display`; `_open_submenu(id, anchor := null)`; clear `GResourceHistory` in `_boot_game`'s new-game and load branches | presentation and routing only |
+| `scripts/ui/main_ui.gd` | accept "g" in `_apply_ui_layout` (`:750`); the second layout call after `_inflight_hiring_box` (2.1); `_last_state`; F9 cycle; call `GKeys` in `_input` before the dialog block; the Tab exception for `g_*` sheets in the dialog block (2.4); signals `queue_view_changed` (end of `update_queued_actions_display`), `feed_changed` (9), `rejection_reported(message)` (5.6.1) and `first_lever_cleared` (5.13); `_open_submenu(submenu_id: String) -> void` keeps its signature and asks `g_desk.submenu_anchor_for(submenu_id)` when the layout is g (5.7.4); a G-only row builder in `_populate_upgrades` (5.9.1); clear `GResourceHistory` in `_boot_game`'s new-game and load branches | presentation and routing only |
 | `scripts/ui/layout_controller.gd` | `"g"` arrangement | container work, as today |
 | `scripts/ui/action_bar_renderer.gd` | when layout is g, also emit the ordered, filtered row list to GDesk | same list, same order, same gates |
 | `scripts/ui/submenu_controller.gd` | read-only `option_count(id)` over `_options_for` (`submenu_controller.gd:305-325`) | read-only |
 | `scripts/ui/ledger_screen.gd` | read-only `summary_word()` (the "clean" / "$N owed" text it already builds, `ledger_screen.gd:97-115`) | read-only |
-| `scripts/ui/event_dialog.gd`, `scripts/ui/month_review_panel.gd` | apply G paper styles when the layout is g | styling only, same buttons and keys |
+| `scripts/ui/event_dialog.gd` | apply G paper styles when the layout is g; a read-only `current_event: Dictionary`, set in `_show_next_event` (`:172`) and cleared where `_pending_event` is cleared (`:539`) (V2) | styling and a read-only handle; same buttons, keys and queue |
+| `scripts/ui/month_review_panel.gd` | a G-only geometry and style path, `use_g := false` by default; classic `apply_geometry` (`:139`) untouched (5.12, A7) | classic path and its tests unchanged |
+| `scripts/ui/event_result_presenter.gd` | `present_error` (`:77-85`) also emits `host.rejection_reported` | display only |
+| `scripts/ui/research_quality_selector.gd` | a G style flag that skips the per-button `font_color` override (`:60`) and uses a G type variation (5.8, A4) | same buttons, same signal |
 | `scripts/ui/player_guide.gd` | an `embedded` mode for opening over a live run (5.9.4) | today its Back goes to the welcome screen |
 | `scripts/ui/settings_menu.gd`, `scenes/settings_menu.tscn` | the "G desk options" row | UI |
 | `autoload/keybind_manager.gd` | new binds (8.1) | presentation-only autoload edit allowed by AGENTS.md section 1 |
 | `autoload/theme_manager.gd` | add one step to `FONT_STEPS` (4.2) | presentation-only (theme) |
-| `data/asset_provenance.json` | one record per new asset (11.5) | metadata, no run effect |
+| `data/asset_provenance.json` | **only if Alex approves it as a metadata exception (Q15)**: one record per new media file (11.5). Without approval the records go in `fork/design/godot-g/provenance.json` instead (V4) | metadata, no run effect |
 
 The scope tripwire (`tools/check_ladder_bump.py`) will list the two autoloads
-and `data/asset_provenance.json`. Each is presentation-only, so the squash
-commit declares `Ladder-Impact: none -- presentation only: keybinds, a font
-size step and asset provenance records; no run outcome changes`.
+(and `data/asset_provenance.json` only if Q15 is approved). The autoload edits
+are presentation-only, so the squash commit declares `Ladder-Impact: none --
+presentation only: keybinds and a font size step; no run outcome changes`
+(add "and asset provenance records" only with Q15 approved).
+
+**Fork-only files** (`fork/design/godot-g/tools/*` such as `contrast_godot.py`,
+`cut_icons.py`, the copied `synthesize.py`, and `fork/design/godot-g/
+provenance.json`) are never committed on a `ui/g-*` branch: they go in
+separate fork commits on `lean` (like backlog commits) or on
+`design/ui-concepts` (A8). AGENTS.md section 8 step 3 forbids `fork/` files in
+a change that goes to Pip.
 
 ---
 
@@ -556,7 +624,10 @@ farthest from it, k = max(4, 0.5% of the box).
 In Godot:
 - `tests/visual/g_capture.gd` (debug-only harness) saves a PNG of the viewport
   and a JSON list of every visible `Label` / `RichTextLabel` / `Button` text
-  box (global rect at the capture size).
+  box (global rect at the capture size), **plus the text boxes of
+  custom-drawn text**: `GDateline` and `GDoomCard` (and any other `_draw`
+  text) expose `get_text_boxes() -> Array[Rect2]`, and the harness adds them
+  (A10).
 - `fork/design/godot-g/tools/contrast_godot.py` (a fork tool, adapted from
   `fork/design/hifi3/G/contrast.py`) reads both and prints the lowest ratio per
   state and every box under 4.5.
@@ -638,7 +709,10 @@ plus the other signals named.
   already warns on at Commit (`main_ui.gd:1015-1023`); `BELOW ZERO` restates
   the sign already printed.
 - **Reputation**: drawn once, then a 12 px gap and a 1 px rule, then
-  "**0** ends the run" (`small`, `muted`, the 0 in `blood`). True to the code:
+  "**0** ends the run" (`small`, `muted`, the 0 bold in a lifted red,
+  `blood-text` `#d25a49`: 4.86:1 on the panel `#100e0c`, where `blood`
+  `#9b3328` measures only 2.66:1; A10). `blood` stays for lines and fills,
+  never for text. True to the code:
   reputation <= 0 ends the run (`scripts/core/game_state.gd:791`). G's
   semicircle reputation gauge is not built.
 - Tooltips: keep today's resource tooltips (`main_ui._apply_balance_tooltips`,
@@ -698,6 +772,18 @@ plus the other signals named.
   `Clock` (`Clock.month_index` over the month's turns, `clock.gd:146`) with
   `state.turn`; G computes them, the game does not change. After the boundary:
   bar full and "<Month> played out".
+- **The four WATCH sub-states (A6).** G decides which one it is in from
+  `main_ui.current_turn_phase`, `screen_mode.current_mode`,
+  `modal_stack.top_kind()` and `EventDialog.current_event`, never from the
+  calendar changing alone:
+
+| Sub-state | How G knows | Banner | Attention card | Commit | Rail |
+|---|---|---|---|---|---|
+| W1 V peek | phase `action_selection`, view WATCH | WATCH; playback bar empty, "not committed yet" | PLAN face | as in PLAN (Enter and Space work as today) | as in PLAN |
+| W2 playback | phase `turn_end` / `turn_start`, no modal on top | WATCH; bar live, "workday N of M" | WATCH face | "MONTH IN PLAY", inert | ACTIONS, UPGRADES disabled |
+| W3 event waiting | top kind `event` and `current_event` is not a review | WATCH; `||` lit | WATCH face plus the reply line | inert, no keycap | keycaps hidden |
+| W4 review | top kind `event` and `MonthReviewPanel.is_month_review(current_event)` | WATCH; bar full, "<Month> played out" | closed face | "MONTH COMPLETE" | keycaps hidden |
+
 - `SpeedSegments` (WATCH only): `||` (inert, lit while an event has paused
   playback), 1x, 2x, 4x. 1x/2x/4x emit `screen_mode.speed_changed` with
   today's values (0.20/0.10/0.05 s, `screen_mode.gd:37`); `main_ui` already
@@ -773,24 +859,41 @@ plus the other signals named.
 
 **WATCH face** (G state 4):
 - Header right "held after Commit".
-- HELD: one silver cell per held hour, "N left". N = today's WATCH reserve
-  readout: `attention_reserved` if > 0, else `attention_total -
-  attention_spent` (`screen_mode.gd:162-176`).
+- HELD: one silver cell per held hour, "N left". N = the **remaining**
+  reserve, `state["attention_reserved"]`, which `to_dict` fills from
+  `get_reserve_attention()` = `month_plan.reserve_remaining()` =
+  `attention_reserved - reserve_used` (`scripts/core/game_state.gd:1207-1211,
+  1468`; `scripts/core/month_plan.gd:221-223`). Not the allocation
+  `month_plan.attention_reserved`, which keeps counting hours already used
+  (A6).
 - "Spent at Commit": `month_plan.attention_spent` captured at the first WATCH
   state.
-- While an event waits: "This reply would cost N hr", N = the Attention price
-  the event dialog itself shows (`WindowResolver.present_for_dialog` stamps
-  it, `game_manager.gd:795-799`; read it from the event dict the dialog was
-  given).
+- While an event waits (W3): prices stay **per option**, from the existing
+  presenter `EventDialog.window_attention_for_option(event, option)`
+  (`scripts/ui/event_dialog.gd:86`), read through the new read-only
+  `EventDialog.current_event` (V2). The card never shows one generic price
+  for a window whose options differ:
+  - every option costs the same N > 0: "This reply costs N hr";
+  - every option is free: "Replies to this cost no hours";
+  - options differ: "Each reply shows its own hours".
+  The option rows on the paper carry each price, as today.
 - STAFF AT WORK: role icon + count per role from `state.safety_researchers`,
   `capability_researchers`, `compute_engineers`, `managers`.
 
-**Closed face** (under the month review, G state 5):
-- "<Month>, closed": held 0 left; "Used on events N hr" = held at WATCH start
-  minus held at month end; "Unspent, evaporated N hr" = held at month end.
-  All from values the UI saw; the review's own words already say unspent
-  hours evaporate (`game_manager.gd:836`). G does not name which event used
-  the hours (10.6).
+**Closed face** (under the month review, W4, G state 5):
+- The boundary resets the month plan (`begin_month` from
+  `scripts/core/month_controller.gd:410-420`) before the new month's state
+  reaches the UI, so the closing month's numbers are gone by then. G keeps
+  **its own copy of the last pre-boundary snapshot**: the held count from the
+  last state it saw with the old (year, month), and the held count at the
+  first W2 state (A6).
+- "<Month>, closed": "Used on events N hr" = held at W2 start minus held in the
+  last pre-boundary snapshot; "Unspent, evaporated N hr" = held in that
+  snapshot. The review's own words already say unspent hours evaporate
+  (`game_manager.gd:836`).
+- **When G has no such snapshot** (a load or a layout flip during the review),
+  both counts are omitted and the face shows only "<Month>, closed".
+- G does not name which event used the hours (10.6).
 
 ### 5.6 Bottom strip: Feedback, held plate, Commit
 
@@ -803,18 +906,50 @@ plus the other signals named.
   themselves (the hiring pipeline) debit more hours at Commit
   (`game_manager.gd:715-730`), so the hold after Commit can be smaller. In
   WATCH the Attention card carries the hold and the plate is hidden.
-- **Commit plate** (296x48): "COMMIT THE MONTH", Barlow 700 caps, `label`.
-  - idle (nothing queued): muted text, plain hairline, `Enter` keycap shown;
-  - ready (something queued): amber hairline and text;
-  - hidden Enter: while any modal or G sheet is open (only the top layer
-    shows Enter);
-  - WATCH: "MONTH IN PLAY", dashed, inert; after the boundary "MONTH COMPLETE".
-  - Click: **the same handler as Enter today**,
-    `main_ui._on_commit_plan_button_pressed()` (`main_ui.gd:1053-1077`), and
-    only when `commit_plan_button.disabled` is false (that button's state is
-    still maintained by `_on_turn_phase_changed`, `main_ui.gd:1407-1441`).
-    Space keeps `end_turn` (`main_ui.gd:595-599`). G draws one button; both
-    keys keep today's two paths (10.7).
+- **Commit plate** (296x48, V1): one control that keeps both of today's
+  paths and their eligibility. Classic has two buttons: "COMMIT THE MONTH >"
+  wired to `_on_end_turn_button_pressed` and disabled while the queue is empty,
+  and "Plan (Enter)" wired to `_on_commit_plan_button_pressed` and never
+  disabled in plan (`scenes/main.tscn:367-378, 415-416`;
+  `main_ui.gd:1425-1426`).
+  - **Queue not empty:** caption "COMMIT THE MONTH", amber, keycap `Space`.
+    Click runs exactly `main_ui._on_end_turn_button_pressed()`
+    (`main_ui.gd:989-1051`): the same pass fallback, warnings and checks,
+    and only when `end_turn_button.disabled` is false.
+  - **Queue empty:** caption "HOLD ALL HOURS FOR EVENTS", muted but live,
+    keycap `Enter`. Click runs exactly `main_ui._on_commit_plan_button_pressed()`
+    (`main_ui.gd:1053-1077`), which holds every hour for events
+    (`plan_controller.append_reserve_all`, `plan_controller.gd:131`), and only
+    when `commit_plan_button.disabled` is false. So an empty, reactive month
+    stays one click away, as in classic.
+  - The keycap always names the key that runs the same path as the click.
+    Space and Enter keep their own handlers unchanged
+    (`main_ui.gd:595-599`, Enter's `commit_plan`).
+  - Hidden keycap while any modal or G sheet is open (only the top layer shows
+    a key).
+  - WATCH: "MONTH IN PLAY", dashed, inert; after the boundary "MONTH COMPLETE"
+    (5.2 sub-states).
+  - **Parity tests (phase 1a):** with a non-empty queue, the plate click and a
+    press of the classic EndTurnButton give the same feed lines and the same
+    state hash; with an empty queue, the plate click and the classic
+    CommitPlanButton do.
+
+#### 5.6.1 Refusal toast (A5)
+
+- Today every PLAN-time refusal ("Not enough Attention", "Cannot afford",
+  submenu and hiring/travel rejections, `GameManager.error_occurred`) goes
+  through `EventResultPresenter.present_error` (`event_result_presenter.gd:77-85`),
+  which writes to the WATCH-only feed and to `plan_screen.flash_error`
+  (`scripts/ui/plan_screen.gd:44-63`). G hides `ContentArea`, so that toast
+  is never seen in G.
+- Fix: `present_error` also emits a new `main_ui.rejection_reported(message)`.
+  `GDesk` shows it in `GToast`: a single line under the banner, `warn` text on
+  `panel-2`, "[!] " + message, visible for 4 s like today's toast, hidden by a
+  Tween on a pausable node (so it freezes in pause, like today's
+  `create_timer(4.0, false)`); a newer message replaces an older one.
+- Tests (phase 1b): an early UI refusal (an unaffordable row click,
+  `main_ui.gd:1744-1746`) and a backend rejection (`error_occurred`) both show
+  the G toast.
 
 ### 5.7 Actions sheet (A)
 
@@ -829,7 +964,18 @@ plus the other signals named.
   ordered list to GDesk when the layout is g; the flat grid is still built
   for keys 1-9 (2.2).
 - Row (height 44, `Button` with custom content): icon on a 40 px dark tile;
-  name (`body`); a second line (`small`, `muted`):
+  name (`body`); a second line (`small`, `muted`).
+  Icons: today's `IconLoader` icon for the action, except a G-only map in
+  `GActionsPanel` (A11; classic and `data/icon_mapping.json` untouched):
+  `advertise` -> `g_new/advertise.png`, `travel` -> `g_new/travel.png`,
+  `publicity` -> `g_new/publicity.png`, `scout_shitpost` ->
+  `g_new/post_online.png`, `scout_meetups` -> `g_new/meetups.png`,
+  `order_supplies` -> `g_new/supplies.png`; and two fallbacks for ids with no
+  mapping today (which would show `IconLoader`'s checkerboard,
+  `autoload/icon_loader.gd:33-59`): `scout_read` ->
+  `actions_research/action_research_ml_fundamentals_64.png`, `tour_offices` ->
+  `actions_facilities/action_facility_expand_office_64.png`. Until a Sol icon
+  is picked, its id keeps today's icon. Second line:
   - **door** (`action.is_submenu`): "N choices" (`submenu_controller.option_count(id)`;
     for the bespoke hiring, financing and travel builders that have no option
     list, the line reads "choices" without a count) and a `>` tab;
@@ -840,18 +986,25 @@ plus the other signals named.
 - Number keycaps 1-9 on the first nine rows (the same slots as today's
   action bar, 8.1).
 - Row states: rest; hover/focus (amber hairline); queued (chip); blocked
-  (hatched, dashed edge, reason in `warn`):
-  - "x N <resource> short" from the action's costs minus shown amounts
-    (the same comparison `_costs_affordable` makes, `main_ui.gd:1939-1955`);
-  - "x needs N <pool> hr" when the action's own pool is short, which is the
-    test today's click applies (`main_ui.gd:1736-1739`; 10.1);
+  (hatched, dashed edge, reason in `warn`). The blocked test is **exactly
+  today's admission test on unrounded values** (A5), read-only calls on the
+  live state, so a row is never shown live when the click would be refused or
+  the other way round (`main_ui.gd:1733-1746`):
+  - "x needs N <pool> hr" when `state.get_available_attention() < cost` or
+    `state.get_available_hours(hour_type) < cost` (the aggregate and the typed
+    check together; 10.1);
+  - "x N <resource> short" when `not state.can_afford(costs)`; N is the
+    shortfall, and only N is rounded for display;
   - coming soon: "COMING SOON" chip, as the renderer labels it.
+  Parity tests (phase 1b): an empty queue, a reserved pool (hours held, so the
+  aggregate check bites before the typed one) and an unaffordable action each
+  show blocked in G exactly when the classic click is refused.
 - First-lever hint: the row whose id is `_first_lever_action_id()` pulses
   like the rail plate (5.13).
 
 #### 5.7.2 Detail card
 
-- For the focused row (hover or keyboard focus): name, the data's
+- For the focused row (hover, or keyboard focus moved with Tab, 2.4): name, the data's
   description, hours and costs, a fit line ("N operating hours left, $M left
   after the plan so far": money shown minus `calculate_queued_costs().money`),
   and two buttons: **ADD TO PLAN** (plays) or **OPEN** (doors), and **BACK**.
@@ -866,21 +1019,30 @@ plus the other signals named.
 
 - Row click or ADD TO PLAN / OPEN: `main_ui._on_dynamic_action_pressed(id,
   name)` (`main_ui.gd:1699-1752`), the same handler the action bar uses, with
-  the same refusals and toasts.
+  the same refusals, shown in the G toast (5.6.1).
 - Number keys 1-9 while the sheet is top: `main_ui._trigger_action_by_index(i)`
   (identical to the desk).
 - A or Esc or `x`: close. U: switch to Upgrades. Q: switch to the Plan drawer.
 
 #### 5.7.4 Doors
 
-- `_open_submenu(id, anchor)` builds today's submenu (`main_ui.gd:672-680`,
-  `submenu_controller.open`). ModalStack pops the Actions sheet first
-  (2.4). G passes the row as `anchor` so the submenu sits beside the sheet's
-  right edge (`SubmenuChrome.align_to_button`).
+- `_open_submenu` keeps its exact signature,
+  `func _open_submenu(submenu_id: String) -> void:` (pinned by
+  `tests/unit/test_navigation_principles.gd:148`), and still builds today's
+  submenu (`main_ui.gd:672-680`, `submenu_controller.open`). Inside it, when
+  the layout is g, the anchor comes from `g_desk.submenu_anchor_for(submenu_id)`
+  instead of `_find_action_button(submenu_id)` (A2): the Actions sheet row for
+  that id if the sheet is open, else `null` (the submenu centres, as it does
+  when no button is found). Clicks and 1-9 slots both reach this one function,
+  so both get the same anchor. ModalStack pops the Actions sheet first (2.4);
+  the submenu sits beside the sheet's right edge
+  (`SubmenuChrome.align_to_button`, `scripts/ui/submenu_chrome.gd:77`).
 - When that submenu leaves the tree by any path, GDesk re-presents the Actions
-  sheet if (a) the sheet opened it, (b) no other modal is now on top, and
-  (c) the phase is still plan. So Esc from a door goes back to the sheet, and
-  Esc again goes to the desk.
+  sheet only if all hold (A3): (a) the sheet opened it; (b) the layout is still
+  g and `GDesk` is still in the tree (no flip, no scene exit); (c) no newer
+  modal is on top (`modal_stack.top_kind()` is empty); (d) the phase is still
+  plan. The re-present is `call_deferred` and re-checks (b)-(d) when it runs.
+  So Esc from a door goes back to the sheet, and Esc again goes to the desk.
 - The submenus keep their own keys (Q W E... per option, `DialogKeys`) and
   close affordance. In G they get the G panel stylebox
   (`SubmenuChrome.style_panel` swapped when the layout is g); no content change.
@@ -903,6 +1065,11 @@ plus the other signals named.
   queued money cost, reputation minus queued reputation cost. Results of
   plays are not included (open question Q5).
 - RESEARCH QUALITY: today's `research_quality_selector`, reparented in (2.2).
+  Its buttons set a per-button `font_color` override
+  (`scripts/ui/research_quality_selector.gd:60`), which outranks any theme
+  variation, so in G it gets a style flag: skip that override, use the
+  `GQualityButton` type variation and `get_font_size("body")` (A4). Same
+  buttons, same `quality_selected` signal.
 - UNDER WAY: today's in-flight hiring box, reparented in (2.2); hidden when
   empty.
 - Footer buttons: UNDO [Z] (`_on_undo_last_button_pressed`,
@@ -923,13 +1090,28 @@ plus the other signals named.
 - Header "UPGRADES", `x`. Body: today's upgrades label and scroll, reparented
   (2.2). `main_ui._populate_upgrades()` keeps filling it
   (`main_ui.gd:1605-1664`) on every state update, so content, prices,
-  affordability and clicks are today's. G restyles the row buttons through
-  `g_theme.tres` type variations only.
+  affordability and clicks are today's.
+- Restyling needs a G-only build path (A4). Today each row comes from
+  `ThemeManager.create_button()` (`main_ui.gd:1624`), which sets per-node
+  stylebox, colour and a literal 12 px font size overrides
+  (`autoload/theme_manager.gd:391-402`); per-node overrides beat any theme
+  type variation, and unaffordable or bought rows are dimmed with `modulate`
+  (`main_ui.gd:1637-1646`). So when the layout is g, `_populate_upgrades`
+  builds each row with `Button.new()`, `theme_type_variation =
+  &"GUpgradeRow"`, `add_theme_font_size_override("font_size",
+  ThemeManager.get_font_size("body"))`, and **no** `modulate`: bought and
+  unaffordable rows use the disabled stylebox (hatch and dashed edge, 4.3).
+  Text, `disabled`, tooltip, `pressed` handler and every check stay exactly
+  the classic branch's.
 
 #### 5.9.2 Staff (E)
 
 - Opens today's Employee screen through `TabManager` (`main_ui.gd:1084-1089`).
   Not redrawn in this build. Esc returns, as today (`tab_manager.gd:31-36`).
+- Before it opens, E (or the plate) dismisses any G-owned modal (a `g_*`
+  sheet or the embedded guide) through ModalStack (V5). Hiding `GDesk` with
+  `MainUI` does not hide its child sheets or unregister them, so without this
+  a sheet would stay on the stack behind the Employee screen.
 
 #### 5.9.3 Ledger (L)
 
@@ -944,17 +1126,27 @@ plus the other signals named.
   a resume flag would start a fresh game when the player came back
   (`main_ui._boot_game`, `main_ui.gd:796-827`).
 - G instances `scenes/player_guide.tscn` as an overlay inside `TabManager`,
-  registered in ModalStack (`kind "g_guide"`, close mode FREE), and sets a new
-  `embedded = true` on it. `player_guide.gd` in embedded mode closes itself
-  (`queue_free`) on Back and Esc instead of calling `SceneTransition`. No
-  scene change happens.
+  with its own full-rect barrier under it (as the sheets have), registered in
+  ModalStack (`kind "g_guide"`, close mode FREE), and sets a new
+  `embedded = true` on it. In embedded mode `player_guide.gd`:
+  - Back calls `modal_stack.dismiss(self)` (FREE mode frees it) instead of
+    `SceneTransition.go_to` (`player_guide.gd:7-10`);
+  - its own `_input` **does not handle Esc** (`player_guide.gd:12-16` runs
+    before `MainUI._input` because the guide is a later sibling); Esc reaches
+    ModalStack like any modal (A3).
+  No scene change happens. F1 toggles it: F1 with the guide on top closes it
+  (V5).
 
 ### 5.10 Feed (WATCH)
 
 - Node: `GFeedPanel` (PanelContainer, bottom-left). Header "FEED" and the
   month. Body: a `RichTextLabel` rendered from `main_ui._feed_lines` with the
   same filters as today's feed (`main_ui.gd:1505-1566`; G renders from the
-  model, it does not move `message_log`). Lines show the day (mono, `muted`)
+  model, it does not move `message_log`). `feed_changed` is emitted in
+  `log_message` right after the line is stored and trimmed
+  (`main_ui.gd:1517-1522`), **before** the filter early return (`:1523`) and
+  the `await` (`:1528`), so filtered lines and the await never swallow it;
+  and at the end of `_render_feed` (N3). Lines show the day (mono, `muted`)
   and the game's message; the newest line has an amber left edge.
 - Folding: lines from the same day beyond the newest four collapse into
   "+ N more lines from <Day D Mon>". The full log is one click away: clicking
@@ -973,10 +1165,15 @@ plus the other signals named.
 - The event dialog is today's (`scripts/ui/event_dialog.gd`), with today's
   queue, blocker, buttons, keys and priority (`PRIORITY_MUST_ANSWER`, #452).
   When the layout is g, `event_dialog._show_next_event` asks `GPaper` to style
-  the panel it builds: paper 9-slice background, ink text, "ACROSS YOUR DESK"
+  the panel it builds. The dialog is mounted on `get_tree().root`
+  (`event_dialog.gd:451`), outside `GDesk`, so `GPaper` sets
+  `theme = g_theme.tres` on the panel itself (A7). Styling: paper 9-slice
+  background, ink text, "ACROSS YOUR DESK"
   heading, an ink "NEEDS A REPLY" stamp for events that wait, option rows as
   paper rows with the option's key tile (`DialogKeys.label_for(i)`: Q, W, E),
-  text, effect and cost in bold ink. Footer: money shown and held hours.
+  text, effect and cost in bold ink; each option's hours from
+  `window_attention_for_option` (`event_dialog.gd:86`), as today. Footer:
+  money shown and held hours (5.5).
 - Keys: Q W E (and 1 2 3 as today's hidden alias). No Enter, no selected-row
   state, no Enter keycap (10.4). Esc does nothing (swallowed, #452,
   `modal_stack.gd:162-172`).
@@ -990,6 +1187,15 @@ plus the other signals named.
   paper (no board), Courier Prime ink, "MONTH REVIEW" and the period at the
   top, the lede, the attention line, LAST MONTH'S MOVEMENT rows (bold, as G
   measured), rivals only when the payload has them.
+- **A G-only path (A7).** `tests/unit/test_month_review_panel.gd` pins the
+  classic geometry (`apply_geometry`, `month_review_panel.gd:139`: area 1.9-3.5x
+  the generic panel) and the literal sizes `SIZE_BODY`, `SIZE_SMALL`,
+  `SIZE_BUTTON` (`:99-108`; test `:96-105, 132-137, 275-277`). So G adds a
+  separate entry, `apply_geometry_g` plus a `use_g := false` parameter on the
+  builders: 700 px wide, top 132, sizes from `ThemeManager.get_font_size()`.
+  The classic path and its constants are untouched. A new
+  `test_g_review_geometry.gd` pins G's width and sizes. `GPaper` applies
+  `g_theme.tres` itself (the review is on `get_tree().root`, 2.3).
 - **The words are the payload's**, unchanged (MonthReviewPanel "rewrites no
   wording"). G's rewritten attention line ("12 planning and 8 operating...")
   and the dropped closing line are not built (10.5).
@@ -1013,8 +1219,10 @@ plus the other signals named.
 - The ACTIONS plate and, inside the sheet, that action's row pulse (alpha
   1.0 -> 0.4 -> 1.0, 0.6 s each way, as today's nudge).
 - It goes away when `_clear_first_lever_nudge` runs (first use of the lever,
-  or turn 3, `main_ui.gd:1258-1262`), or with its x (the x only hides the note
-  for this session; it does not change `GameConfig`).
+  or turn 3, `main_ui.gd:1273-1274`): that function (`main_ui.gd:1599`) emits a
+  new `first_lever_cleared` signal that `GAdvisorNote` listens to (N3). Or
+  with its x (the x only hides the note for this session; it does not change
+  `GameConfig`).
 - It replaces today's getting-started hint line, which G hides.
 
 ### 5.14 The room and its doom layer (upgrade 2)
@@ -1069,9 +1277,13 @@ plus the other signals named.
 - **Room effects setting:** `full` = as above; `simple` = no shader: Backdrop
   `modulate` = brightness x grade tint for the band, glows kept, no smoke,
   grain or sky; `off` = today's 0.35 modulate and scrim (the classic room).
-  `simple` is also the automatic fallback if the shader fails to compile
-  (check `material.shader` compile in a one-frame probe at setup; on failure
-  log once and switch to `simple`).
+- **No runtime compile probe (A10).** Godot 4.5's `Shader` API gives GDScript
+  no compile-status result, so the build does not try to detect a failed
+  compile at run time. Instead phase 3a renders the **production** material
+  (all layers) on both Forward+ and Compatibility and keeps both captures;
+  `room_effects = "simple"` is the documented fallback when that check fails
+  on a renderer, or when the GPU cost misses the budget below. The player can
+  also pick it in G desk options.
 - **Renderer:** `project.godot` sets no rendering method, so desktop runs use
   Forward+ (Vulkan), with Godot's own fallback to Compatibility (OpenGL) if
   Vulkan is missing. The spike compiled and rendered the band shader on both
@@ -1115,11 +1327,11 @@ fits; there is no hand-keyed timeline for an AnimationPlayer. Rules:
 |---|---|---|---|---|
 | Dateline type-on | Tween of `visible_count` with a callback per letter that also plays its strike (7.2) | ~1.6 s for "NOVEMBER 1, 2017", +0.56 s carriage return, +0.7 s tail | never blocks input; a new date while typing: kill, show the new date set, no sound (7.3) | shown set, no sound |
 | Sheet open (Actions, Plan, Upgrades) | modulate.a 0 -> 1 and position x -8 -> 0 | 0.12 s, ease out | the sheet is top from the first frame and takes keys and clicks; Esc / its letter mid-open: kill, hide at once | instant |
-| Sheet close | modulate.a 1 -> 0 | 0.08 s | hidden from ModalStack at once (input goes to the desk at once); a re-open mid-close kills the close | instant |
-| Switch sheet (A with Plan open) | close the old (0.08) and open the new (0.12) at the same time | 0.12 s | as above | instant |
+| Sheet close | `hide_panel()`: hidden, barrier off and focus released in the same call (V6); no fade | instant | input goes to the desk at once | instant |
+| Switch sheet (A with Plan open) | the old closes at once, the new opens with its 0.12 s fade | 0.12 s | as above | instant |
 | PLAN <-> WATCH | the feed panel and WATCH strip fade in (0.15); PLAN-only parts hide at once | 0.15 s | V and phase changes are immediate; a second flip mid-fade kills the fade | instant |
 | Event paper arrives | modulate.a 0 -> 1, y +12 -> 0 | 0.2 s | the dialog's buttons are live at once (today's), so a key pressed during the fade answers | instant |
-| Month review arrives | as the event paper, while the dateline types | 0.2 s | Space advances at once (today's); the dateline keeps typing and is cut to set by the next state | instant |
+| Month review arrives | as the event paper, while the dateline types | 0.2 s | Space advances at once (today's); the dateline keeps typing to the end: the next plan-phase state has the same date text, which 7.3 ignores; only a state with a different date cuts it to set | instant |
 | Room steps band | tween shader uniforms and glow strength, old -> new | 1.2 s, ease in-out | none (display only); a further band change mid-tween starts from the current values | instant |
 | P(Doom) arc | the arc's drawn value tweens old -> new; the % text and band name switch at once | 0.4 s, ease out | none | instant |
 | Band ladder | the lit chip switches when the band changes (no tween) | -- | -- | -- |
@@ -1152,9 +1364,11 @@ values the game never had; the band and level jump, the arc eases.
      (`main_ui.gd:554-560`);
   3. nothing open: Esc opens the pause menu (`main_ui.gd:504-510`).
 - Each G sheet and the options modal also carries `EscToClose` and a visible
-  `x`, so `test_ui_no_dead_ends.gd` passes on its own.
+  `x`, wired standalone-safe (2.4), so `test_ui_no_dead_ends.gd` passes on its
+  own. The embedded guide leaves Esc to ModalStack (5.9.4).
 - The advisor note is not modal (5.13): Esc does not close it; its x does.
-- Esc during a sheet's open tween: closes it (6.2).
+- Esc during a sheet's open tween: closes it at once (6.2). Tested in phase
+  1b, with Tab inside a sheet and an event replacing an open sheet.
 
 ### 6.5 Reduced motion
 
@@ -1205,10 +1419,12 @@ values the game never had; the band and level jump, the arc eases.
 
 ### 7.2 Playback in Godot
 
-- `GTypeSound` (Node) owns a pool of six `AudioStreamPlayer` children, all
+- `GTypeSound` (Node) owns a pool of `AudioStreamPlayer` children, all
   `bus = &"SFX"` (bus 1 in `godot/default_bus_layout.tres`; its volume is
-  `GameConfig.sfx_volume`, applied at `game_config.gd:363-369`). Each strike
-  takes the next free player (or the oldest, if all six still ring), sets
+  `GameConfig.sfx_volume`, applied at `game_config.gd:363-369`). Pool size:
+  12. A strike's tail is 0.78 s and the fastest gap is 0.073 s, so up to 11
+  can ring at once; six would cut tails short (N2). Each strike
+  takes the next free player (or the oldest, if all still ring), sets
   `stream`, `pitch_scale` and `volume_db`, and calls `play()`, so overlapping
   tails do not cut each other. This is the routing the spike proved
   (`spikes/dateline.gd:80-93`, which creates a player per strike; the build
@@ -1232,7 +1448,8 @@ values the game never had; the band and level jump, the arc eases.
   Movie Maker frames against the same capture's audio: mean +5.0 ms, max
   +11.4 ms, every letter within one frame (13.3). No compensation is built.
   Movie Maker uses Godot's dummy audio driver, so speaker latency on Alex's
-  PC is checked by ear in phase 4; only if it is clearly late (over about
+  PC is checked by ear in phase 4, together with whether any tail is cut
+  short (N2); only if it is clearly late (over about
   40 ms) delay the visual reveal by `AudioServer.get_time_to_next_mix() +
   AudioServer.get_output_latency()`.
 - **Which strike plays:** `pick[i] = rng.randi_range(0, 5)`, never the same as
@@ -1319,15 +1536,28 @@ How it is held:
 | H / F / P / T | open Hire / Fundraising / Publicity / Travel submenus | same (`keybind_manager.gd:61-70`) | same |
 | A | Actions sheet | free | **new** bind `g_actions` |
 | U | Upgrades sheet | free | **new** bind `g_upgrades` |
-| E | Staff (Employee screen) | free; an old `employee_tab` bind is commented out (`keybind_manager.gd:56`) | **new** bind `g_staff` |
+| E | Staff (Employee screen); first closes any G-owned modal (V5) | free; an old `employee_tab` bind is commented out (`keybind_manager.gd:56`) | **new** bind `g_staff` |
 | Q | Plan drawer | free on the desk; inside dialogs Q is choice 1 (`scripts/ui/dialog_keys.gd:30-31`) | **new** bind `g_plan` |
 | R | Reserve 1 hour, only while the Plan drawer is open | free (`menu_research` was deleted, `keybind_manager.gd:63`) | **new** bind `g_reserve` |
-| F1 | Guide (embedded) | free | **new** bind `g_guide` |
+| F1 | Guide (embedded); toggles it (V5) | free | **new** bind `g_guide` |
 | F9 | cycle classic -> proposed -> g (debug builds) | flips classic/proposed (`main_ui.gd:485-489`) | changed (debug only) |
 
 - The new binds are added to `KeybindManager` (category UI, description
   ending "(G desk)") so the rebind screen lists them. In classic they do
-  nothing (only `GKeys` reads them).
+  nothing (only `GKeys` reads them). Pip's P4 rule says no advertised key is
+  inert; these six are inert in classic by design while G is a test layout.
+  Tell the scope reviewer this is expected.
+- **`test_no_keybind_action_is_inert`** (`tests/unit/test_navigation_principles.gd:156-171`)
+  needs the literal text `is_action_pressed(event, "<bind>")` somewhere in the
+  sources for every bind, so `GKeys` writes the six checks out literally
+  (8.2), never in a loop over a table (A2).
+- **Saved binds win (V7).** A saved keybind profile keeps its own keys and
+  loads new defaults alongside (`keybind_manager.gd:155-170`), so a player who
+  bound, say, Commit to A would also get `g_actions` on A. Before GKeys claims
+  a key on the desk, GDesk checks that no existing (non-`g_`) bind uses the
+  same keycode; if one does, the existing bind wins, the G bind is skipped and
+  its keycap hidden. Recomputed at setup and whenever binds change. Test: a
+  saved profile with Commit on A; A commits, the Actions plate shows no key.
 - G's mock-up keys that are dropped: Enter on the Actions detail card, the
   event's selected option and the review button (Pip's Enter ruling, 10.4);
   1/2/3 labels on event options (the game advertises Q/W/E).
@@ -1336,20 +1566,29 @@ How it is held:
 
 ### 8.2 Routing
 
-`GKeys.route(event, top_kind, phase) -> String` is a static, pure function
-returning an intent (`"toggle_actions"`, `"toggle_plan"`, `"toggle_upgrades"`,
-`"staff"`, `"guide"`, `"reserve"`, `"undo"`, `"clear"`, `"slot_N"`, or `""`).
+`GKeys.route(event, top_kind, phase, kb, skipped) -> String` is a static,
+pure function returning an intent (`"toggle_actions"`, `"toggle_plan"`,
+`"toggle_upgrades"`, `"staff"`, `"guide"`, `"reserve"`, `"undo"`, `"clear"`,
+`"slot_N"`, or `""`). `kb` is the key matcher passed in: `KeybindManager` at
+run time, a small stub in unit tests, so the function never names an autoload
+(A2). It makes six literal calls, `kb.is_action_pressed(event, "g_actions")`,
+`... "g_upgrades")`, `"g_staff"`, `"g_plan"`, `"g_reserve"`, `"g_guide"`, each
+skipped when its name is in `skipped` (the V7 conflicts).
 `main_ui._input` calls it **after** the text-focus gate and the ledger block
 (`main_ui.gd:473-502`) and **before** the Esc-to-pause check and the dialog
 block (`main_ui.gd:504-569`), only when the layout is g. Rules:
 
 - `top_kind` is `modal_stack.top_kind()` (`modal_stack.gd:71`).
 - If `top_kind` is not empty and does not start with `"g_"`: return `""` (the
-  dialog block handles the key exactly as today).
+  dialog block handles the key exactly as today). So neither E nor F1 acts
+  while an event or the review is up (V5).
 - If the phase is not plan (`current_turn_phase` is not `action_selection`),
   A, U and Q return `""` (their sheets are PLAN-only; their plates are
   disabled in WATCH). E, F1 and L work in both.
 - A with Actions top: close. A with another G sheet top: switch. Same for U, Q.
+- E with a G sheet or the guide on top: `"staff"` (GDesk dismisses the G modal,
+  then opens Staff, 5.9.2). F1 with the guide on top: `"guide"` closes it;
+  otherwise it opens it (V5).
 - With `g_plan` top: Z, C, R map to undo, clear, reserve (each only if today's
   button is enabled).
 - With `g_actions` top: 1-9 map to `slot_N`.
@@ -1377,18 +1616,21 @@ All read-only. "via host" = GDesk calls an existing `main_ui` method.
 | P(Doom) card | `state.doom`, `state.doom_system.doom_trend`, ThemeManager bands | `game_state_updated` | click -> `_show_doom_trend_expanded()` |
 | Attention card | `state.planning_hours_left`, `operating_hours_left`, `month_plan.*`, `plan_controller.queued_actions` | `game_state_updated`, `queue_view_changed`, `turn_phase_changed` | buttons -> open sheets |
 | Held plate | `month_plan.attention_total/spent/reserved` | `game_state_updated` | none |
-| Commit | `commit_plan_button.disabled`, queue size, phase | `turn_phase_changed`, `queue_view_changed` | click -> `_on_commit_plan_button_pressed()` |
+| Attention card, WATCH | `state["attention_reserved"]` (remaining reserve), G's pre-boundary snapshot, `EventDialog.current_event` + `window_attention_for_option` | `game_state_updated`, `turn_phase_changed` | none |
+| Commit | queue size, `end_turn_button.disabled`, `commit_plan_button.disabled`, phase | `turn_phase_changed`, `queue_view_changed` | click -> `_on_end_turn_button_pressed()` (queue not empty) or `_on_commit_plan_button_pressed()` (empty) |
+| Refusal toast | message | `main_ui.rejection_reported` | none |
 | Actions sheet | `ActionBarRenderer` row list, state for blocked reasons | `actions_available` (via renderer), `game_state_updated` | row -> `_on_dynamic_action_pressed()`; door -> `_open_submenu()` |
 | Plan drawer | `plan_controller.queued_actions`, `calculate_queued_costs()` | `queue_view_changed`, `game_state_updated` | x -> `_remove_queued_action()`; Undo/Clear/Reserve -> today's handlers |
 | Upgrades sheet | today's list (reparented) | today's | today's |
-| Feed | `main_ui._feed_lines` | a new `main_ui.feed_changed` signal emitted at the end of `log_message` and `_render_feed` | filter toggles -> today's handlers |
+| Feed | `main_ui._feed_lines` | a new `main_ui.feed_changed` signal, emitted in `log_message` before the filter return and the await, and at the end of `_render_feed` (5.10) | filter toggles -> today's handlers |
 | Event paper | the event dict | `event_triggered` (today's dialog) | today's buttons |
 | Review paper | the `review` payload | today's | today's button |
-| Advisor note | `GameConfig.show_first_lever_hint`, `first_lever_hint_text`, `first_lever_action_id` | boot, `_clear_first_lever_nudge` | x hides the note only |
+| Advisor note | `GameConfig.show_first_lever_hint`, `first_lever_hint_text`, `first_lever_action_id` | boot, `main_ui.first_lever_cleared` | x hides the note only |
 | Room | `state.doom` band | `game_state_updated` | none |
 
-`main_ui` gets two new signals, `queue_view_changed` and `feed_changed`; both
-are emitted from existing view functions and carry no data.
+`main_ui` gets four new signals: `queue_view_changed`, `feed_changed` and
+`first_lever_cleared` (no data), and `rejection_reported(message: String)`.
+All are emitted from existing view functions.
 
 ---
 
@@ -1396,8 +1638,9 @@ are emitted from existing view functions and carry no data.
 
 1. **The Attention spill.** ADR-0011 and the core gate let operating work use
    planning hours (`scripts/core/month_plan.gd:182-193`). Today's UI refuses
-   the click when the action's own pool is short (`main_ui.gd:1736-1739`,
-   `submenu_controller.gd:150-152`). The build keeps the refusal, shows the
+   the click when the aggregate or the action's own pool is short
+   (`main_ui.gd:1733-1742`, `submenu_controller.gd:150-152`). The build keeps
+   the refusal, using the same unrounded test, shows the
    row blocked ("x needs N operating hr"), and draws no hatched spill cell or
    spill tag (G state 3 does both).
 2. **Reserve.** The ADR's hold is untyped; today's UI disables Reserve at 0
@@ -1416,9 +1659,13 @@ are emitted from existing view functions and carry no data.
 6. **Held hours by event.** G state 5 names the event that used the held hour.
    The game does not report that per event; the build shows "Used on events
    N hr" (5.5).
-7. **Two commit paths.** Today Enter and Space commit through different
-   handlers (`main_ui.gd:989-1077`). G draws one Commit plate wired to the
-   Enter path; Space keeps its own path.
+7. **Two commit paths.** Today Space ("COMMIT THE MONTH", disabled with an
+   empty queue) and Enter ("Plan", never disabled in plan) commit through
+   different handlers (`main_ui.gd:989-1077`, `:1425-1426`). The mock-up draws
+   one button. G draws one plate that keeps both paths and their eligibility
+   (V1, 5.6): queue not empty -> the Space path with all its warnings; queue
+   empty -> the Enter path. Space and Enter keep their own handlers.
+   Parity-tested for both branches.
 8. **Costs that are not in the action data.** Advertise a Role and Work Your
    Connections have empty `costs` in `data/actions/core.json`; their real
    costs live in Balance (H spec 7.2). G shows what today's hover and tiles
@@ -1439,6 +1686,9 @@ are emitted from existing view functions and carry no data.
     same actions as today; G's five-group order is not used.
 13. **No reorder** (^ v) in the Plan drawer: the queue has no reorder
     operation (16).
+14. **Held hours in WATCH** are the remaining reserve the game reports, not
+    the mock-up's arithmetic (5.5); an event's hours are shown per option,
+    never as one price for the window.
 
 ---
 
@@ -1500,10 +1750,12 @@ are emitted from existing view functions and carry no data.
      the flat black to alpha. The trial did not need this.
   2. Trim to the alpha bounding box (alpha > 16).
   3. Scale the trimmed picture so its longer side is a fixed share of the
-     final canvas, by tier: tier 0 = 0.78, tier 1 = 0.52, tier 2 = 0.68,
-     tier 3 = 0.84, tier 4 = 0.96. (Tier 0 is an empty container, so it sits
-     mid-size; tiers 1-4 grow.) Lanczos, done in one step from the
-     original to the final size.
+     final canvas, by tier: tier 0 = 0.74, tier 1 = 0.50, tier 2 = 0.64,
+     tier 3 = 0.78, tier 4 = 0.88. (Tier 0 is an empty container, so it sits
+     mid-size; tiers 1-4 grow.) Then cap the height at 0.90 of the canvas,
+     so every picture fits in the space above the baseline with a 4% top
+     margin (A11: both trial tier-4 crops are nearly square, so 0.96 would
+     clip). Lanczos, done in one step from the original to the final size.
   4. Place it centred horizontally and **bottom-aligned** on a shared
      baseline 6% above the canvas bottom, so the set sits on one "desk".
   5. Save 128x128 PNG RGBA, 8-bit, no metadata (about 15-30 KB each).
@@ -1513,17 +1765,22 @@ are emitted from existing view functions and carry no data.
   once per resource from the check sheet and records the values used in
   the script.
   The six action icons go through the same script with one share for all
-  (0.90, centred, not bottom-aligned), since they are not a size ladder.
-  Smoke and the paper sheet skip steps 3-4 and are only downscaled.
+  (0.88, centred, not bottom-aligned), since they are not a size ladder.
+  Smoke and the paper sheet have their own recipes (11.2a).
+- **Judging (N1).** Every batch is judged on a contact sheet at the real
+  sizes, 32 and 40 px, on the G plate colour, beside Pip's rail icons
+  (`main_navigation/*`) and his resource icons. Whether the set belongs
+  beside Pip's is Alex's call (Q16); the build carries on with the picks
+  meanwhile.
 
 ### 11.2 The list
 
 | Item | Kind | Size and format | Import | Batch |
 |---|---|---|---|---|
 | 25 resource tier icons (`money-0..4`, `compute-`, `research-`, `papers-`, `rep-`) | **Sol picture**, cut by `cut_icons.py` (11.1) | made at ~1254x1254; shipped 128x128 PNG RGBA (shown at 32 and 40 px, so about 3x) | `compress/mode` Lossless, `mipmaps/generate` on, `process/fix_alpha_border` on, `process/premult_alpha` off; the `TextureRect` sets `texture_filter = LINEAR_WITH_MIPMAPS` (in Godot 4 the filter is a CanvasItem property, not an import setting) | money: from the trial, no re-run; then 4 batches of 5 (compute, research, papers, reputation), each run 2-3 times |
-| Six new action icons: advertise a role (pinned notice), travel and conferences (suitcase), publicity (megaphone), post online (speech bubble), go to meetups (two glasses), order office supplies (carton with pencils) | **Sol picture** | 128x128 PNG RGBA, on Pip's dark tile look | as above | 1 batch of 6 |
-| Floor smoke (bands 5-6) | **Sol picture** | 2048x512 PNG RGBA, soft violet-grey wisps, transparent, left and right edges fade | Lossless, no mipmaps | 1 batch, 2 variants |
-| Paper sheet | **Sol picture** | 1024x1024 PNG RGB, aged tan sheet, flat, top-down, no text, darker at the bottom, burnt edges, worn corners | Lossless; used as 9-slice, margins 64 | 1 batch, 3 variants |
+| Six new action icons: advertise a role (pinned notice), travel and conferences (suitcase), publicity (megaphone), post online (speech bubble), go to meetups (two glasses), order office supplies (carton with pencils) | **Sol picture** | generated on a **transparent** background like the tier icons (the dark tile is G's StyleBox, not part of the picture); shipped 128x128 PNG RGBA | as the tier icons | 1 batch of 6, phase 2b; mapped in `GActionsPanel` (5.7.1) |
+| Floor smoke (bands 5-6) | **Sol picture**, own recipe (11.2a) | 2048x512 PNG RGBA | Lossless, no mipmaps | 1 batch, 2 variants, phase 3b |
+| Paper sheet | **Sol picture**, own recipe (11.2a) | 1024x1024 PNG RGB | Lossless; used as 9-slice, margins 64 | 1 batch, 3 variants, phase 2b (script stand-in until picked) |
 | Window mask for `office_wide_day` | **texture (script + hand check)** | 1536x1024 PNG L8 (white = window pane) | Lossless, no mipmaps, filter linear | -- |
 | Room noise (`noise_lo`, `noise_hi`) | **texture (script)** | 256x256 PNG L8, tileable | Lossless, repeat on | -- |
 | Panel grime 9-slice | **texture (script)** | 256x256 PNG RGBA | Lossless | -- |
@@ -1535,6 +1792,30 @@ are emitted from existing view functions and carry no data.
 Not new: Pip's icons and office art listed in 5.3-5.6; Pip's
 `tex_painted_metal_panel_512.png` in the grime texture. No eldritch cat (G
 dropped the office cat instrument; open question in G notes).
+
+Unused in G: the brief's art list also names **in-tray** and **feed**
+placeholder icons (from H). G has no in-tray, and its feed panel header is
+text only, so neither is made (A11).
+
+#### 11.2a Smoke and paper recipes (A11)
+
+They are not square, centred objects, so they do not use the icon template's
+"Every item" paragraph:
+
+- **Floor smoke.** Prompt: the template's header and "Look:" paragraph, then
+  one item: "smoke-floor.png -- a wide, low band of slow smoke drifting
+  across a floor, seen from the side, soft violet-grey, thin at the top,
+  nothing else in the picture, transparent background, the smoke fading out
+  before every edge." Ask for the widest landscape frame the tool gives.
+  Cut: take the densest full-width band at 4:1, feather the left and right
+  10% and the top 20% to alpha, resize to 2048x512.
+- **Paper sheet.** Prompt: header and "Look:", then: "paper-sheet.png -- a
+  sheet of old, handled office paper filling the whole frame edge to edge,
+  flat and seen from straight above, even light, tan, a little darker toward
+  the bottom, scorched and worn at the edges and corners, no text, no
+  objects, nothing on it." Cut: centre square crop, resize to 1024x1024;
+  check that the 9-slice middle (margins 64) tiles without visible seams at
+  700x900; if it does not, pick another variant.
 
 ### 11.3 The descriptions (starting point for the "Items" lists)
 
@@ -1567,12 +1848,36 @@ Red appears only in tier 0 (the trial prompt's "The design" paragraph).
   a guard, `tools/assets/check_provenance.py` (hidden in this checkout; read it
   with `git show HEAD:tools/assets/check_provenance.py`). The guard reports any
   packed asset with no record.
-- Every new file in `godot/assets/` gets a record: Sol pictures
-  `origin: generated_model`; script textures and the WAVs
-  `origin: procedural_render` or `authored_code`; fonts: see Q9. Use
-  `tools/assets/backfill_provenance.py --record` (also hidden; Alex unhides
-  `tools/assets/` by adding it to `fork/sparse-checkout.txt`, AGENTS.md
-  section 3) or write the records by hand in the same shape.
+- **Records only for the media the guard scans (A9):** extensions `.png .jpg
+  .jpeg .webp .svg .gif .bmp` and `.ogg .wav .mp3`
+  (`check_provenance.py:88-90`). The guard treats any record naming a file it
+  does not scan as stale (`:366-369`), so **no** records for `.ttf`,
+  `OFL.txt`, `SOURCE.txt` or `.gdshader`. Sol pictures:
+  `origin: generated_model`; script textures and the WAVs:
+  `origin: procedural_render` or `authored_code`.
+- **Fonts** carry their licence and source beside them instead: `OFL.txt`
+  and `SOURCE.txt` (pinned URL and SHA-256 per file) in each
+  `godot/assets/fonts/<family>/` (2.5).
+- **Where the records live (V4).** Editing `godot/data/asset_provenance.json`
+  is outside AGENTS.md section 1 (it is not a bug fix, copy text or a
+  presentation-only autoload), so it needs Alex's approval as a metadata
+  exception (Q15).
+  - Approved: records go in `godot/data/asset_provenance.json` on the
+    `ui/g-*` branch, in the same shape (by hand, or with
+    `tools/assets/backfill_provenance.py --record` once Alex unhides
+    `tools/assets/`, AGENTS.md section 3).
+  - Not approved (the default): records go in
+    `fork/design/godot-g/provenance.json`, same shape, committed as a fork
+    commit on `lean`, never on a `ui/g-*` branch. That file is **staging
+    only**: before any change goes to Pip (AGENTS.md section 8), its records
+    move into `godot/data/asset_provenance.json` on the `up/<slug>` branch,
+    and Pip's provenance guard must pass there.
+- **Provenance audit** in every phase that adds media (2b, 3a, 3b, 4, 5):
+  list every new media file under `godot/assets/` on the branch and check
+  each has exactly one record (in whichever file holds them); report the list
+  in the phase report. With Q15 approved, also run Pip's guard with the
+  copy-and-link method in 12.1 item 3 (it resolves the repo two levels up,
+  `check_provenance.py:83`, so its copy goes in `<dir>/tools/assets/`).
 - The manifest's notes say Pip's funding commitment counts on the asset set
   being homogeneous (all generated); see Q9.
 
@@ -1589,18 +1894,48 @@ On the change branch, before squashing (AGENTS.md sections 4 and 7):
    `/data/godot-4.5.1/Godot_v4.5.1-stable_linux.x86_64`; run under `xvfb-run`
    if the runner needs a display).
 2. `python scripts/check_no_emoji.py`, `python tools/check_scene_nav.py`.
-3. Pip's two hidden guards, read from history:
-   `git show HEAD:tools/check_font_sizes.py > /data/pdoom1-g/tmp/cfs.py && python /data/pdoom1-g/tmp/cfs.py`
-   and the same for `tools/check_pause_timers.py`.
+3. Pip's two hidden guards, run against the **real worktree** (A8). Both find
+   the repo from their own path (`REPO_ROOT = Path(__file__).resolve().parents[1]`,
+   `check_font_sizes.py:68`, `check_pause_timers.py:36`), so a copy saved
+   anywhere else scans the wrong tree: the font guard then fails on every
+   run and the timer guard scans zero files and passes. Working method, from
+   the worktree root `$WT`:
+   ```
+   G=/data/pdoom1-g/guards/$(basename "$WT"); mkdir -p "$G/tools"
+   ln -sfn "$WT/godot" "$G/godot"
+   git -C "$WT" show HEAD:tools/check_font_sizes.py   > "$G/tools/check_font_sizes.py"
+   git -C "$WT" show HEAD:tools/check_pause_timers.py > "$G/tools/check_pause_timers.py"
+   python "$G/tools/check_font_sizes.py"
+   python "$G/tools/check_pause_timers.py"
+   python "$G/tools/check_pause_timers.py" --self-test
+   ```
+   All three must exit 0, and the font guard must print a scene count (it is
+   at the ceiling today, scenes 125 of 125, so **no new
+   `theme_override_font_sizes` in any `.tscn`**: G sets every size in code,
+   4.2).
 4. `python tools/check_ladder_bump.py --base lean --head HEAD`; every listed
    file must be one of 2.5's presentation-only exceptions.
-5. **Same-seed check** (from phase 1 on): `tests/visual/g_capture.gd` plays a
-   fixed seed with a fixed input script (queue three plays, commit, answer the
-   first event with its first option, begin the next month), once with the
-   layout classic and once with g, and compares a hash of
-   `GameManager.state.to_dict()` at the end. Must match.
+5. **Same-seed check** (from phase 1 on; A8). `tests/visual/g_capture.gd`
+   runs one fixed fixture twice, once with the layout classic and once with
+   g, and compares a hash of `GameManager.state.to_dict()` (it includes the
+   RNG state, so an extra draw shows) at the end. The fixture:
+   - `game_manager.start_new_game("g-parity-1")`;
+   - queue `scout_read`, `scout_read`, `scout_meetups` through the UI path
+     each layout uses (classic bar buttons; G sheet rows), asserting after
+     each that the queue grew (the fixture fails loudly if a play is
+     refused);
+   - commit through the Space path;
+   - when the first event arrives, answer it with the first option whose
+     button is enabled (assert there is one);
+   - assert the run reaches the month review, advance it with Space, and
+     assert the next month opens in `action_selection`;
+   - then hash. Both hashes must match, and both runs must have passed every
+     assert.
+   If the seed's first month has no event, the fixture says so and the orchestrator
+   picks another seed once and writes it into the fixture.
 6. **Screenshots** from the real game under xvfb (a CPU render on this box,
-   13.1; say so in the report) at 1920x1080 and 1280x720:
+   13.1; say so in the report), written to scratch under `/data/pdoom1-g/`,
+   never into tracked folders, at 1920x1080 and 1280x720:
    classic before, G after, for the states the phase touches (12.3), plus the
    contrast check (4.5) on the G shots.
 7. A fresh `scope-reviewer` with no cut or ask items.
@@ -1609,7 +1944,8 @@ On the change branch, before squashing (AGENTS.md sections 4 and 7):
 
 Each sub-phase is one `ui/g-<slug>` branch from `lean`, squashed into `lean`
 as one commit. G stays behind the switch the whole time; classic is never
-changed except where a row of 2.5 says so.
+changed except where a row of 2.5 says so. Fork tools and the fork
+provenance file are never committed on these branches (2.5, A8).
 
 **Phase 1: a playable G desk, plain look.**
 - 1a `ui/g-switch`: GPrefs, the `"g"` arrangement in LayoutController, F9
@@ -1617,35 +1953,53 @@ changed except where a row of 2.5 says so.
   classic chrome and shows: top strip (plain numbers, no icons, today's
   turn label text in the dateline slot), banner and view switch, P(Doom) card,
   Attention card (PLAN face), held plate, Commit, Feedback, Menu. Rail plates
-  for Staff, Ledger, Guide (embedded guide included). Tests: GPrefs round
-  trip; layout flip g -> classic restores every node (extend
-  `test_ui_layout.gd` with a g fixture); `test_ui_no_dead_ends` passes;
-  same-seed check.
+  for Staff, Ledger, Guide (embedded guide included), the refusal toast.
+  Tests: GPrefs round trip; boot directly into a persisted G; F9 flips from
+  classic and from proposed into g and back, in PLAN and WATCH, restoring
+  every node (extend `test_ui_layout.gd` with a g fixture);
+  `test_ui_no_dead_ends` passes; the Commit plate parity tests for both
+  branches (5.6); the Settings board-fit test; same-seed check.
 - 1b `ui/g-sheets`: Actions sheet with detail card and door return, Plan
   drawer, Upgrades sheet, `GKeys` routing and the new binds,
-  `queue_view_changed`. Tests: `GKeys.route` table test; sheets close on Esc,
-  x and their letter; door return; 1-9 parity (same action id queued as from
-  the classic bar); same-seed check.
+  `queue_view_changed`, the Upgrades and research-quality G rows (A4).
+  Tests: `GKeys.route` table test with a stub `kb`;
+  `test_navigation_principles.gd` still passes (literal bind checks,
+  unchanged `_open_submenu` signature); sheets close on Esc, x and their
+  letter, standalone and live; Esc mid-open; Tab stays inside a sheet; an
+  event replacing an open sheet; door return and its guards; E and F1 over a
+  G sheet and over an event (V5); a saved profile with Commit on A (V7); the
+  refusal toast for an early UI refusal and a backend rejection (A5); blocked
+  rows match refusals for an empty queue, a reserved pool and an
+  unaffordable action (A5); 1-9 parity (same action id queued as from the
+  classic bar); same-seed check.
 - 1c `ui/g-watch`: WATCH banner (playback bar, speeds), WATCH and closed faces
   of the Attention card, feed panel with `feed_changed`, Commit's WATCH states,
-  rail disabled states. Tests: workday N of M against `Clock`; held-hours
-  derivations; same-seed check.
+  rail disabled states, the four WATCH sub-states (5.2), `current_event`.
+  Tests: workday N of M against `Clock`; held hours = remaining reserve;
+  the closed face with and without a pre-boundary snapshot; per-option reply
+  line for free, equal and mixed prices (V2); each WATCH sub-state; same-seed
+  check.
 
 **Phase 2: the look.**
 - 2a `ui/g-theme`: fonts (import, OFL files), `g_theme.tres`, the `label`
   font step, palette, styleboxes, grime/hatch/keycap/tick drawing, hierarchy
-  sizes, script-made textures. Contrast check on every G state at both sizes.
-- 2b `ui/g-paper`: event paper, review paper, advisor note, submenu and ledger
-  panel restyle; the paper texture (script stand-in until the Sol batch);
-  the six new action icons batch (Sol). Contrast on paper.
+  sizes, script-made textures. Contrast check on every G state at both sizes,
+  including the custom-drawn text (4.5) and the "0" of "0 ends the run".
+- 2b `ui/g-paper`: event paper, review paper (the G-only path and its
+  geometry test, 5.12), advisor note, submenu and ledger panel restyle; the
+  paper batch (Sol, 11.2a; script stand-in until picked); the six new action
+  icons batch (Sol) and their map; provenance audit. Contrast on paper.
 
 **Phase 3: the room by doom band.**
 - 3a `ui/g-room`: the shader, band table, glows, window mask, noise
-  textures, the `simple` / `off` modes and the compile fallback, the band
-  tween, grain offset in `_process`. Screenshots of the room forced to each
-  band 0-6 (a debug-only override in `g_room.gd`, like the mock-up's
-  `?band=`), frame time logged.
-- 3b `ui/g-smoke`: the smoke batch (Sol) and its layer for bands 5-6.
+  textures, the `simple` / `off` modes, the band tween, grain offset in
+  `_process`. Screenshots of the room forced to each band 0-6 (a debug-only
+  override in `g_room.gd`, like the mock-up's `?band=`) with the production
+  material **on both Forward+ and Compatibility** (`--rendering-method
+  gl_compatibility`); if either fails, `simple` is the fallback (5.14).
+  Frame time logged; the cost check on Alex's PC. Provenance audit.
+- 3b `ui/g-smoke`: the smoke batch (Sol, 11.2a) and its layer for bands 5-6.
+  Provenance audit.
 
 **Phase 4: the dateline and its sound** (`ui/g-dateline`): GDateline with
 the ribbon, the schedule, GTypeSound, the rendered WAVs, the busy rule, the
@@ -1653,13 +2007,13 @@ type triggers. Tests: `schedule()` timings for "NOVEMBER 1, 2017" with a fixed
 seed; triggers (new game types, new month types, in-month day change does
 not, load does not, resume does not); busy rule; no draw from the global RNG
 (seed the global RNG, type a date, check the global sequence is unchanged).
-A timing log of letter and strike times from a real run.
+A timing log of letter and strike times from a real run. Provenance audit.
 
 **Phase 5: tier icons** (`ui/g-tiers`): four more Sol batches (compute,
 research, papers, reputation; money from the trial if accepted), import,
 `GTiers`, the cell icon swap and crossfade, tags, reputation's "0 ends the
 run". Tests: tier boundaries on shown amounts (60, 60.25, 60.5, 0.25, -0.4
-from the H council); tags.
+from the H council); tags. Provenance audit; contact sheet for Alex (Q16).
 
 **Phase 6: trace windows** (`ui/g-traces`): `GResourceHistory`, the clear rule
 in `_boot_game`, the trace drawing, the caption, the take switch. Tests:
@@ -1695,7 +2049,9 @@ From `fork/design/godot-g/spikes/RESULTS.md` (official
 `4.5.1.stable.official.f62fdbde1` Linux binary under Xvfb; the box's own
 4.7.2 was not used). Rerun all three with
 `bash fork/design/godot-g/spikes/run.sh all`; it stages its project and logs
-under `/data/pdoom1-spikes`.
+under `/data/pdoom1-spikes`. Screenshots from a rerun go to
+`/data/pdoom1-spikes/shots/` by default, not to the tracked `spikes/shots/`
+(`run.sh:24`, `PDOOM_SPIKE_SHOTS="${PDOOM_SPIKE_SHOTS:-$work/shots}"`; A8).
 
 ### 13.1 Room shader
 
@@ -1748,7 +2104,7 @@ under `/data/pdoom1-spikes`.
 | `main_ui.gd` is 2.3k lines and coupled to node paths | G hooks break classic | G hides nodes, never removes them; the same-seed check and the flip test every sub-phase |
 | Reparenting live nodes (upgrades, research quality, in-flight box) | a node freed with a sheet | sheets are persistent; restore on leaving g is tested |
 | ModalStack pops the Actions sheet for a door | the player loses their place | door return (5.7.4) |
-| Font licences and provenance | Pip's guard flags fonts; funding note | Q9; records written |
+| Font licences and provenance | Pip's funding note; a record for a file the guard does not scan fails it | Q9, Q15; records only for scanned media (11.5) |
 | A/B scaffolding is temporary in Pip's design ("the loser is deleted", `game_config.gd:90-95`) | G may not fit Pip's plan | G is a fork test build; nothing assumes Pip adopts it |
 | Audio latency on Windows | letters lead strikes | measured 5 ms in Movie Maker; check by ear on Alex's PC in phase 4; compensate only if clearly late (7.2) |
 
@@ -1792,6 +2148,17 @@ Each: the question, then what happens if nobody decides.
   buttons? If nobody decides, it is kept.
 - **Q14.** The Attention spill and Reserve (10.1, 10.2) are Pip's rules to
   settle in code. If nobody decides, G follows today's UI.
+- **Q15.** May the build edit `godot/data/asset_provenance.json` (a metadata
+  exception to AGENTS.md section 1) to record the new art and sounds? If
+  nobody decides, the records are kept in
+  `fork/design/godot-g/provenance.json` as staging and moved into the data
+  file only on the branch that goes to Pip, where his guard must pass (V4).
+- **Q16.** Do the Sol icons belong beside Pip's icons, judged at 32 and 40 px
+  on the G plate? If nobody decides, the build uses the picked icons and
+  Alex judges them from each batch's contact sheet.
+- **Q17.** Is "HOLD ALL HOURS FOR EVENTS" the right caption for the Commit
+  plate when nothing is queued (it runs today's Enter path, which holds every
+  hour for events)? If nobody decides, that caption is used.
 
 ---
 
@@ -1808,3 +2175,33 @@ Each: the question, then what happens if nobody decides.
   stylebox swap.
 - **H-HF's heavier texture** (stencil font, rivets, needle dial).
 - **Changes to Pip's rules** behind 10.1 and 10.2.
+
+---
+
+## 17. Council round 1 changes
+
+Council: Opus, Sol, Neon, 2026-11-22 (`fork/design/godot-g/council/r1-*.md`).
+
+| Item | What | Where it landed |
+|---|---|---|
+| A1 | "g" accepted in both dispatchers; G applied after `_inflight_hiring_box` exists; desk created before nodes move; seeded from live state; nodes back before free; boot and flip tests | 2.1, 2.2, 12.2 (1a) |
+| A2 | `kb` injected into `GKeys.route`; six literal bind checks; `_open_submenu` signature kept, G anchor resolved inside | 2.5, 5.7.4, 8.1, 8.2 |
+| A3 | standalone-safe Esc; barrier off at once; embedded guide leaves Esc to ModalStack; guarded door return | 2.4, 5.7.4, 5.9.4, 6.4 |
+| A4 | G-only Upgrades row builder and research-quality style flag; no modulate dimming | 2.5, 5.8, 5.9.1 |
+| A5 | refusal toast via `rejection_reported`; rows use today's unrounded admission test; parity tests | 2.5, 5.6.1, 5.7.1, 5.7.3, 10.1, 12.2 (1b) |
+| A6 | held = remaining reserve; pre-boundary snapshot or omit; per-option prices; four WATCH sub-states | 5.2, 5.5, 9, 10.14, 12.2 (1c) |
+| A7 | G-only review geometry path, classic untouched; GPaper applies `g_theme`; G geometry test | 2.3, 2.5, 5.11, 5.12 |
+| A8 | pinned read-only design inputs; fork tools never on `ui/g-*`; working guard invocation and `--self-test`; concrete same-seed fixture; spike shots to scratch | 2.5, 12.1, 12.2, 13; build-prompt.md 2-4 |
+| A9 | records only for scanned media; OFL and source beside fonts; provenance audit per asset phase; Alex asked (Q15) | 2.5, 11.5, 12.2, 15 |
+| A10 | no compile probe, two-renderer capture, `simple` fallback; "0" lifted to 4.86:1; custom-drawn text in the contrast capture | 4.5, 5.1.2, 5.14, 12.2 (2a, 3a) |
+| A11 | tier shares fit above the baseline; smoke and paper recipes; paper batch scheduled; in-tray and feed placeholders unused; action icons transparent; G icon map with fallbacks | 5.7.1, 11.1, 11.2, 11.2a |
+| N1 | art judged at 32/40 px beside Pip's rail icons; Alex decides | 11.1, Q16 |
+| N2 | voice pool sized for the tail (12); tail cut and latency checked on Alex's PC | 7.2 |
+| N3 | `feed_changed` before the filter return and await; `first_lever_cleared`; review dateline wording reconciled; Settings row in `Col3` plus the board-fit test; scene font-size census at 125/125 | 2.1, 5.10, 5.13, 6.2, 9, 12.1 |
+| V1 | one Commit plate: Space path with a queue, Enter path without; caption and keycap say which; parity tests | 5.6, 9, 10.7, Q17 |
+| V2 | read-only `EventDialog.current_event`; prices per option only | 2.5, 5.5, 5.11 |
+| V3 | Tab moves focus inside the top `g_*` sheet | 2.4, 5.7.2 |
+| V4 | provenance in a fork staging file unless Alex approves the data edit; moved and guard-checked on `up/<slug>` | 2.5, 11.5, Q15; build-prompt.md 3, 6 |
+| V5 | E closes G-owned modals then opens Staff; F1 toggles the guide; neither acts over an event or the review | 5.9.2, 5.9.4, 8.1, 8.2 |
+| V6 | `hide_panel()` hides, drops the barrier and releases focus at once; no close fade | 2.4, 6.2 |
+| V7 | existing binds win over G keys; conflicting keycap hidden; test with Commit on A | 8.1, 8.2, 12.2 (1b) |

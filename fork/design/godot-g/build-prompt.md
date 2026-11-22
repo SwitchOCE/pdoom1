@@ -45,6 +45,16 @@ today.**
 
 ## 2. What to read first
 
+**Design inputs come from one pinned commit, read-only (A8).** `lean` does not
+carry `fork/design/godot-g/` or `fork/design/hifi3/`, so a worktree cut from
+`lean` does not have them. The pin is the `design/ui-concepts` commit that
+holds the approved spec: `PIN=<fill in the hash when this prompt is approved>`.
+Make one read-only copy for everyone:
+`git worktree add --detach ~/code/pdoom1-design-$PIN $PIN`, then
+`chmod -R a-w ~/code/pdoom1-design-$PIN/fork`. Every brief points workers at
+files in that copy (or at `git show $PIN:<path>`). Nobody edits it; if the
+spec must change, Alex approves a new pin.
+
 1. `fork/design/godot-g/spec.md`: the build spec. It is the plan. Section 12
    gives the phases and sub-phases; you may merge or split them (Alex's scope
    line above). Section 10 lists where the build follows today's code instead
@@ -75,47 +85,60 @@ Per sub-phase:
    restore or check out `.claude/settings.local.json`.
 2. **Scope.** Mechanics unchanged: with the same seed and inputs, a run plays
    out exactly as today. No edits in `godot/scripts/core/`, `godot/data/`
-   (except provenance records, spec.md 2.5) or the gameplay autoloads. No new
+   (except provenance records, and only with Alex's approval, section 6) or the gameplay autoloads. No new
    doom numbers on screen (ADR-0015, ADR-0001). If a worker finds the plan
    needs a mechanics change, stop that sub-phase and tell Alex.
-3. **Upstream rules.** ASCII only in `.gd`, `.json`, `.md`, no emoji anywhere;
+3. **Fork files stay off change branches (A8).** Fork tools
+   (`fork/design/godot-g/tools/*`: `contrast_godot.py`, `cut_icons.py`, the
+   copied `synthesize.py`) and the fork provenance file
+   (`fork/design/godot-g/provenance.json`) are never committed on a `ui/g-*`
+   branch. Commit them as separate fork commits on `lean` (like backlog
+   commits) or on `design/ui-concepts`. A `ui/g-*` squash that lists any
+   `fork/`, `AGENTS.md` or `.claude/` file is a cut item.
+4. **Upstream rules.** ASCII only in `.gd`, `.json`, `.md`, no emoji anywhere;
    scene changes only through `SceneTransition`; font sizes only through
    `base_theme.tres` and `ThemeManager.get_font_size()`; every
    `create_timer(...)` passes `process_always` explicitly.
-4. **Runtime gate** (spec.md 12.1), all on the branch, everything committed:
+5. **Runtime gate** (spec.md 12.1), all on the branch, everything committed:
    - fast gate `python scripts/run_godot_tests.py --quick --ci-mode --min-tests 300`
      exits 0 (2 = did not complete: never a pass);
-   - `python scripts/check_no_emoji.py`, `python tools/check_scene_nav.py`,
-     and Pip's hidden font-size and pause-timer guards run from history
-     (spec.md 12.1 item 3);
+   - `python scripts/check_no_emoji.py`, `python tools/check_scene_nav.py`;
+   - Pip's hidden font-size and pause-timer guards, run against the real
+     worktree with the copy-and-link method in spec.md 12.1 item 3, plus
+     `check_pause_timers.py --self-test`. A copy run from anywhere else scans
+     the wrong tree and "passes" on zero files: never accept that;
    - the scope tripwire `python tools/check_ladder_bump.py --base lean --head HEAD`;
      every listed file must be one spec.md 2.5 names as presentation-only;
-   - the same-seed check (spec.md 12.1 item 5) matches between classic and g;
+   - the same-seed fixture (spec.md 12.1 item 5: seed `g-parity-1`, three
+     accepted plays, an enabled event choice, the review and the next month
+     reached in both runs) matches between classic and g;
    - before (classic) and after (G) screenshots from the real game at
      1920x1080 and 1280x720 for the states the sub-phase touches, and the
      contrast check on the G shots. Say in the report that this box renders
-     on the CPU (spec.md 13.1).
-5. **Scope review.** Spawn the `scope-reviewer` agent on the sub-phase's
+     on the CPU (spec.md 13.1). Screenshots and any spike rerun output go to
+     scratch under `/data/pdoom1-g/`, never into tracked folders (spec.md 13);
+   - in every phase that adds media: the provenance audit (spec.md 11.5).
+6. **Scope review.** Spawn the `scope-reviewer` agent on the sub-phase's
    commit range. Its brief: Alex's words from section 1 above, quoted, plus
    AGENTS.md section 1 and the spec.md sections the sub-phase builds, as the
    plan. Never review a sub-phase in your own context. Pass your worker
    briefs to it only as labelled proposals.
-6. **Merge only if** the runtime gate passed and the scope review has no cut
+7. **Merge only if** the runtime gate passed and the scope review has no cut
    or ask items and says the step moves the goal. Otherwise stop and bring
    Alex its cut and ask items, one line each.
-7. **Squash** into `lean` as ONE commit: the problem line, `Refs #N` if any,
+8. **Squash** into `lean` as ONE commit: the problem line, `Refs #N` if any,
    and the declaration. For G sub-phases that touch only UI paths: no line. If
-   the tripwire listed the presentation-only autoload edits or
-   `data/asset_provenance.json`:
+   the tripwire listed the presentation-only autoload edits (keybinds, the
+   font step), or `data/asset_provenance.json` with Alex's approval (section 6):
    `Ladder-Impact: none -- presentation only: <what>; no run outcome changes`.
    Never a `Ladder-Impact:` line on the branch's own commits. Never edit
    `ladder_version.txt`. If the pre-squash tripwire listed files or the squash
    needed a conflict fixed, run
    `python tools/check_ladder_bump.py --base <squash>~1 --head <squash>`; it
    must exit 0.
-8. **Backlog.** Update `fork/BACKLOG.md` on `lean` in a separate commit.
-9. **Clean up.** Delete the merged branch and its worktree once pushed.
-10. **Never open a PR to Pip's repo** (`PipFoweraker/pdoom1`). Pushing `lean`
+9. **Backlog.** Update `fork/BACKLOG.md` on `lean` in a separate commit.
+10. **Clean up.** Delete the merged branch and its worktree once pushed.
+11. **Never open a PR to Pip's repo** (`PipFoweraker/pdoom1`). Pushing `lean`
     and branches to Alex's fork (`origin`) is fine.
 
 ## 4. Where it runs
@@ -178,8 +201,30 @@ Per sub-phase:
   `fork/design/godot-g/tools/`; copy only the picked files into
   `godot/assets/` at the sizes in spec.md 11.2; add a provenance record for
   each (spec.md 11.5).
+- Smoke and paper are not square objects: use their own recipes
+  (spec.md 11.2a). Generate the action icons on a transparent background.
+- Judge every batch at 32 and 40 px on the G plate beside Pip's rail and
+  resource icons (spec.md 11.1); whether the set belongs is Alex's call.
 - Script-made textures, the shader and the sound are not Sol work (spec.md
   11.2 says which is which).
+
+**Provenance (A9, V4).** Pip's guard (`tools/assets/check_provenance.py`,
+hidden here) scans only image and audio files and treats any other record
+as stale, so records are written only for new `.png`/`.webp`/`.wav` (etc.)
+files; fonts carry `OFL.txt` and `SOURCE.txt` beside them instead (spec.md
+11.5). Where the records go depends on one approval Alex gives with this
+prompt:
+- **If Alex approves editing `godot/data/asset_provenance.json`** as a
+  metadata exception to AGENTS.md section 1 (spec.md Q15): records go there on
+  the `ui/g-*` branch, and the guard runs with the copy-and-link method.
+- **Otherwise (the default):** records go in
+  `fork/design/godot-g/provenance.json` (same shape), committed as a fork
+  commit on `lean`, never on a `ui/g-*` branch. It is staging only: before
+  any change goes to Pip (AGENTS.md section 8), the records move into
+  `godot/data/asset_provenance.json` on the `up/<slug>` branch, and Pip's
+  guard must pass there.
+Every phase that adds media runs the provenance audit (spec.md 11.5) and
+lists the files in its report.
 
 ## 7. Reporting
 
@@ -193,5 +238,7 @@ Per sub-phase:
 
 ## 8. Do not start
 
-This prompt does nothing until Alex approves it. When he does, begin with
-phase 1a (spec.md 12.2).
+This prompt does nothing until Alex approves it. With the approval, Alex
+answers (or leaves on its default) the provenance question in section 6, and
+the pinned design commit is written into section 2. Then begin with phase 1a
+(spec.md 12.2).

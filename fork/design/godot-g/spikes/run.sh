@@ -13,7 +13,7 @@ case "$mode" in
     *) printf 'Usage: %s [all|prepare|shader|shader-compat|font|dateline]\n' "$0" >&2; exit 2 ;;
 esac
 
-mkdir -p "$work"/{home,xdg/data,xdg/config,xdg/cache,tmp,logs,movies,inputs/fonts} \
+mkdir -p "$work"/{home,xdg/data,xdg/config,xdg/cache,tmp,logs,movies,shots,inputs/fonts} \
     "$project/assets/"{fonts,sfx}
 export TMPDIR="$work/tmp"
 touch "$TMPDIR/Xauthority"
@@ -21,7 +21,7 @@ touch "$TMPDIR/Xauthority"
 run_godot() {
     env HOME="$work/home" XDG_DATA_HOME="$work/xdg/data" \
         XDG_CONFIG_HOME="$work/xdg/config" XDG_CACHE_HOME="$work/xdg/cache" \
-        PDOOM_SPIKE_SHOTS="$sources/shots" timeout 150s \
+        PDOOM_SPIKE_SHOTS="${PDOOM_SPIKE_SHOTS:-$work/shots}" timeout 150s \
         xvfb-run -a -f "$TMPDIR/Xauthority" -s '-screen 0 1920x1080x24' \
         "$godot" --path "$project" --audio-driver Dummy "$@"
 }
