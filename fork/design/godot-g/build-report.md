@@ -5,6 +5,109 @@ prompt approved at `b3f9fd14` (spec pin `5e540c1c`).
 
 ---
 
+## E -- 2026-11-23: Alex's build D notes done; build E is ready to play
+
+### What Alex asked, and what changed
+
+From Alex's notes on build D: "Get rid of the smoke. No smoke, thank you. ...
+we shouldn't have warnings if you're starting at zero ... No [torn edges] on
+paper ... Get everything rebuilt with those changes". The PC session added
+two rough spots from the D shots. Each change is one squash in `lean`:
+
+- `5358478d` **No smoke.** The smoke layer, its texture, its drift and its
+  tests are gone. The room still darkens with doom (3a).
+- `3e348af5` **Research and papers at 0 read neutral.** Their tier-0 icons
+  (the same notebook and clipboard) lost the red warning glow, so a run no
+  longer opens with two red icons. Money, compute and reputation start at
+  tier 3 (245,000 / 100 / 50), so none of them starts in a warning state.
+  They keep their tier-0 warnings.
+- `2f3da71b` **Paper with straight edges.** The sheet is cropped to its
+  inside and scaled back, keeping the same colour and texture on events, the
+  month review and the advisor note.
+- `f03deb42` **Badge moved.** In G the build badge now sits in the bottom
+  strip, between FEEDBACK and the plates. "0 ends the run" fits and MENU
+  shows again. Classic keeps it top right.
+  - In a release export (what you play) the badge is only a small "v0.14.5"
+    label, not the amber DEV BUILD. It sat over G's MENU plate there too.
+- `56f845f6` **No raw feed ids.** G's feed shows "Intelligence Opportunity"
+  instead of "FEED | unknown -- Intelligence Opportunity". Classic is
+  unchanged.
+- Fork commits:
+  - `385017a8`: provenance. The smoke record and `cut_smoke.py` are gone;
+    the changed icons and paper are recorded with their tools,
+    `deglow.py` and `straight_paper.py`. All 44 records match their files.
+  - `431ea001`: backlog, including the room cost result.
+
+**Room cost check** (your PC, RX 7800 XT, forward_plus): delta 0.018 ms per
+frame, WITHIN the 2 ms budget. The full room stays the default; recorded in
+the backlog decisions.
+
+### Gates
+
+- **Each branch, on `lean` at `959cf74e`:**
+  - fast gate with 0 failures, except that the paper branch's first run
+    failed its own new test, which is now fixed (see the review section);
+  - emoji, scene-nav, both hidden guards and their self-test;
+  - a tripwire listing nothing, so no `Ladder-Impact` line on any squash;
+  - classic and G same-seed results equal to `d732161d...`.
+- **Final `lean` (`431ea001`) after all five squashes:**
+  - fast gate 1755 tests, 0 failures; every check passes;
+  - tripwire against `959cf74e` lists nothing;
+  - classic and G same-seed results both `d732161d...`.
+
+### Review
+
+One scope reviewer read all five diffs against your words: 0 cut, 0 ask on
+each. I made the small fixes it noted:
+- Five draw-order checks in the room test, lost with the smoke tests, are
+  back.
+- The icon note is a plain comment.
+
+The paper's first gate failed my own new test. It compared the sheet's edge
+with its middle, and the paper is shaded darker toward the bottom. The test
+now compares each edge with the paper just inside it: a torn rim fails it,
+soft shading passes. The old sheet fails it on all four sides (0.73-0.82
+against a 0.9 limit) and the new one passes everywhere (0.93 or more).
+
+### The Windows build
+
+On the Optiplex, `/data/pdoom1-g/builds/E/` holds `PDoom.exe` (97 MB) and
+`PDoom.pck` (66 MB). It was exported from `lean` at `431ea001` with Godot
+4.5.1, "Windows Desktop", and `build_stamp.txt` was restored.
+
+Screenshots are in `/data/pdoom1-g/builds/E-shots/` (CPU renders, same 17
+views as D; the capture's same-seed result matched):
+- `g-01_month1.png`: neutral icons at 0, "0 ends the run" whole, MENU, and
+  the badge at the bottom;
+- `g-06_event.png` and `g-07_review.png`: straight paper;
+- `g-15_late_band5.png`: band 6 with no smoke.
+
+### Open items
+
+1. **Does a month in G read simpler than classic?** Alex is playing D now.
+2. **1600x900:** a few small labels lose contrast there; scaling the compact
+   layout to about 0.85 would fix it. Left as is; it is a backlog todo.
+3. Small gaps noted by the review, not fixed:
+   - a feed item whose event has no name would still show its id (every
+     item seen has a name);
+   - the conference-trip summary (classic and G) still prints
+     "day N -- <source> -- <name>".
+
+### Disk
+
+`/data` has 42 GB free and `/` has 65 GB free. `/data/pdoom1-g` is about
+1.1 GB:
+- builds D and E, 160 MB each (D can go once Alex has moved to E);
+- export templates, 186 MB;
+- step reports and shots, about 350 MB.
+
+Removed: the five change worktrees and branches, and their gate sandboxes and
+guard copies. The only worktrees left are `pdoom1` and `pdoom1-lean`. Most
+of the growth on `/data` since D (18 to 25 GB used) is in other projects'
+folders, not here.
+
+---
+
 ## Final -- 2026-11-23: every G phase is in `lean`; build D is ready to play
 
 ### Is the goal met?
