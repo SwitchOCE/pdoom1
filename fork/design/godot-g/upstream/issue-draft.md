@@ -67,7 +67,7 @@ Godot 4.5.1, "Windows Desktop", release mode, plus a README and a .bat.
   the project name is unchanged and there is no custom user dir
   (`grep -n "config/name\|custom_user_dir" godot/project.godot`). It adds one file,
   `g_ui.cfg`; settings or saves from 0.15.0 may not load cleanly in it.
-- G starts on for a fresh profile. To switch it off: Settings > ALL PROTOCOLS > G desk
+- G starts on. To switch it off: Settings > ALL PROTOCOLS > G desk
   options > "G desk (the new main screen)" off. That restores the saved layout, which
   defaults to classic, the next time the game screen opens (New Game or Continue).
 - A fresh profile sends your anonymous launch ping on its first start, because it is on
@@ -135,13 +135,24 @@ fixture `tests/visual/g_capture.gd`, and the media and fonts below (3.5 MB).
 in the same game state -- the sha256 of `GameManager.state.to_dict()` at the start of
 month 2 -- in classic, in G, and in your 0.14.5 base `4119ddcb`. The fixture is
 `tests/visual/g_capture.tscn`; each run is a fresh process with an empty profile. Set
-`GODOT` to your Godot 4.5.1 binary first, for example:
+`GODOT` to your Godot 4.5.1 binary first, with the one line for your system.
+
+Windows (Git Bash):
 
 ```
-export GODOT="C:/Users/you/tools/godot-4.5.1/Godot_v4.5.1-stable_win64_console.exe"   # Git Bash
-export GODOT="$HOME/tools/Godot_v4.5.1-stable_linux.x86_64"                          # Linux
-export GODOT_BIN="$GODOT"   # tools/check_class_cache.py, which the script runs first, reads this
+export GODOT="C:/Users/you/tools/godot-4.5.1/Godot_v4.5.1-stable_win64_console.exe"
+```
 
+Linux:
+
+```
+export GODOT="$HOME/tools/Godot_v4.5.1-stable_linux.x86_64"
+```
+
+Then, on either:
+
+```
+export GODOT_BIN="$GODOT"   # tools/check_class_cache.py, which the script runs first, reads this
 bash fork/design/godot-g/tools/same_seed.sh                          # classic and G
 git worktree add ../pdoom1-base 4119ddcb                             # today's game
 mkdir -p ../pdoom1-base/godot/tests/visual

@@ -7,8 +7,8 @@ set "APPDATA=%~dp0profile"
 if not exist "%APPDATA%\" mkdir "%APPDATA%"
 if not exist "%APPDATA%\" goto fail
 rem Check the folder can be written to, not only that it exists.
-type nul >"%APPDATA%\.write-test" 2>nul || goto fail
-del "%APPDATA%\.write-test" >nul 2>&1
+type nul >"%APPDATA%\.pdoom-g-write-test" 2>nul || goto fail
+del "%APPDATA%\.pdoom-g-write-test" >nul 2>&1
 goto run
 :fail
 echo Could not create or write to the profile folder:
