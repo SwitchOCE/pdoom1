@@ -21,3 +21,9 @@ VERDICT: CHANGES NEEDED
 ## Non-blocking
 
 None.
+
+## Follow-up at e538021b
+
+VERDICT: GOOD TO GO
+
+In the rebuilt page, **Another month** stays disabled during playback and works afterward. Click attempts during playback leave November selected, and December remains displayed after selecting and replaying it. Verified in real-time Chromium with normal motion, reduced motion, and the silent fallback. Chromium was closed.
