@@ -16,6 +16,7 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 - [todo] bug -- month 1 opens at workday 2 of 21: turn 1 is Tue 4 Jul, the start day says Mon 3 Jul (mechanics: Pip's call) -- Refs #1381 --
 - [todo] bug -- run_godot_tests.py reuses the user:// sandbox between runs, so one run's config.cfg can fail the next (tooling) -- Refs #1382 --
 - [todo] bug -- door submenu key hints are unreadable: 10 px, 60% alpha, under the option icon (UI: in scope for a fork fix; G's skin lifts them in G only) -- Refs #1383 --
+- [todo] bug -- Scouting submenu options show the missing-icon placeholder: scout_read, scout_meetups, scout_shitpost have no entry in icon_mapping.json (display data: in scope for a fork fix; G maps its own icons) -- Refs #1384 --
 
 (Empty. Candidates from Pip's open issues, titles only, untriaged -- check each
 against AGENTS.md section 1 before taking it:
