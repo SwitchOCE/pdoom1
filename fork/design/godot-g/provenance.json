@@ -1,0 +1,25 @@
+{
+  "_note": "Provenance records for G's new media, in the shape of Pip's godot/data/asset_provenance.json 'assets' entries. Kept here, not in Pip's manifest, until Q15 is settled (spec 11.5, V4 default). Merge them into the manifest when a G change goes upstream.",
+  "assets": {
+    "textures/g/panel_grime_9.png": {
+      "sha256": "6d74117814cf8c49867b6398d7aabbce8888a61d9ad9d45e0183f7c28182e4f9",
+      "bytes": 54795,
+      "origin": "procedural_render",
+      "origin_detail": "script-rendered by make_textures.py (G 2a, seed 20261122, numpy noise + Pip's textures/surfaces/tex_painted_metal_panel_512.png mixed in at 5%); fork tool, not committed",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "textures/g/hatch_16.png": {
+      "sha256": "5e44a6bdda3ac7406a0e2633569cf42457eccbc9a9218e0db3571d914cda5c66",
+      "bytes": 143,
+      "origin": "procedural_render",
+      "origin_detail": "script-rendered by make_textures.py (G 2a, analytic 2 px diagonal strokes of the frame colour at 6%); fork tool, not committed",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    }
+  }
+}
