@@ -3,7 +3,7 @@
 # worktree that has ui/g-room (or lean once 3a is merged). Takes about a minute.
 #
 # What it does: boots the real game into the G desk in a throwaway profile (never the real
-# one), holds the room at band 3, turns VSync off, and times frames: plain room (today's dim
+# one), holds the room at band 6 (every layer, floor smoke included), turns VSync off, and times frames: plain room (today's dim
 # room, room effects "off") against the graded room (room effects "full", the shader), same UI,
 # in the order plain, graded, graded, plain (45 warm-up frames, then 240 timed frames each).
 #

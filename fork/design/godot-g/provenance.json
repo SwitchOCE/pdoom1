@@ -370,6 +370,16 @@
       "confidence": "high",
       "author": "unattributed",
       "author_evidence": ""
+    },
+    "textures/g/smoke_floor.png": {
+      "sha256": "5502e33b95c1cb9b7a54289d5a3e972688c8d21939ab70fb0ca3b15c8654839b",
+      "bytes": 824490,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 3b floor smoke batch run1 (spec 11.2a prompt, /data/pdoom1-art/prompts/task-smoke-run1.txt), variant b, smoke-floor-b.png (source sha256 1eede2b3738396ba6c41fa11ed661b363c0220d4ff0f92bfa7873428aefd155f, 2172x724 RGBA); cut by cut_smoke.py (G 3b): densest full-width 4:1 band (rows 27-570), left/right 10% and top 20% feathered to alpha (smoothstep), resized to 2048x512 Lanczos in premultiplied alpha, transparent pixels set to the smoke's mean colour; deterministic; fork tool, not committed; tinted in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
     }
   }
 }
