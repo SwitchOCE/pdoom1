@@ -22,10 +22,10 @@
       "author_evidence": ""
     },
     "textures/g/paper_sheet.png": {
-      "sha256": "2fd4c3cc60d5ae5abe65addf4c340b829114e4e45e1543bc1d539f9e858dae5b",
-      "bytes": 1021661,
+      "sha256": "513147dec10a30c78bd000c9d2cd98056d811fbc9f926b5851166b6d7d2efc51",
+      "bytes": 942389,
       "origin": "generated_model",
-      "origin_detail": "Codex built-in image generation tool, G 2b paper batch (spec 11.2a prompt, /data/pdoom1-art/prompts/task-paper-run1.txt), variant b (source sha256 9e4f184d350a5736d1c1d8990b98187a3df4ccbf05286a190a87bea411f4c60d, 1086x1448); cut by cut_paper.py (G 2b): backing strips trimmed 4/4/4/3 px, whole sheet resized to 1024x1024 Lanczos; fork tool; then recoloured to the spec 4.1 paper tokens by fork/design/godot-g/tools/tint_paper.py (luminance times token mid #b9ac91, scaled so the sheet middle averages #b9ac91; Alex: the first cut was \"far too yellow\")",
+      "origin_detail": "Codex built-in image generation tool, G 2b paper batch (spec 11.2a prompt, /data/pdoom1-art/prompts/task-paper-run1.txt), variant b (source sha256 9e4f184d350a5736d1c1d8990b98187a3df4ccbf05286a190a87bea411f4c60d, 1086x1448); cut by cut_paper.py (G 2b): backing strips trimmed 4/4/4/3 px, whole sheet resized to 1024x1024 Lanczos; fork tool; then recoloured to the spec 4.1 paper tokens by fork/design/godot-g/tools/tint_paper.py (luminance times token mid #b9ac91, scaled so the sheet middle averages #b9ac91; Alex: the first cut was \"far too yellow\"); then cropped 72 px in from each side and scaled back to 1024x1024 Lanczos by fork/design/godot-g/tools/straight_paper.py, so the edges are clean and straight (build E; Alex: no torn edges on the paper; previous sha256 2fd4c3cc60d5ae5abe65addf4c340b829114e4e45e1543bc1d539f9e858dae5b)",
       "evidence": "E:hand-inspection",
       "confidence": "high",
       "author": "unattributed",
@@ -222,10 +222,10 @@
       "author_evidence": ""
     },
     "icons/g_tiers/research-0.png": {
-      "sha256": "1965abc26cd3d568ac0247783cef0ca9747c75fa4a7f26f4a0cffebc2d7599bd",
-      "bytes": 16094,
+      "sha256": "15b32d62729eac0242952bbdbc1a09c951af0bb68e6c82a77f9bf655620d3f0c",
+      "bytes": 14613,
       "origin": "generated_model",
-      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source research-0.png, sha256 4c9ae803263a6a250e812f84bd425ab359e4655474e2afd4838712aef164f1ab); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source research-0.png, sha256 4c9ae803263a6a250e812f84bd425ab359e4655474e2afd4838712aef164f1ab); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator; then the red warning glow removed by fork/design/godot-g/tools/deglow.py (build E; Alex: \"we shouldn't have warnings if you're starting at zero\"; previous sha256 1965abc26cd3d568ac0247783cef0ca9747c75fa4a7f26f4a0cffebc2d7599bd)",
       "evidence": "E:hand-inspection",
       "confidence": "high",
       "author": "unattributed",
@@ -272,10 +272,10 @@
       "author_evidence": ""
     },
     "icons/g_tiers/papers-0.png": {
-      "sha256": "998198e5adbc9f6788b2c595513c809eb32e352f6bc1f00842d107447c181191",
-      "bytes": 14840,
+      "sha256": "99870c2182b562c3fe90f9e444a312da5270136eaf1df25f364cd2ceffa005bc",
+      "bytes": 13581,
       "origin": "generated_model",
-      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source papers-0.png, sha256 5a50ea428d908e3d3c9d5fe671313e97d3349cae2c67f2cc10044a4827521ef3); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source papers-0.png, sha256 5a50ea428d908e3d3c9d5fe671313e97d3349cae2c67f2cc10044a4827521ef3); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator; then the red warning glow removed by fork/design/godot-g/tools/deglow.py (build E; Alex: \"we shouldn't have warnings if you're starting at zero\"; previous sha256 998198e5adbc9f6788b2c595513c809eb32e352f6bc1f00842d107447c181191)",
       "evidence": "E:hand-inspection",
       "confidence": "high",
       "author": "unattributed",
@@ -366,16 +366,6 @@
       "bytes": 27472,
       "origin": "generated_model",
       "origin_detail": "Codex built-in image generation tool, G phase 5 rep tier batch run1 (/data/pdoom1-art/prompts/task-tiers-rep-run1.txt) (source rep-4.png, sha256 321d4d9362cc74a7173fa66e2e56da72b6eec02e4e233a6877d5c0dd32bc5db2); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
-      "evidence": "E:hand-inspection",
-      "confidence": "high",
-      "author": "unattributed",
-      "author_evidence": ""
-    },
-    "textures/g/smoke_floor.png": {
-      "sha256": "5502e33b95c1cb9b7a54289d5a3e972688c8d21939ab70fb0ca3b15c8654839b",
-      "bytes": 824490,
-      "origin": "generated_model",
-      "origin_detail": "Codex built-in image generation tool, G 3b floor smoke batch run1 (spec 11.2a prompt, /data/pdoom1-art/prompts/task-smoke-run1.txt), variant b, smoke-floor-b.png (source sha256 1eede2b3738396ba6c41fa11ed661b363c0220d4ff0f92bfa7873428aefd155f, 2172x724 RGBA); cut by cut_smoke.py (G 3b): densest full-width 4:1 band (rows 27-570), left/right 10% and top 20% feathered to alpha (smoothstep), resized to 2048x512 Lanczos in premultiplied alpha, transparent pixels set to the smoke's mean colour; deterministic; fork tool, not committed; tinted in G with self_modulate only, pixels as cut",
       "evidence": "E:hand-inspection",
       "confidence": "high",
       "author": "unattributed",
