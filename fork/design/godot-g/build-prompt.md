@@ -55,6 +55,11 @@ Make one read-only copy for everyone:
 files in that copy (or at `git show $PIN:<path>`). Nobody edits it; if the
 spec must change, Alex approves a new pin.
 
+**First job: spec.md section 19.** Three small items were still open when the
+council stopped (its two fix rounds were used). Settle them before phase 1a:
+write the outcome into your phase 1a brief and your first report, and if
+one needs a different fix than section 19 proposes, say so to Alex.
+
 1. `fork/design/godot-g/spec.md`: the build spec. It is the plan. Section 12
    gives the phases and sub-phases; you may merge or split them (Alex's scope
    line above). Section 10 lists where the build follows today's code instead

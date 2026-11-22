@@ -45,6 +45,7 @@ Sections:
 16. Not in this build
 17. Council round 1 changes
 18. Council round 2 changes
+19. Still open after the council (resolve before phase 1a)
 
 ---
 
@@ -2308,3 +2309,47 @@ Re-check by Opus and Sol, 2026-11-22 (`fork/design/godot-g/council/r2-*.md`).
 | R2-5 | card summary from `costs_with_window_attention` totals, only when every total is known and equal; otherwise none; paper rows authoritative | 5.5, 12.2 (1c) |
 | R2-6 | provenance guard run with the real worktree as root and the tracked pin from history; only once Q15 is approved or on `up/<slug>`; verified output | 11.5; build-prompt.md 3, 6 |
 | R2-7 | `GIcons` resolver on the Actions sheet, the submenu grid (`submenu_controller.gd:229`) and the Plan drawer, with the fallbacks; rendered textures checked on all three | 2.5, 5.7.1, 5.8, 11.2, 12.2 (1b) |
+
+## 19. Still open after the council (resolve before phase 1a)
+
+The brief allows two fix rounds. After round 2, the round 3 re-check gave
+Opus GOOD TO GO (9/10) and Sol CHANGES NEEDED (9/10) with the three items
+below, so the run stopped here and Neon was not asked to re-check. The items
+are relayed from Sol's and Opus's round 3 answers
+(`fork/design/godot-g/council/r3-*.md`), not yet settled by the council and
+not yet written into the sections above. The build orchestrator settles
+them first (they are small and local) and records the outcome in its report.
+The orchestrator of this run checked the evidence lines named here against
+the code and they hold.
+
+1. **Boot into G still races the first state (Sol, NEW; Opus note 1 says the
+   same from the other side).** With `main.tscn` as the startup scene, the
+   deferred call from R2-1 runs after `_boot_game()` (Sol's 4.5.1 probe:
+   `G_DESK_BEFORE_BOOT=false`; Opus's: `AFTER_AWAIT_boot` printed before
+   `DEFERRED_apply_g`). Through `SceneTransition` the order is the other way
+   round. Sol's fix: call `_apply_ui_layout("g")` (not deferred) after the
+   existing `await get_tree().process_frame` and immediately before
+   `_boot_game()` (`main_ui.gd:360-362`); by then `_ready` has returned, so
+   adding to MainUI's parent is allowed (Sol's probe:
+   `G_DESK_BEFORE_BOOT=true`). Opus's alternative: when `GDesk.setup` finds a
+   fresh game (turn 0, not a load), treat it as the new-game dateline
+   trigger. Sol's fix covers both launch paths and replaces the deferred
+   call in 2.1.
+2. **The phase 1a fixture picks a disabled action (Sol, NEW).** The first
+   non-door slot is Advertise a Role, which is "coming soon" and disabled
+   (`action_bar_renderer.gd:289-291`); `_trigger_action_by_index` skips
+   disabled buttons, so the first queue-growth assert fails. Fix: pin three
+   known admissible inputs, for example three presses of the Purchase
+   Compute slot in the standard starting profile (`data/actions/core.json:13`),
+   and assert the slot's action id, the active layout and the queue growth.
+   The 1b Scouting fixture stays.
+3. **The icon screenshot gate asks for views the game cannot produce (Sol,
+   NEW).** 5.7.1/12.2 require every mapped id on every surface, but Scouting
+   choices never appear in the top-level Actions sheet and door ids such as
+   Travel open a submenu without entering the queue (`actions.gd:207`,
+   `main_ui.gd:1707`). Fix: require each id on the surfaces where it can
+   appear; check fallbacks in 1b and the commissioned textures after import
+   in 2b.
+
+Opus's round 3 note 1 is folded into item 1. Nothing else is open from the
+council.
