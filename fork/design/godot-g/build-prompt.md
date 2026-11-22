@@ -48,7 +48,7 @@ today.**
 **Design inputs come from one pinned commit, read-only (A8).** `lean` does not
 carry `fork/design/godot-g/` or `fork/design/hifi3/`, so a worktree cut from
 `lean` does not have them. The pin is the `design/ui-concepts` commit that
-holds the approved spec: `PIN=<fill in the hash when this prompt is approved>`.
+holds the approved spec: `PIN=505d0db9`.
 Make one read-only copy for everyone:
 `git worktree add --detach ~/code/pdoom1-design-$PIN $PIN`, then
 `chmod -R a-w ~/code/pdoom1-design-$PIN/fork`. Every brief points workers at
