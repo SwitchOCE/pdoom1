@@ -32,6 +32,11 @@ extends Node
 ##   for every G motion (6.2) to end before each shot.
 ## tiers (g, phase 5): month 1 (t1_month1), three Purchase Compute through the action slots,
 ##   the month played as in parity, and month 2 (t2_month2) with other tiers. Not a same-seed run.
+## traces (g, phase 6; the profile's g_ui.cfg sets resources="traces"): the parity fixture
+##   with shots of the trace windows: month 1 (tr1_month1, one point, "no history yet"), month 2
+##   after the hash (tr2_month2), then two more months with one Purchase Compute each
+##   (tr3_month4, four points), and the G desk options modal (tr0_options). The hash line is
+##   the parity fixture's; the shots read the screen only.
 ##   JSON format: {"boxes":[{x,y,w,h,text,node}]} in the PNG's pixel space, as
 ##   fork/design/godot-g/tools/contrast_godot.py reads it.
 ## room (g only, phase 3a): the room forced to each doom band 0-6 with the production material
@@ -166,7 +171,7 @@ func _run() -> void:
 		_check(false, "--mode=dateline needs --layout=g")
 		_finish()
 		return
-	if mode in ["shots", "room", "tiers"] and out_dir == "":
+	if mode in ["shots", "room", "tiers", "traces"] and out_dir == "":
 		_check(false, "--out=DIR is required for %s" % mode)
 		_finish()
 		return
@@ -249,6 +254,15 @@ func _run() -> void:
 	if mode == "shots":
 		await _shots_plan_phase()
 
+	if mode == "traces":
+		# Phase 6: the trace take must be on (the profile's g_ui.cfg), read through the desk so
+		# this file names no G class.
+		var cells = _desk().get("resource_cells") if _desk() != null else null
+		_check(cells is Dictionary and String(cells["money"].get("take")) == "traces",
+			"the G desk shows the trace windows (resources=traces in the profile)")
+		_hide_dev_badge()
+		await _frames(20)
+		await _shot("tr1_month1")
 	if mode == "tiers":
 		# Phase 5 shots (not the same-seed fixture): month 1, then three Purchase Compute
 		# through the retained action slots so month 2 shows other money and compute tiers.
@@ -414,12 +428,109 @@ func _run() -> void:
 		await _shot("t2_month2")
 	if mode == "shots":
 		await _late_band_shot()
+	if mode == "traces":
+		await _settle_month_opening()
+		await _shot("tr2_month2")
+		if not await _traces_months(2):
+			_finish()
+			return
+		await _settle_month_opening()
+		await _shot("tr3_month4")
+		# The options modal where the player meets it: Settings > board > G desk options.
+		SceneTransition.go_to("res://scenes/settings_menu.tscn")
+		var t1 := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t1 < 20000:
+			await _frames(1)
+			var cs := get_tree().current_scene
+			if cs != null and cs.scene_file_path == "res://scenes/settings_menu.tscn":
+				break
+		await _frames(30)
+		var sm := get_tree().current_scene
+		if _check(sm != null and sm.has_method("_open_g_desk_options"), "the Settings screen is up"):
+			sm.call("_show_board")
+			sm.call("_open_g_desk_options")
+			await _frames(10)
+			await _shot("tr0_options")
 	if mode == "shots" and layout == "classic":
 		# Today's guide is a scene of its own, reached from the menus, not over the run.
 		SceneTransition.go_to(GUIDE_SCENE)
 		await _frames(20)
 		await _shot("04_guide")
 	_finish()
+
+
+# --- trace windows (phase 6, spec 5.1.3) -------------------------------------------------------
+
+func _settle_month_opening() -> void:
+	"""Close a month's opening notices (an unlock card's Continue) and let toasts and any
+	crossfade finish before a shot. View only."""
+	for _i in range(5):
+		var cont := _visible_button("Continue")
+		if cont == null:
+			break
+		cont.pressed.emit()
+		await _frames(5)
+	await get_tree().create_timer(6.0, false).timeout
+	_hide_dev_badge()
+
+
+func _traces_months(n: int) -> bool:
+	"""Traces shots: play n more months, each with one Purchase Compute while money allows,
+	committed with Space; events take their first enabled option, the review takes Space."""
+	for k in range(n):
+		await _settle_month_opening()
+		var i := _slot_for("buy_compute")
+		if i >= 0 and not _slot_button(i).disabled and float(GameManager.state.money) >= 50000.0:
+			_main_ui._trigger_action_by_index(i)
+			await _frames(3)
+		await _close_g_sheets()
+		_say("traces: month +%d queue %d, money %d" % [k + 1, int(_main_ui.plan_controller.queue_size()),
+			int(GameManager.state.money)])
+		await _key(KEY_SPACE)
+		if _phase() == "ACTION_SELECTION":
+			# Nothing queued: Enter holds every hour for events (today's empty-queue commit).
+			await _key(KEY_ENTER)
+		if not _check(_phase() != "ACTION_SELECTION", "traces: month +%d committed" % (k + 1)):
+			return false
+		var start_turn: int = int(GameManager.state.turn)
+		var seen0 := _events_seen.size()
+		var handled: Dictionary = {}
+		var reviewed := false
+		var t0 := Time.get_ticks_msec()
+		while not reviewed:
+			await _frames(1)
+			if Time.get_ticks_msec() - t0 > MONTH_TIMEOUT_S * 1000.0:
+				_check(false, "traces: month +%d reached its review" % (k + 1))
+				return false
+			if _top_kind() != "event":
+				continue
+			var dlg = _main_ui.active_dialog
+			if dlg == null or not is_instance_valid(dlg) or handled.has(dlg.get_instance_id()):
+				continue
+			handled[dlg.get_instance_id()] = true
+			await _frames(3)
+			var idx := seen0 + handled.size() - 1
+			var ev_id: String = String(_events_seen[idx]) if idx < _events_seen.size() else "?"
+			if ev_id == "__month_review__":
+				await _key(KEY_SPACE)
+				reviewed = true
+				continue
+			var pick: Button = null
+			for b in _main_ui.active_dialog_buttons:
+				if b is Button and not (b as Button).disabled:
+					pick = b
+					break
+			if not _check(pick != null, "traces: event %s has an enabled option" % ev_id):
+				return false
+			pick.pressed.emit()
+			await _frames(2)
+		t0 = Time.get_ticks_msec()
+		while _phase() != "ACTION_SELECTION" and Time.get_ticks_msec() - t0 < 20000:
+			await _frames(1)
+		if not _check(_phase() == "ACTION_SELECTION" and int(GameManager.state.turn) > start_turn,
+				"traces: month +%d played (turn %d)" % [k + 1, int(GameManager.state.turn)]):
+			return false
+	return true
 
 
 # --- the room (phase 3a, spec 5.14) ------------------------------------------------------------

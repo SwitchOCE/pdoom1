@@ -12,12 +12,21 @@ extends HBoxContainer
 ## with reduced motion it swaps at once. The tween belongs to this node, so it freezes under
 ## the pause menu like every G tween (spec 6.3).
 ##
+## Take b, trace windows (spec 5.1.3, GPrefs.resources = "traces"): the icon plate gives way to
+## a small monitor (TraceWindow) that draws the resource's line from GResourceHistory: the shown
+## amount at the start of each earlier month, then the current shown amount. set_take switches
+## between the two at once; the value, chip, tag and note are the same in both takes.
+##
 ## VIEW-ONLY: writes no game state, draws no random number, creates no timer.
 
 const CROSSFADE_S := 0.25
 const PLATE_LEAD := 40     # money's plate and icon (px on the 1920x1080 canvas)
 const PLATE := 32          # every other resource
 const NOTE_GAP := 12       # value -> rule -> note (spec 5.1.2)
+## Trace windows (spec 5.1.3): 48x46 for money, 40x40 for the rest.
+const MONITOR_LEAD := Vector2(48, 46)
+const MONITOR := Vector2(40, 40)
+const TAKES := ["icons", "traces"]
 
 ## Reduced motion (spec 6.5): the swap is instant when GPrefs.reduced_motion() is on, or when
 ## this flag is set (tests). Static so every cell follows at once.
@@ -33,6 +42,9 @@ var tag_label: Label
 var note: Control = null
 var note_zero: Label = null
 var note_text: Label = null
+## Take b: the trace window, and the take on screen ("icons" | "traces").
+var monitor: TraceWindow
+var take: String = "icons"
 
 ## The tier shown now (-1 before the first amount), and the shown amount it came from.
 var tier: int = -1
@@ -64,6 +76,13 @@ func _init(resource_key: String = "", caps_text: String = "", with_chip: bool = 
 	_back.visible = false
 	plate.add_child(_front)
 	plate.add_child(_back)
+	monitor = TraceWindow.new()
+	monitor.name = "Trace"
+	monitor.custom_minimum_size = MONITOR_LEAD if lead else MONITOR
+	monitor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	monitor.mouse_filter = Control.MOUSE_FILTER_PASS
+	monitor.visible = false
+	add_child(monitor)
 	# Hierarchy (spec 4.4): caps `small` in `dim`; money's value at `header` (rank 2), the rest
 	# at `label` (rank 3); every number in mono.
 	cap = GDesk.make_label(caps_text, "small", GDesk.C.dim, "GCaps")
@@ -93,6 +112,7 @@ func _init(resource_key: String = "", caps_text: String = "", with_chip: bool = 
 	add_child(tag_box)
 	if resource_key == "reputation":
 		_build_note()
+	set_take(GPrefs.resources())
 
 
 func _make_icon(n: String, px: int) -> TextureRect:
@@ -148,6 +168,20 @@ func _build_note() -> void:
 
 
 # --- refresh -------------------------------------------------------------------------------
+
+func set_take(t: String) -> void:
+	"""Tier icons or trace windows (spec 5.1.2-5.1.3); an unknown take shows the icons."""
+	take = t if t in TAKES else "icons"
+	if plate == null:
+		return
+	plate.visible = take == "icons"
+	monitor.visible = take == "traces"
+
+
+func set_trace(pts: Array) -> void:
+	"""The trace window's points (shown amounts, oldest first; the last is the current one)."""
+	if monitor != null:
+		monitor.set_points(pts)
 
 func set_amount(raw: float) -> void:
 	"""Show a raw amount: today's text, and the tier, colour and tag of its shown amount."""
@@ -230,3 +264,95 @@ func is_fading() -> bool:
 
 func icon_rects() -> Array:
 	return [_front, _back]
+
+
+static func make_caption() -> VBoxContainer:
+	"""Take b's caption (spec 5.1.3): the strip's first cell, "TRACE" over "since <Mon YYYY>"
+	or "no history yet". GDesk sets the second line from GResourceHistory.caption()."""
+	var vb := VBoxContainer.new()
+	vb.name = "TraceCaption"
+	vb.add_theme_constant_override("separation", 0)
+	vb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var k := GDesk.make_label("TRACE", "small", GDesk.C.dim, "GCaps")
+	k.name = "Caps"
+	k.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(k)
+	var v := GDesk.make_label("no history yet", "small", GDesk.C.muted)
+	v.name = "Since"
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(v)
+	vb.set_meta("since", v)
+	return vb
+
+
+## A trace window (spec 5.1.3; the mock-up's traceSVG, fork/design/hifi3/H/concept.html):
+## `well` fill, 1 px `frame_hi` border, two faint grid lines, the line auto-scaled to its own
+## min..max (flat in the middle when they are equal), a dashed `blood` zero line only when the
+## line crosses 0, and a dot on the last point (the current amount). One point: a flat dashed
+## line and the dot. No forecast, and no doom trace (ADR-0015).
+class TraceWindow extends Control:
+	const PAD_Y := 7.0
+	const PAD_X := 5.0
+	const ONE_X := 6.0
+	const GRID := Color(147.0 / 255.0, 179.0 / 255.0, 169.0 / 255.0, 0.10)   # `op` at 10 %
+	const HALO := Color(214.0 / 255.0, 206.0 / 255.0, 189.0 / 255.0, 0.22)   # `bone` at 22 %
+	const FLAT := Color(214.0 / 255.0, 206.0 / 255.0, 189.0 / 255.0, 0.30)   # `bone` at 30 %
+	const LINE := Color("#cfc5ae")
+	const DOT := Color("#efe6d0")
+
+	var points: Array = []
+
+	func set_points(pts: Array) -> void:
+		if pts == points:
+			return
+		points = pts.duplicate()
+		queue_redraw()
+
+	static func layout(pts: Array, w: float, h: float) -> Dictionary:
+		"""The geometry the window draws, pure (tests read it): {line: PackedVector2Array,
+		one: bool (one point or none), zero_y: float (-1 when the line does not cross 0)}."""
+		var line := PackedVector2Array()
+		if pts.size() < 2:
+			if pts.size() == 1:
+				line.append(Vector2(w - ONE_X, h * 0.5))
+			return {"line": line, "one": true, "zero_y": -1.0}
+		var lo := float(pts[0])
+		var hi := lo
+		for v in pts:
+			lo = minf(lo, float(v))
+			hi = maxf(hi, float(v))
+		var n := pts.size()
+		for i in range(n):
+			var x := PAD_X + (w - 2.0 * PAD_X) * float(i) / float(n - 1)
+			line.append(Vector2(x, _y(float(pts[i]), lo, hi, h)))
+		var zero_y := _y(0.0, lo, hi, h) if lo < 0.0 and hi > 0.0 else -1.0
+		return {"line": line, "one": false, "zero_y": zero_y}
+
+	static func _y(v: float, lo: float, hi: float, h: float) -> float:
+		if hi == lo:
+			return h * 0.5
+		return PAD_Y + (h - 2.0 * PAD_Y) * (1.0 - (v - lo) / (hi - lo))
+
+	func _draw() -> void:
+		var w := size.x
+		var h := size.y
+		draw_rect(Rect2(Vector2.ZERO, size), GDesk.C.well)
+		draw_rect(Rect2(Vector2(0.5, 0.5), size - Vector2.ONE), GDesk.C.frame_hi, false, 1.0)
+		for g in [1, 2]:
+			var gy := floorf(h * g / 3.0) + 0.5
+			draw_line(Vector2(1, gy), Vector2(w - 1, gy), GRID, 1.0)
+		var lay := layout(points, w, h)
+		var line: PackedVector2Array = lay.line
+		if line.is_empty():
+			return
+		if bool(lay.one):
+			draw_dashed_line(Vector2(ONE_X, h * 0.5), Vector2(w - ONE_X, h * 0.5), FLAT, 1.0, 2.0)
+			draw_circle(line[0], 2.6, DOT, true, -1.0, true)
+			return
+		if float(lay.zero_y) >= 0.0:
+			var zy := float(lay.zero_y)
+			draw_dashed_line(Vector2(1, zy), Vector2(w - 1, zy), GDesk.C.blood, 1.0, 3.0)
+		draw_polyline(line, HALO, 4.0, true)
+		draw_polyline(line, LINE, 1.6, true)
+		draw_circle(line[line.size() - 1], 2.8, DOT, true, -1.0, true)

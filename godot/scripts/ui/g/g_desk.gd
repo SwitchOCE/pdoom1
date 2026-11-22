@@ -90,6 +90,7 @@ var resource_cells: Dictionary = {}    # key -> Control (cell)
 const DELTA_CHIP_KEYS := ["money", "compute", "reputation"]
 var resource_chips: Dictionary = {}    # key -> Label
 var resource_strip: HBoxContainer      # the five GResourceCells and their rules (spec 5.1.2)
+var trace_caption: VBoxContainer       # take b's "TRACE / since <Mon YYYY>" cell (spec 5.1.3)
 const RESOURCE_SEP := 24
 const RESOURCE_SEP_MIN := 8
 var menu_button: Button
@@ -376,6 +377,10 @@ func _build_top_strip() -> void:
 	cells.add_theme_constant_override("separation", RESOURCE_SEP)
 	cells.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(cells)
+	# Phase 6 (spec 5.1.3, take b): the trace caption is the strip's first cell, traces only.
+	trace_caption = GResourceCell.make_caption()
+	trace_caption.visible = GPrefs.resources() == "traces"
+	cells.add_child(trace_caption)
 	for key in RESOURCE_KEYS:
 		# A 1 px frame rule before each cell (the mock-up's cell separators).
 		var rule := ColorRect.new()
@@ -638,6 +643,7 @@ func _on_state(state: Dictionary) -> void:
 	_refresh_dateline(state)
 	for key in RESOURCE_KEYS:
 		(resource_cells[key] as GResourceCell).set_amount(float(state.get(key, 0)))
+	_refresh_traces(state)
 	plate_staff.set_status(str(int(state.get("total_staff", 0))))
 	_refresh_ledger_plate()
 	_refresh_delta_chips()
@@ -691,6 +697,20 @@ func _refresh_dateline(state: Dictionary) -> void:
 		dateline.type_text(t)
 	else:
 		dateline.set_text(t)
+
+
+func _refresh_traces(state: Dictionary) -> void:
+	"""Phase 6 (spec 5.1.3-5.1.4): note the month's sample of shown amounts (GResourceHistory),
+	then the take from GPrefs.resources (applies at once) and each window's line. View only."""
+	GResourceHistory.note_state(state)
+	var take := GPrefs.resources()
+	var ym := GResourceHistory.year_month(state)
+	for key in RESOURCE_KEYS:
+		var cell := resource_cells[key] as GResourceCell
+		cell.set_take(take)
+		cell.set_trace(GResourceHistory.points(key, float(state.get(key, 0)), ym))
+	trace_caption.visible = take == "traces"
+	(trace_caption.get_meta("since") as Label).text = GResourceHistory.caption()
 
 
 func _refresh_delta_chips() -> void:

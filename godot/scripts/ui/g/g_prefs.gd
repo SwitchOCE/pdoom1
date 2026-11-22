@@ -17,7 +17,8 @@ extends RefCounted
 ##                            desk options modal (phase 7).
 ##   typewriter_sound bool -- the dateline's typewriter strikes; default true (Alex, 2026-11-23:
 ##                            "include a mute option for it"). Off: the date still types, silently.
-## (resources arrives with its reader in phase 6.)
+##   resources    String -- "icons" | "traces" (default "icons"; spec 5.1.2-5.1.3, open
+##                            question Q2): the top strip's tier icons or trace windows.
 
 ## THE one place that decides whether G is on when nothing is saved yet. Alex's decision for
 ## the fork's builds: on. Flip this constant to make classic the default again.
@@ -31,8 +32,10 @@ static var _desk: bool = DESK_DEFAULT
 static var _room_effects: String = "full"
 static var _reduced_motion: bool = false
 static var _typewriter_sound: bool = true
+static var _resources: String = "icons"
 
 const ROOM_EFFECTS := ["full", "simple", "off"]
+const RESOURCES := ["icons", "traces"]
 
 
 static func reload_prefs(path: String = PATH) -> void:
@@ -41,6 +44,7 @@ static func reload_prefs(path: String = PATH) -> void:
 	_room_effects = "full"
 	_reduced_motion = false
 	_typewriter_sound = true
+	_resources = "icons"
 	var cf := ConfigFile.new()
 	if cf.load(path) == OK:
 		_desk = bool(cf.get_value(SECTION, "desk", DESK_DEFAULT))
@@ -48,6 +52,8 @@ static func reload_prefs(path: String = PATH) -> void:
 		_room_effects = re if re in ROOM_EFFECTS else "full"
 		_reduced_motion = bool(cf.get_value(SECTION, "reduced_motion", false))
 		_typewriter_sound = bool(cf.get_value(SECTION, "typewriter_sound", true))
+		var rs := String(cf.get_value(SECTION, "resources", "icons"))
+		_resources = rs if rs in RESOURCES else "icons"
 	_loaded = true
 
 
@@ -59,6 +65,7 @@ static func save_prefs(path: String = PATH) -> int:
 	cf.set_value(SECTION, "room_effects", _room_effects)
 	cf.set_value(SECTION, "reduced_motion", _reduced_motion)
 	cf.set_value(SECTION, "typewriter_sound", _typewriter_sound)
+	cf.set_value(SECTION, "resources", _resources)
 	return cf.save(path)
 
 
@@ -89,6 +96,11 @@ static func typewriter_sound() -> bool:
 	return _typewriter_sound
 
 
+static func resources() -> String:
+	_ensure_loaded()
+	return _resources
+
+
 # --- setters (persist = false keeps the change in memory only, for tests) ---------------
 
 static func set_desk(on: bool, persist: bool = true) -> void:
@@ -115,5 +127,12 @@ static func set_reduced_motion(on: bool, persist: bool = true) -> void:
 static func set_typewriter_sound(on: bool, persist: bool = true) -> void:
 	_ensure_loaded()
 	_typewriter_sound = on
+	if persist:
+		save_prefs()
+
+
+static func set_resources(take: String, persist: bool = true) -> void:
+	_ensure_loaded()
+	_resources = take if take in RESOURCES else "icons"
 	if persist:
 		save_prefs()

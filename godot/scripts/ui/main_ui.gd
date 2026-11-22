@@ -871,6 +871,9 @@ func _boot_game():
 		game_manager.resume_in_place()
 		_show_conference_backlog(game_manager.last_conference_trip)
 		return
+	# G trace windows (spec 5.1.4): a new game or a load starts the strip's month history
+	# afresh; the resume above keeps it. Presentation only: no game state, no RNG.
+	GResourceHistory.clear()
 	# L7 (#618): if the welcome screen queued a saved game, boot into it instead
 	# of starting a new run. The flag is one-shot.
 	if GameConfig.pending_load_path != "":
