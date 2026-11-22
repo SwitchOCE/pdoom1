@@ -1,5 +1,5 @@
 function typeDate(withSound) {
-  const line = document.getElementById("dlLine"), btn = document.getElementById("dlPlay"), note = document.getElementById("dlNote");
+  const line = document.getElementById("dlLine"), btn = document.getElementById("dlPlay"), nxt = document.getElementById("dlNext"), note = document.getElementById("dlNote");
   const text = MONTHS[mi];
   if (typing) return;
   if (withSound && window.TypeSound && TypeSound.busy && TypeSound.busy()) return;  // the last play's tail is still sounding
@@ -8,16 +8,17 @@ function typeDate(withSound) {
   if (reduced()) {
     line.textContent = text;
     if (!withSound) return;
-    typing = true; btn.disabled = true;
-    const free = () => { btn.disabled = false; typing = null; };
+    typing = true; btn.disabled = true; nxt.disabled = true;
+    const free = () => { btn.disabled = false; nxt.disabled = false; typing = null; };
     times = playDateline(text, { onDone: free });
     if (!times) { note.textContent = "This browser cannot play the sound."; free(); }
     return;
   }
-  btn.disabled = true;
+  btn.disabled = true; nxt.disabled = true;
   line.innerHTML = '<span id="dlTxt"></span><span class="cur"></span>';
   const txt = document.getElementById("dlTxt");
-  const done = () => { line.textContent = text; btn.disabled = false; typing = null; };
+  // "Another month" is disabled while typing; done() shows the selected date anyway
+  const done = () => { line.textContent = MONTHS[mi]; btn.disabled = false; nxt.disabled = false; typing = null; };
   typing = true;
   if (withSound) times = playDateline(text, { onChar: (i) => { txt.textContent = text.slice(0, i + 1); }, onDone: done });
   if (!times) {
