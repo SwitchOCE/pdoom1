@@ -36,8 +36,9 @@ Unzip to a folder you can write to and keep the files together. Then:
 
 G on and off
 ------------
-G is ON when it starts. Back to today's screen (classic):
+G starts ON for a fresh profile. To switch it off:
   Settings > ALL PROTOCOLS > G desk options > "G desk (the new main screen)" off
+That restores the saved layout, which defaults to classic (today's screen).
 It applies the next time the game screen opens (New Game or Continue from
 the main menu). The same switch turns G back on.
 

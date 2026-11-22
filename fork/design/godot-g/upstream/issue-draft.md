@@ -67,9 +67,9 @@ Godot 4.5.1, "Windows Desktop", release mode, plus a README and a .bat.
   the project name is unchanged and there is no custom user dir
   (`grep -n "config/name\|custom_user_dir" godot/project.godot`). It adds one file,
   `g_ui.cfg`; settings or saves from 0.15.0 may not load cleanly in it.
-- G is on when it starts. Back to classic: Settings > ALL PROTOCOLS > G desk options >
-  "G desk (the new main screen)" off. It applies the next time the game screen opens
-  (New Game or Continue).
+- G starts on for a fresh profile. To switch it off: Settings > ALL PROTOCOLS > G desk
+  options > "G desk (the new main screen)" off. That restores the saved layout, which
+  defaults to classic, the next time the game screen opens (New Game or Continue).
 - A fresh profile sends your anonymous launch ping on its first start, because it is on
   by default (`godot/autoload/game_config.gd:134`). Turn it off in Settings > ALL
   PROTOCOLS > "Anonymous launch ping".
@@ -140,6 +140,7 @@ month 2 -- in classic, in G, and in your 0.14.5 base `4119ddcb`. The fixture is
 ```
 export GODOT="C:/Users/you/tools/godot-4.5.1/Godot_v4.5.1-stable_win64_console.exe"   # Git Bash
 export GODOT="$HOME/tools/Godot_v4.5.1-stable_linux.x86_64"                          # Linux
+export GODOT_BIN="$GODOT"   # tools/check_class_cache.py, which the script runs first, reads this
 
 bash fork/design/godot-g/tools/same_seed.sh                          # classic and G
 git worktree add ../pdoom1-base 4119ddcb                             # today's game
@@ -151,9 +152,14 @@ cp godot/tests/visual/g_capture.gd godot/tests/visual/g_capture.tscn ../pdoom1-b
 Pass rule: each run's line shows `G_CAPTURE result PASS`, and the three `HASH` lines are
 present and equal. On 2026-11-23 (Linux, Godot 4.5.1) all three printed
 `d732161daf4066d4f1bf66cd9de61259cc91bc84d0d764d4156c467a49eab8ea`. The script is written
-for Git Bash too but has not been run on Windows. `MODE=shots OUT=<absolute dir>` in front
-of the same command saves the fixture's screenshots instead, under its own file names
-(`classic-01_month1.png`, `g-01_month1.png`, ...); the seven above are renamed copies.
+for Git Bash too but has not been run on Windows. To save the fixture's screenshots instead,
+under its own file names (`classic-01_month1.png`, `g-01_month1.png`, ...; the seven above
+are renamed copies), give an absolute output folder whose path has no spaces (the script
+splits it on spaces):
+
+```
+MODE=shots OUT="$HOME/g-shots" bash fork/design/godot-g/tools/same_seed.sh
+```
 
 **The PR would ship G off.** The fork has G on by default for Alex's playtests
 (`grep -n DESK_DEFAULT godot/scripts/ui/g/g_prefs.gd`); for your repo it would be off, the
@@ -162,7 +168,8 @@ way #1372 kept "Default is unchanged", so nobody sees G unless they switch it on
 #### What it does not do
 
 - No new teaching. The tutorial is today's: the advisor line is your existing first-lever
-  hint, shown in G as a note; the Player Guide is your guide, opened as an overlay.
+  hint, shown in G as a note, plus one line G adds saying which plate holds it ("Scouting is
+  in Actions, the glowing button."); the Player Guide is your guide, opened as an overlay.
 - No hidden information made visible (ADR-0001, ADR-0015): each tier icon restates the
   number beside it, the optional resource traces (off unless chosen in G options) plot
   month-start amounts the strip has already shown, and the feed line that prints a doom
@@ -261,9 +268,9 @@ call:
 - (c) have G take its colours from the active skin, so "Paperwork (Alex C)" and the others
   recolour G too.
 
-**The terminal look (#529, unparked 2026-10-26, PR #1350).** G leaves it alone: classic
-keeps the terminal look, and it stays free to be built. G's look is a desk in the office
-rather than a terminal.
+**The terminal look (#529, unparked 2026-10-26, PR #1350).** G leaves the separate #529
+CRT package available for future work. G's look is a desk in the office rather than a
+terminal.
 
 **The office as a visual loop (#1319).** G grades only the static office backdrop by doom
 band. It does not address OfficeFloor's tiers or furniture, and it hides OfficeFloor while
