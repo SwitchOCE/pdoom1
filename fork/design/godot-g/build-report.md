@@ -5,6 +5,99 @@ prompt approved at `b3f9fd14` (spec pin `5e540c1c`).
 
 ---
 
+## Checkpoint B -- 2026-11-22: 2a (the look) and 1c (WATCH) merged; a full month in G's look
+
+### Is the goal met yet?
+
+Closer. A whole run plays in G from `lean`, now in G's own look and with a
+working WATCH phase, and the old UI is still one switch away. Every run still
+plays out exactly as today: the same-seed hash is `d732161d...` for classic on
+`lean`, and for classic and G on each merged branch. Still missing from the
+build: paper for the event and the review (2b, gated, merging next), the room
+by doom band (3a, building), floor smoke (3b), the dateline and its sound (4,
+building), tier icons (5, building), motion (7).
+
+**Has the UI and tutorial problem moved?** The UI part, yes, more than at A.
+- **Hierarchy:** the P(Doom) card reads first, then hours and money, then the
+  plan; everything else recedes. Before, everything was one weight.
+- **WATCH:** while the month plays, G says which workday it is, how many
+  hours are still held for events, and what was spent at Commit. The feed
+  folds busy days ("+ 51 more lines"), opens the full log in one click, and
+  hides doom numbers (your Q2), the "Turn Phase" debug line and raw choice
+  ids ("You chose: Issue public response").
+- **Tutorial:** unchanged since A (the advisor note and the glowing ACTIONS
+  plate). No new teaching yet.
+
+Nobody has played it on a real GPU yet. All screenshots are CPU renders.
+
+### What merged into `lean` since A
+
+- `fb92bbcd` **ui: G desk look (2a)** -- fonts (four OFL faces with
+  licences), `g_theme.tres`, hierarchy, script-made panel textures, a "label"
+  font step, the compact view for small windows, one total hours figure
+  (your Q1), no tooltip covering the next Actions row.
+  `Ladder-Impact: none -- presentation only` (ThemeManager font step);
+  post-squash tripwire exit 0.
+- `90e057a5` **ui: G WATCH (1c)** -- playback bar, the Attention card's WATCH
+  and closed faces, Commit's WATCH states, the feed. No tripwire listing;
+  post-squash tripwire exit 0.
+- Fork commits: tools (`make_textures.py`, `make_theme.gd`, `cut_paper.py`),
+  2a's provenance records, backlog lines and your decisions.
+
+Gate for each merge (on the branch, everything committed): fast gate 0
+failures (2a 1632 tests, 1c 1644), emoji, scene-nav, the font-size and
+pause-timer guards and self-test, tripwire, three equal same-seed hashes.
+Scope reviews: 2a and 1c each ended with 0 cut and 0 ask (2a's last ask was
+your 720p answer; 1c's feed fix took two rounds).
+
+Your four checkpoint A defects: the Meetups checkerboard (fixed by 2b's
+icons; Pip's cause filed as #1384), the feed's half line and debug line
+(fixed in 1c), the tooltip over the next row (fixed in 2a), the green event
+card (fixed by 2b's paper).
+
+### The Windows build
+
+`/data/pdoom1-g/builds/B/` on the Optiplex: `PDoom.exe` (97 MB) and
+`PDoom.pck` (64 MB), exported from `lean` at `90e057a5` with Godot 4.5.1
+("Windows Desktop" preset); `build_stamp.txt` restored afterwards. Copy both
+files to the PC and run `PDoom.exe`. G is on by default; classic is in
+Settings > G desk options.
+
+Screenshots of a month in G (1920x1080, CPU renders):
+`/data/pdoom1-g/builds/B-shots/` -- month 1 with the advisor note
+(`g-01_month1`), the Actions sheet (`g-08_actions`), the Plan drawer
+(`g-10_plan`), WATCH just after Commit (`g-05_watch`), mid-month
+(`g-13_w2_mid`), an event (`g-06_event`, still today's panel until 2b), the
+review (`g-07_review`, same), the full feed log (`g-14_feed_full`).
+
+### Questions for you
+
+1. **Does a month in G read simpler than classic?** Play month 1 to the
+   review in the B build (or look at the shots above). Yes / no / what
+   still overwhelms.
+2. (Later, with 2b and 5) the new action and tier icons beside Pip's (Q16),
+   and the recoloured paper.
+
+Bugs filed on Pip's repo since A: #1380, #1381, #1382, #1383, #1384 (the last
+two are classic-only; per your call the fork leaves them).
+
+### Disk
+
+- `/data`: 45 GB free of 70. `/data/pdoom1-g` is 1.1 GB: builds A and B
+  (~310 MB), the build profile (~190 MB), live worktree scratch for 2b, 3a,
+  4 and 5, reports and final shots. About 300 MB of superseded shots,
+  profiles, gate temp folders and old parity runs were deleted this round.
+- `/data/pdoom1-art` 80 MB (the art runs and picks; keep until 5 merges).
+- Home disk: 63 GB free. The image tool's own copies from all nine art runs
+  (~54 MB) were deleted; the other 1.3 GB in `~/.codex/generated_images` is
+  not from this run.
+- Worktrees: `pdoom1-g-theme` and branch `ui/g-theme` removed after 2a's
+  merge. `pdoom1-g-watch` stays until 2b is rebased onto `lean`, then goes.
+  Live: `g-paper` (2b), `g-room` (3a), `g-dateline` (4), `g-tiers` (5),
+  `g-parity-lean`, the read-only design copy.
+
+---
+
 ## Checkpoint A -- 2026-11-22: phase 1a + 1b merged, a G desk you can play by mouse
 
 ### Is the goal met yet?
