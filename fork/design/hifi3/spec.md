@@ -228,6 +228,24 @@ Per band, one step each:
 - **The six screens:** screen 1 is band 1; screens 2 to 4 are band 2 (HIGH,
   40.2%); screen 5 is band 3 (SEVERE, 56.7%); screen 6 is band 5
   (CATASTROPHIC, 81.4%).
+- **Game bands to the palette doc's art bands.** The palette doc
+  (`docs/art/PALETTE_AND_DOOM_INTENSITY.md`) authors five art bands, 0 Cosy
+  to 4 Terminal; the game has seven doom bands. H's layer draws from them
+  like this:
+
+| Game band | Art band H's layer uses | What it takes from it |
+|---|---|---|
+| 0 NOMINAL | 0 Cosy | amber glow, clear bright sky, warm grade |
+| 1 ELEVATED | 0 Cosy, toward 1 Uneasy | amber glow kept; overcast grey sky, a little dimmer |
+| 2 HIGH | 1 Uneasy | orange glow; cooler, desaturated grade (shadows lengthen) |
+| 3 SEVERE | 2 Spooky | red-orange glow, storm-blue sky, low-key |
+| 4 EXTREME | between 2 Spooky and 3 Eldritch | red glow and red sky; no violet yet |
+| 5 CATASTROPHIC | 3 Eldritch | violet glow, the cat's aura and smoke, red-purple sky |
+| 6 TERMINAL | 4 Terminal | fire light over full violet, near-black |
+
+- Purple starts at game band 5, which is the doc's "purple for band 3+".
+  H uses one glow per band, so Spooky's second accent (the blue arc) is
+  not drawn; the cold blue sits in the grade and sky instead.
 - The mock-up fakes the layer with CSS filters and gradients over one
   picture. In the game it should be per-band art layers (window sky,
   monitor glow, floor smoke), as the palette doc already plans. Today's
@@ -322,12 +340,13 @@ a sheet is skipped.
 | 1 | 66 | 5.44 | 4.53 |
 | 2 | 139 | 5.44 | 4.53 |
 | 3 | 201 | 5.25 | 4.53 |
-| 4 | 87 | 5.42 | 4.59 |
+| 4 | 87 | 5.42 | 4.93 |
 | 5 | 113 | 4.91 | 4.53 |
 | 6 | 64 | 4.88 | 4.53 |
 
-The trace take (3.2) measures the same as its state, and screen 1 at every
-band (0 to 6) measures 5.43 or more at 1920 and 4.53 at 1280x720. The
+The trace take (3.2) measures the same as its state (screen 2 with traces:
+5.42 and 4.53), and screen 1 at every band (0 to 6) measures 5.41 or more
+at 1920 and 4.53 at 1280x720. The
 1280x720 floor is the held panel's small grey note.
 
 Three rules came out of the measuring:
@@ -372,11 +391,24 @@ money, compute, research, papers, reputation. Money is the lead cell
 (level 2, 1.3); the rest are level 3. The plain number always stays beside
 the picture. A negative value turns warn colour.
 
+**One shown amount drives the cell.** Each cell reads its resource once
+and turns it into the amount the game prints, at the game's display
+precision (`game_config.gd` `format_money` and `format_scalar`: whole
+units, rounded half away from zero, the sign from the raw value). The
+number, the tier icon, the warn colour and every trace sample all come
+from that shown amount, never from the raw float. So reputation 60 and
+60.25 both print "60" and draw tier 3; 60.5 prints "61" and draws tier 4;
+0.25 prints "0" and draws tier 0. The "0 ends the run" note in the mock-up
+sits beside that same number. The real loss rule is unchanged and stays
+on game state: reputation at 0 or below ends the run, checked on the raw
+value (`game_state.gd:791`).
+
 Reputation is drawn here once, with the note "**0** ends the run" (the 0
-in blood red). That is the game's rule: reputation at 0 or below ends the
-run (`game_state.gd:791`; `death_attribution.gd:46` files it as a
-reputation death). The old tachometer is gone; the mock-up keeps it behind
-`?rep=dial` for comparison only.
+in blood red), set off from the number by a 12 px gap and a 1 px rule so
+the two do not read as one figure ("21 | 0 ends the run", not "21 0").
+`death_attribution.gd:46` files a loss there as a reputation death. The
+old tachometer is gone; the mock-up keeps it behind `?rep=dial` for
+comparison only.
 
 The strip is kept compact: if it crowds the room art, it shrinks first.
 
@@ -402,7 +434,9 @@ screen and nothing else: no forecast, no hidden value (ADR-0001).
 - The icons are new art (6.4).
 
 **Take b: trace windows (`?res=trace`).** Each plate becomes a small
-monitor (64x48 for money, 52x40 for the rest) with the resource's line.
+monitor (48x46 for money, 40x40 for the rest) with the resource's line.
+Cells are a little tighter (9 px side padding), so the strip with its
+caption still clears the dateline.
 
 - **History only.** The line is the amount at the start of each month the
   player has already played, plus the current amount as the last point.
@@ -412,8 +446,14 @@ monitor (64x48 for money, 52x40 for the rest) with the resource's line.
   number beside it gives the size. When the line crosses 0, a dashed blood
   zero line shows where.
 - **No doom trace** (ADR-0015). P(Doom) stays a level on its meter.
-- A tab under the strip reads "TRACE since Jul 2017". In month 1 it reads
-  "no history yet", and each window shows one point on a flat dashed line.
+- The caption is the strip's own first cell, inside its 60 px (top 16 to
+  76), so nothing can sit over it: the plan sheet and the actions sheet
+  start at top 88, the event card at 93. It reads "TRACE" over "since Jul
+  2017"; in month 1, "no history yet", and each window shows one point on
+  a flat dashed line. With the caption, the strip starts at x 462 to 479,
+  at least 52 px right of the longest dateline in the six screens.
+- Samples are shown amounts (above), so a trace never shows a step the
+  number beside it does not.
 - The mock-up's data is `fork/design/hifi/run-state.md`, "Resource
   history". Its Jan-Mar 2018 points are a marked projection, there only so
   screen 6 has a line.
@@ -852,8 +892,10 @@ not final art.
   Recording them is presentation data, but it is new state, so Pip should
   agree it, and it must not change a run.
 - **The Plan sheet and the strip both show money and reputation** in
-  screens 2 and 3: the strip today's amount, the sheet the amount after
-  the listed costs. Whether the sheet should show only the change is open.
+  screen 3 only (screen 2 is the Actions card file, which has no AFTER
+  COSTS): the strip today's amount, the sheet's AFTER COSTS the amount
+  after the listed costs. Whether the sheet should show only the change is
+  open.
 - **The AFTER COSTS preview** is new. It adds no hidden information (it
   subtracts listed costs), but Pip may not want a preview at all.
 - **Fonts:** small at 15 vs the 16 px floor, and the missing 22 step

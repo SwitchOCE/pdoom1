@@ -662,8 +662,8 @@ by script, not final art.
 
 ### Resources, take b: trace windows (`?res=trace`)
 
-The same five cells with a small monitor in place of the icon (64 x 48 for
-money, 52 x 40 for the rest).
+The same five cells with a small monitor in place of the icon (48 x 46 for
+money, 40 x 40 for the rest; sizes after the r2 fix round).
 
 - The line is the amount at the start of each month the player has seen,
   plus today. Data: run-state.md "Resource history".
@@ -671,14 +671,17 @@ money, 52 x 40 for the rest).
   shows shape, not size. When the line crosses 0 a dashed red zero line
   appears (research in states 3, 5, 6).
 - No forecast, no future point, and no doom trace (ADR-0015).
-- A tab under the strip says "TRACE since Jul 2017"; in month 1 it says
-  "no history yet" and each window shows a flat dashed line with one dot.
+- The strip's first cell says "TRACE" over "since Jul 2017"; in month 1
+  it says "no history yet" and each window shows a flat dashed line with
+  one dot.
 - State 6's Jan-Mar points are a marked projection in run-state; a real
   build draws what the run recorded.
 
 **Compact first:** both takes fit in one 60px strip between the dateline
 and the meter. Take b first ran into the dateline in state 6; the TRACE
-note moved into the tab and the windows shrank, not the art.
+note moved into a tab under the strip, which the plan sheet then covered
+(council r2, N1). It is now back inside the strip as a compact first cell,
+with smaller windows and tighter cells, not smaller art.
 
 ### Mixer ids
 
@@ -742,3 +745,34 @@ The 720 floor (4.53) is the held panel's small grey note. Layout checks
   (compute, papers, the upper money and research tiers). Pip may want
   different ones.
 - Take b needs the game to record month-start amounts; it does not today.
+
+## Fix round r2 (fork/design/hifi3/council/r2-agreed.md)
+
+- **S3, one shown amount.** `shownAmount()` / `shownText()` turn each
+  resource into the amount the game prints (game_config.gd format_money /
+  format_scalar: whole units, round half away from zero, sign from the raw
+  value). The number, the tier, the warn colour and the trace samples all
+  read it. Checked in the page: rep 60 and 60.25 print "60", tier 3; 60.5
+  prints "61", tier 4; 0.25 prints "0", tier 0; -0.4 prints "-0" (as the
+  game does), tier 0; money 20,000.4 prints "$20,000", tier 1, and
+  20,000.5 prints "$20,001", tier 2. `money()` now rounds too, as the game
+  does. The real loss rule stays game state (game_state.gd:791, raw
+  reputation <= 0).
+- **N1, caption.** The TRACE caption is the strip's first cell (`.rc.cap`),
+  inside top 16..76, so the plan sheet and actions sheet (top 88) and the
+  event card (top 93) cannot cover it. Strip left edge with the caption,
+  measured: x 462 (states 1-3), 479 (states 4-6); longest dateline text
+  ends at 427 (state 4). Checked in states 1-6 with `?res=trace`, plus a
+  new state 2 trace render for the check (not a deliverable).
+- **opus 1.** "0 ends the run" sits 12 px after the number, behind a 1 px
+  rule (frame-hi), so "21" and "0" no longer read as one figure.
+- **neon 2.** Event option badge ink `#c9bc9f` -> `#e4dac4`.
+- **opus 3, sol 1.** Spec only (2.4 mapping table; 7.1 says state 3).
+- Element ids, classes and the SOUND block are unchanged. The caption's
+  class changed from `.rs .cap` (a tab) to `.rc.cap` (a cell); it is still
+  inside `#resources`.
+- **Contrast after r2** (composited pixels; lowest at 1920 / 1280x720;
+  nothing under 4.5): s1 5.44 / 4.53; s2 5.44 / 4.53; s3 5.25 / 4.53; s4
+  5.42 / 4.93; s5 4.91 / 4.53; s6 4.88 / 4.53; s2-trace 5.42 / 4.53;
+  s3-trace 5.25 / 4.53; s5-trace 4.91 / 4.53; s6-trace 4.88 / 4.53;
+  band-0..6 5.41-5.44 / 4.53. Layout checks clean in every state.

@@ -4,7 +4,8 @@ The revised H (`fork/design/hifi3/H/`) with a texture pass drawn from
 HighFleet and amber control panels: worn painted steel, rivets and screws,
 stencilled labels, counter windows, an analogue dial and warning plates.
 Texture only. Same layout, hierarchy, colour by band, tier icons (take a),
-ids and dateline as H.
+ids and dateline as H. The one layout change is the council round 2 fix to
+the reputation cell (section 7).
 
 - `concept.html?state=1` first screen (July, band 1), `?state=4` WATCH
   event (14 November, band 2), `?state=5` end of month (December review,
@@ -14,7 +15,8 @@ ids and dateline as H.
   lists every text box for the contrast measure.
 - `render.sh 1 4 5` renders `sN.png` (1920x1080) and `sN-720.png`
   (1280x720), runs the check and `contrast.py`, and writes `sN.webp`.
-- WebP (committed): `s1.webp` 271 KB, `s4.webp` 270 KB, `s5.webp` 292 KB.
+- WebP (committed): `s1.webp` 271 KB, `s4.webp` 270 KB, `s5.webp` 292 KB
+  (re-rendered after the round 2 fix).
   The PNGs stay uncommitted.
 
 The texture is one CSS block at the end of the style sheet, headed
@@ -28,12 +30,12 @@ pixels from any reference.
 | # | Element | H | H-HF |
 |---|---|---|---|
 | 1 | Panels (`.pnl`) | warm near-black, hairline frame, smut + grain, H's metal texture image at 5% | olive-black painted steel (`--hf-paint`), dark edge, pressed rim (a groove 6-7px in), lit top lip and shadowed bottom lip; worn top coat mottle (`--hf-mottle`) with H's smut and grain; chipped paint and fine scratches (`--hf-chips`, `--hf-scratch`) masked to the outer 18-22px of each plate. H's metal texture image is gone. |
-| 2 | Corner ticks (`.cn`) | brass L-ticks | domed rivets, 8px, 4px in from each corner (same elements). On the resource strip only the top two show; the lower ones give way to the warning plate. |
+| 2 | Corner ticks (`.cn`) | brass L-ticks | domed rivets, 8px, 4px in from each corner (same elements). On the resource strip they sit 3px in from each end. |
 | 3 | Panel headers (`.ph`) | Barlow 600 on the panel | stencil caps on a slightly raised band, with a groove under it |
 | 4 | Labels | Barlow Condensed caps | Big Shoulders Stencil Text 700, same sizes and colours. Two label sets moved from dim to muted, because the stencil's cut strokes measure lighter: the resource names and the band ladder. The resource cells keep H's text widths (`min-width`) so the strip does not move. |
 | 5 | Numbers | plain mono | each in a dark counter window (`.ctr`): money, compute, research, papers, reputation, held hours. Money, the P(Doom) percentage and the WATCH clock also get drum seams between characters (`.ctr.drum`), like a rolling counter. Same digits, sizes and colours. |
 | 6 | P(Doom) | 270-degree arc on the panel | the same arc, band ticks and colours, set in an analogue dial: steel bezel with four slotted screws, a sunk face, a fine scale every 2.5 (no numerals), a needle at the level running under the number's window, a hub, and one faint glass reflection. The ladder bars become lamps with bezels; the lit one glows in its band colour. The panel keeps its band-coloured frame and top edge. |
-| 7 | "0 ends the run" | small grey text after the reputation number | the same words on a small black warning plate with a dull amber/black hazard stripe at its left end |
+| 7 | "0 ends the run" | small grey text after the reputation number | the same words on a small black warning plate with a dull amber/black hazard stripe at its left end, 12px of bare steel clear of the number's window (section 7) |
 | 8 | Rack (`.kb`) | flat dark plates | raised push plates (lit top lip, dark bottom lip, shadow); stencil labels; key caps sunk into the steel. The hint glow (state 1), the disabled hatch (state 4) and the hidden keys are H's. |
 | 9 | Commit (`.cmt`) | flat button | the same button with a bevel; when muted (idle, wait, month in play) it sits in a dark guard ring. Colours and states are H's. |
 | 10 | PAUSED FOR YOU (state 4) | red-bordered strip, red dot | a warning plate: hazard stripes at both ends, a domed red lamp, stencil words. Same red border and text colour. |
@@ -51,12 +53,12 @@ Unchanged:
 - All data and wording.
 - The dateline and its sound block. The `SOUND_START..SOUND_END` block has the same sha256 as H's. `soundControl()` and the dateline code are identical; a real-time test shows the button locks on click and unlocks when the tail ends.
 
-Layout check: every element box was compared with H's at 1920x1080, in the same state. This covered:
+Layout check (first round): every element box was compared with H's at 1920x1080, in the same state. This covered:
 - each `data-el`;
 - each resource cell, rack plate and ladder row;
 - each header, clock, speed row and event option.
 
-That is 36 boxes in state 1, 42 in state 4 and 36 in state 5; no box differs. The self-check is clean, with no text under 16px.
+That is 36 boxes in state 1, 42 in state 4 and 36 in state 5; no box differed. After the round 2 fix only the resource strip and its cells differ (section 7). The self-check is clean, with no text under 16px.
 
 Mixer ids: the same `data-el` and ids as H for the three states: `room`, `dateline`, `doom`, `resources`, `rack`, `plan` (states 1 and 5), `feed` (state 4), `held` and `commit` (both `data-el=commit`), `advisor` (state 1), `event` (state 4), `review` (state 5), `cat`.
 
@@ -137,3 +139,70 @@ H's floor at 720 was 4.53, set by the held note. H-HF's is 4.76, set by the same
 ## 6. Section for spec.md
 
 The text added to `spec.md` section 8 is the short version of sections 1-2 above.
+
+## 7. Fix round (hifi3 council round 2)
+
+From `council/r2-agreed.md`: S3, opus 1 and neon 1. Only `concept.html`
+and this file changed; ids and classes are unchanged.
+
+**S3, tier precision.** The tier icon, the printed number and its colour now
+all come from one shown amount (`shownAmount()`, `shownText()` in
+`concept.html`). This is the number as the game prints it
+(`godot/autoload/game_config.gd`, `format_grouped`, `format_money`,
+`format_scalar`):
+- whole dollars and whole units;
+- ties rounded away from zero.
+
+Before this fix the icon read the raw value: reputation 60.25 printed "60"
+with a tier 4 icon, and 0.25 printed "0" with a tier 1 icon. Tested at the
+boundaries, through the helpers and the real renderer:
+
+| Raw | Shown | Tier |
+|---|---|---|
+| rep 60 / 60.25 / 59.5 | 60 | 3 |
+| rep 60.5 | 61 | 4 |
+| rep 0.25 / -0.4 | 0 | 0 |
+| rep 0.5 | 1 | 1 |
+| money 20,000.4 | $20,000 | 1 |
+| money 20,000.5 | $20,001 | 2 |
+| money 99,999.5 | $100,000 | 3 |
+| compute 99.5 | 100 | 3 |
+
+Notes on the rule:
+- "0 ends the run" is a fixed rule line and reads nothing from the
+  amount. The real loss check (reputation <= 0) stays game state.
+- The three states' own amounts are whole numbers, so their renders do not
+  change.
+- H-HF has no trace take, so there are no trace samples to round.
+- If designer A's H fix differs from this rule, this page should follow H.
+
+**opus 1, the gap.** The warning plate now starts 16px after the number,
+which leaves 12px of bare steel between the number's window and the plate.
+Before, the gap was 2px, and "50" and "0 ends the run" read as one string.
+
+**neon 1, the padding.** The reputation cell has 5px more right padding
+(17px instead of 12px). The plate no longer runs into the cell's padding,
+and it now ends 17px from the strip's edge (it was about 2px before). The
+strip's lower rivets are back, since the plate no longer reaches them.
+
+**Layout effect:** the strip keeps its right edge and grows 27px to the left:
+- state 1: from 512 to 485;
+- states 4 and 5: from 529 to 502.
+
+The 27px comes from the reputation cell, which goes from 218px to 245px
+wide; the other four cells only shift. The dateline still clears the strip:
+"NOVEMBER 14, 2017" ends near x 425. Every other element box still matches
+H's.
+
+**Contrast after the fix** (re-measured on the re-rendered pixels): the
+same minima as in section 3. The lowest boxes are elsewhere, and the
+reputation cell's text is unchanged in colour and ground.
+
+| State | Lowest at 1920 | Lowest at 720 |
+|---|---|---|
+| 1 | 5.47 | 4.76 |
+| 4 | 5.82 | 5.00 |
+| 5 | 5.47 | 4.76 |
+
+A small game quirk worth knowing: `format_scalar` prints "-0" for values
+between -0.5 and 0. The mock-up shows 0 instead.

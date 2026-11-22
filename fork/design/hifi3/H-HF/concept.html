@@ -335,18 +335,20 @@ body{font-family:var(--sans);color:var(--bone)}
 .rc.lead .v .ctr{--adv:16.8px}
 
 /* --- resources: a long nameplate bar, grooves between the cells, sockets for the tier icons --- */
-.rs .cn.tl,.rs .cn.tr{top:5px}.rs .cn.bl,.rs .cn.br{display:none}
-.rs .cn.tl{left:3px}.rs .cn.tr{right:3px}
+.rs .cn.tl,.rs .cn.tr{top:5px}.rs .cn.bl,.rs .cn.br{bottom:5px}
+.rs .cn.tl,.rs .cn.bl{left:3px}.rs .cn.tr,.rs .cn.br{right:3px}
 .rc+.rc{border-left:1px solid rgba(0,0,0,.7);box-shadow:inset 1px 0 0 rgba(226,216,186,.06)}
 .rc .pv{background:var(--hf-recess);border-color:#050604;box-shadow:var(--hf-sunk)}
 /* the stencil's cut strokes read lighter than Barlow: labels that were dim in H are muted here */
 .rc .k{font-family:var(--stencil);font-weight:700;letter-spacing:1.5px;color:var(--muted)}
 /* the stencil sets narrower than Barlow: each cell keeps H's measured text width, so the strip does not move */
-.rc-compute .tx{min-width:66px}.rc-research .tx{min-width:73px}.rc-papers .tx{min-width:54px}.rc-rep .tx{min-width:139px}
+.rc-compute .tx{min-width:66px}.rc-research .tx{min-width:73px}.rc-papers .tx{min-width:54px}
 /* reputation's rule on a small warning plate: a hazard stripe at the left, the words on black */
-/* (the plate starts 6px after the number, past its window, and runs 10px into the cell's right
-   padding, so the strip keeps H's width; the strip's lower rivets give way to it) */
-.rc .v small.warnp{position:relative;display:inline-block;margin:0 -10px 0 6px;padding:2px 4px 2px 7px;border:1px solid rgba(122,94,39,.6);border-left:0;background:#0c0b09;vertical-align:1px}
+/* the plate stands clear of the number: 12px of bare steel between the number's window and the
+   plate (council r2, opus 1), and the reputation cell has 5px more right padding so the plate is
+   not snug against the strip's edge (neon 1). The strip grows by that much to the left. */
+.rc.rc-rep{padding-right:17px}
+.rc .v small.warnp{position:relative;display:inline-block;margin:0 0 0 16px;padding:2px 5px 2px 8px;border:1px solid rgba(122,94,39,.6);border-left:0;background:#0c0b09;vertical-align:1px}
 .rc .v small.warnp:before{content:"";position:absolute;left:0;top:-1px;bottom:-1px;width:4px;background:var(--hf-hazard)}
 .rc .v .ctr{--off:4px}
 .rc .v .ctr:before{inset:-3px -4px}
@@ -798,15 +800,23 @@ var TIERS = {   // [upper bound of tiers 0..3]; tier 4 is anything above. Tier 0
 function tierOf(k, v){ var t = TIERS[k]; for (var i=0;i<t.length;i++) if (v <= t[i]) return i; return 4; }
 var RES_LABEL = {money:"MONEY", compute:"COMPUTE", research:"RESEARCH", papers:"PAPERS", rep:"REPUTATION"};
 function resValue(k, d){ return k==="money" ? d.money : k==="rep" ? d.rep : d[k]; }
+/* The shown amount: what the game prints, at its display precision (game_config.gd
+   format_grouped / format_money / format_scalar): whole dollars and whole units, ties
+   rounded away from zero. The tier icon, the number and its colour all read this one
+   amount, so the icon never steps where the number does not (60.25 shows 60, tier 3;
+   0.25 shows 0, tier 0). The game prints "-0" for -0.5 < v < 0; the mock-up shows 0.
+   The real loss rule (reputation <= 0) stays game state; "0 ends the run" is a fixed
+   rule line and reads nothing from the amount. */
+function shownAmount(v){ var n = Math.round(Math.abs(v)); return n === 0 ? 0 : (v < 0 ? -n : n); }
+function shownText(k, n){ return k==="money" ? money(n) : (n<0?"-":"")+Math.abs(n).toLocaleString("en-US"); }
 function resources(d){
   var r = tag(panel("rs"), "resources");
   RES_KEYS.forEach(function(k){
-    var v = resValue(k, d), lead = k==="money";
-    var shown = k==="money" ? money(v) : String(Math.round(v));
-    var vis = "<span class=pv><img src='assets/tiers/"+k+"-"+tierOf(k, v)+".svg' alt='"+RES_LABEL[k].toLowerCase()+", tier "+tierOf(k, v)+"'></span>";
+    var n = shownAmount(resValue(k, d)), lead = k==="money", t = tierOf(k, n);
+    var vis = "<span class=pv><img src='assets/tiers/"+k+"-"+t+".svg' alt='"+RES_LABEL[k].toLowerCase()+", tier "+t+"'></span>";
     // H-HF: the number sits in a counter window (.ctr); reputation's rule sits on a small warning plate (.warnp)
     var note = k==="rep" ? "<small class=warnp><b>0</b> ends the run</small>" : "";
-    r.appendChild(el("div","rc rc-"+k+(lead?" lead":""), vis+"<div class=tx><span class=k>"+RES_LABEL[k]+"</span><span class='v"+(v<0?" neg":"")+"'><span class='ctr"+(lead?" drum":"")+"'>"+shown+"</span>"+note+"</span></div>"));
+    r.appendChild(el("div","rc rc-"+k+(lead?" lead":""), vis+"<div class=tx><span class=k>"+RES_LABEL[k]+"</span><span class='v"+(n<0?" neg":"")+"'><span class='ctr"+(lead?" drum":"")+"'>"+shownText(k, n)+"</span>"+note+"</span></div>"));
   });
 }
 

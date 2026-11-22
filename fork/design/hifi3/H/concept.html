@@ -126,18 +126,17 @@ body{font-family:var(--sans);color:var(--bone)}
 .rc .k{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--dim)}
 .rc .v{font:500 var(--t3)/1 var(--mono);color:var(--bone)}
 .rc .v.neg{color:var(--warn)}
-.rc .v small{font:400 var(--t1)/1 var(--sans);color:var(--dim);margin-left:8px}
+.rc .v small{font:400 var(--t1)/1 var(--sans);color:var(--dim);margin-left:12px;padding-left:12px;border-left:1px solid var(--frame-hi)}
 .rc .v small b{font-weight:500;color:#d27f6c}
 .rc.lead .pv{width:52px;height:52px}.rc.lead .pv img{width:48px;height:48px}
 .rc.lead .k{color:var(--muted)}
 .rc.lead .v{font-size:var(--t4)}
-.rc.note .k{color:var(--muted)}
-.rc.note .v{font:400 var(--t1)/1 var(--sans);color:var(--dim)}
 /* take b: a trace window where the tier icon was; the y axis scales to the line (no fixed zero) */
-.rs .cap{position:absolute;left:-1px;top:100%;margin-top:-1px;padding:5px 10px 6px;background:#14110e;border:1px solid var(--frame);border-top:none;font:400 var(--t1)/1 var(--sans);color:var(--muted);white-space:nowrap}
-.rs .cap b{font:600 var(--t1)/1 var(--cond);letter-spacing:2px;color:var(--muted);margin-right:8px}
-.rc .tw{flex:none;width:52px;height:40px;background:#090b0a;border:1px solid rgba(147,179,169,.22);box-shadow:inset 0 0 10px rgba(0,0,0,.7)}
-.rc.lead .tw{width:64px;height:48px}
+.rs.tr .rc{padding:0 9px;gap:6px}
+.rc.cap .k{color:var(--muted)}
+.rc.cap .v{font:500 var(--t1)/1 var(--cond);letter-spacing:.5px;color:var(--muted)}
+.rc .tw{flex:none;width:40px;height:40px;background:#090b0a;border:1px solid rgba(147,179,169,.22);box-shadow:inset 0 0 10px rgba(0,0,0,.7)}
+.rc.lead .tw{width:48px;height:46px}
 .rc .tw svg{display:block}
 
 /* ===== shortcut rack: dark plates, one per menu, with its key ===== */
@@ -360,7 +359,7 @@ body{font-family:var(--sans);color:var(--bone)}
 .ev-o{margin-top:18px;display:flex;flex-direction:column;gap:10px}
 .ev-o>div{display:grid;grid-template-columns:40px 1fr auto;align-items:center;height:62px;border:1px solid rgba(35,28,20,.45);padding:0 14px;font:700 var(--t2)/1 var(--type);color:var(--ink);background:rgba(255,248,230,.06)}
 .ev-o>div.on{border:2px solid var(--ink);background:rgba(255,246,222,.16);padding:0 13px;box-shadow:inset 4px 0 0 var(--amber)}
-.ev-o i{font:700 var(--t1)/1 var(--cond);font-style:normal;background:#2b231a;color:#c9bc9f;text-align:center;padding:4px 0;width:28px}
+.ev-o i{font:700 var(--t1)/1 var(--cond);font-style:normal;background:#2b231a;color:#e4dac4;text-align:center;padding:4px 0;width:28px}
 .ev-o span{font:700 var(--t1)/1 var(--type);color:var(--ink);display:flex;align-items:center;gap:12px}
 .ev-o .nm{display:flex;flex-direction:column;gap:6px}
 .ev-o .nm em{font:700 var(--t1)/1 var(--type);font-style:normal;color:#0b2621}
@@ -519,7 +518,7 @@ function ic(key, icCls, plateCls){
    ------------------------------------------------------------------ */
 function el(tag, cls, html, style){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; if(style) e.setAttribute("style",style); return e; }
 function add(e, parent){ (parent||S).appendChild(e); return e; }
-function money(n){ return (n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-US"); }
+function money(n){ return (n<0?"-":"")+"$"+Math.round(Math.abs(n)).toLocaleString("en-US"); }   // whole dollars, rounded (game_config.gd format_money)
 function pad2(n){ return String(n).padStart(2,"0"); }
 function corners(box){ ["tl","tr","bl","br"].forEach(function(c){ box.appendChild(el("i","cn "+c)); }); return box; }
 function panel(cls, html, style){ return corners(add(el("div","abs pnl "+cls, html, style))); }
@@ -806,9 +805,15 @@ var TIERS = {   // [upper bound of tiers 0..3]; tier 4 is anything above. Tier 0
 function tierOf(k, v){ var t = TIERS[k]; for (var i=0;i<t.length;i++) if (v <= t[i]) return i; return 4; }
 var RES_LABEL = {money:"MONEY", compute:"COMPUTE", research:"RESEARCH", papers:"PAPERS", rep:"REPUTATION"};
 function resValue(k, d){ return k==="money" ? d.money : k==="rep" ? d.rep : d[k]; }
+/* The shown amount: the number exactly as the game prints it (game_config.gd format_money /
+   format_scalar: whole units, round half away from zero, sign from the raw value). The tier,
+   the warn colour and every trace sample are read from this, never from the raw float, so
+   60.25 reputation prints "60" and draws tier 3, like 60. The real loss rule stays game state. */
+function shownAmount(v){ var n = Math.round(Math.abs(v)); return v < 0 ? -n : n; }
+function shownText(k, v){ var t = Math.round(Math.abs(v)).toLocaleString("en-US"); return (v<0?"-":"")+(k==="money" ? "$"+t : t); }
 function traceSVG(k, d, w, h){
-  var col = RES_KEYS.indexOf(k) + 1, pts = HIST.slice(0, d.hist).map(function(r){ return r[col]; });
-  pts.push(resValue(k, d));                         // now: the amount on screen
+  var col = RES_KEYS.indexOf(k) + 1, pts = HIST.slice(0, d.hist).map(function(r){ return shownAmount(r[col]); });
+  pts.push(shownAmount(resValue(k, d)));            // now: the amount on screen, as printed
   var s = '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg">';
   for (var g=1; g<3; g++) s += '<line x1="0" x2="'+w+'" y1="'+(h*g/3).toFixed(1)+'" y2="'+(h*g/3).toFixed(1)+'" stroke="rgba(147,179,169,.10)" stroke-width="1"/>';
   if (pts.length < 2){   // month 1: nothing seen yet
@@ -826,15 +831,16 @@ function traceSVG(k, d, w, h){
   return s + '<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2.8" fill="#efe6d0"/></svg>';
 }
 function resources(d){
-  var r = tag(panel("rs"), "resources");
-  if (TRACE) r.appendChild(el("div","cap","<b>TRACE</b>"+(d.hist ? "since "+HIST[0][0].charAt(0)+HIST[0][0].slice(1).toLowerCase()+" 2017" : "no history yet")));
+  var r = tag(panel("rs"+(TRACE?" tr":"")), "resources");
+  // take b's caption is the strip's own first cell, inside its 60 px, so no sheet below can cover it
+  if (TRACE) r.appendChild(el("div","rc cap","<div class=tx><span class=k>TRACE</span><span class=v>"+(d.hist ? "since "+HIST[0][0].charAt(0)+HIST[0][0].slice(1).toLowerCase()+" 2017" : "no history yet")+"</span></div>"));
   RES_KEYS.forEach(function(k){
-    var v = resValue(k, d), lead = k==="money";
-    var shown = k==="money" ? money(v) : String(Math.round(v));
-    var vis = TRACE ? "<span class=tw>"+traceSVG(k, d, lead?64:52, lead?48:40)+"</span>"
+    var raw = resValue(k, d), v = shownAmount(raw), lead = k==="money";
+    var shown = shownText(k, raw);
+    var vis = TRACE ? "<span class=tw>"+traceSVG(k, d, lead?48:40, lead?46:40)+"</span>"
                     : "<span class=pv><img src='assets/tiers/"+k+"-"+tierOf(k, v)+".svg' alt='"+RES_LABEL[k].toLowerCase()+", tier "+tierOf(k, v)+"'></span>";
     var note = k==="rep" ? "<small><b>0</b> ends the run</small>" : "";
-    r.appendChild(el("div","rc"+(lead?" lead":""), vis+"<div class=tx><span class=k>"+RES_LABEL[k]+"</span><span class='v"+(v<0?" neg":"")+"'>"+shown+note+"</span></div>"));
+    r.appendChild(el("div","rc"+(lead?" lead":""), vis+"<div class=tx><span class=k>"+RES_LABEL[k]+"</span><span class='v"+(raw<0?" neg":"")+"'>"+shown+note+"</span></div>"));
   });
 }
 
@@ -1166,7 +1172,7 @@ function selfCheck(){
     if (cs.display!=="inline" && e.clientWidth>0 && e.scrollWidth > e.clientWidth+1) out.push("OVERFLOW-X "+e.className+" "+t);
     var r = e.getBoundingClientRect();
     if (r.left<st.left-1||r.top<st.top-1||r.right>st.right+1||r.bottom>st.bottom+1) out.push("OFF-STAGE "+t);
-    var box = e.closest(".cap,.pnl,.paper,.cmt,.kb,.q-row,.ac,.att,.foot,.dl,.card,.cf-det,.cf-res>div,.clk,.paused,.speed,.ev-o>div,.rv-btn");
+    var box = e.closest(".pnl,.paper,.cmt,.kb,.q-row,.ac,.att,.foot,.dl,.card,.cf-det,.cf-res>div,.clk,.paused,.speed,.ev-o>div,.rv-btn");
     if (box && box!==e){ var b=box.getBoundingClientRect();
       if (r.right>b.right+1||r.bottom>b.bottom+1||r.left<b.left-1||r.top<b.top-1) out.push("OUTSIDE "+e.className+" "+t); }
     if (parseFloat(cs.fontSize)<16) out.push("SMALL "+cs.fontSize+" "+t);

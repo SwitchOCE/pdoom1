@@ -182,7 +182,7 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
     <p>The colour follows P(Doom), never the calendar. At the lowest band the office is a little brighter: still dim and worn, never cheerful. Each band darkens the room and shifts its palette and texture further, so the pressure rises visibly as doom climbs. The controls stay where they are and stay readable. Below is the same first screen at each of the game's seven doom bands.</p>
   </div>
   <div class="grid bandstrip" id="bandstrip"></div>
-  <p class="figcap">Only the doom band changes between these screens: the room's light, palette and texture. Click any one to see it full size.</p>
+  <p class="figcap">Only the doom band changes between these screens: the room's light, palette and texture. The P(Doom) panel is left at 20.0% in all seven, so you see the room change and nothing else. Click any one to see it full size.</p>
 </section>
 
 <section class="wrap" id="resources">
@@ -192,7 +192,7 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
   </div>
   <div class="tabs" id="resPick"><span class="lab">Moment</span></div>
   <div class="grid g2" id="resPair"></div>
-  <p class="figcap">The same screen with each take. The thresholds for each tier are in the spec.</p>
+  <p class="figcap">The same screen with each take. The thresholds for each tier are in the spec. The traces for July to November come from a real run; December and April are made-up examples, and January to March are drawn as a straight line between them, so the late-game trace is a projected example, not a recorded run.</p>
 </section>
 
 <section class="wrap" id="dateline">
@@ -226,7 +226,7 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
 <section class="wrap" id="alternatives">
   <div class="sec-head"><span class="n">06</span><h2>Other takes</h2></div>
   <div class="reading">
-    <p><b>H-HF</b> is the same design as H with a heavier texture, drawn from the worn instrument panels of games like HighFleet: painted metal, needles, stencilled labels and rivets. Its layout, hierarchy, colours and resources are H's. <b>C, E and G</b> are the three other layouts from the same study. They show the earlier texture: they have H's dark look, but not this round's hierarchy, resource or colour changes.</p>
+    <p><b>H-HF</b> is the same design as H with a heavier texture, drawn from the worn instrument panels of games like HighFleet: painted metal, needles, stencilled labels and rivets. Its layout, hierarchy, colours and resources are H's. <b>C, E and G</b> are the three other layouts from the same study. They show the earlier texture: they have H's dark look, but not the newer hierarchy, resources or colour by band.</p>
   </div>
   <div class="designs" id="designs"></div>
 </section>
@@ -371,6 +371,12 @@ from band 5 the late layer: a violet multiply in the shadows, a violet aura and 
 </li><li>
 <b>The six screens:</b> screen 1 is band 1; screens 2 to 4 are band 2 (HIGH, 40.2%); screen 5 is band 3 (SEVERE, 56.7%); screen 6 is band 5 (CATASTROPHIC, 81.4%).
 </li><li>
+<b>Game bands to the palette doc's art bands.</b> The palette doc (<code>docs/art/PALETTE_AND_DOOM_INTENSITY.md</code>) authors five art bands, 0 Cosy to 4 Terminal; the game has seven doom bands. H's layer draws from them like this:
+</li></ul>
+<div class="tbl-wrap"><table><thead><tr><th>Game band</th><th>Art band H's layer uses</th><th>What it takes from it</th></tr></thead><tbody><tr><td>0 NOMINAL</td><td>0 Cosy</td><td>amber glow, clear bright sky, warm grade</td></tr><tr><td>1 ELEVATED</td><td>0 Cosy, toward 1 Uneasy</td><td>amber glow kept; overcast grey sky, a little dimmer</td></tr><tr><td>2 HIGH</td><td>1 Uneasy</td><td>orange glow; cooler, desaturated grade (shadows lengthen)</td></tr><tr><td>3 SEVERE</td><td>2 Spooky</td><td>red-orange glow, storm-blue sky, low-key</td></tr><tr><td>4 EXTREME</td><td>between 2 Spooky and 3 Eldritch</td><td>red glow and red sky; no violet yet</td></tr><tr><td>5 CATASTROPHIC</td><td>3 Eldritch</td><td>violet glow, the cat's aura and smoke, red-purple sky</td></tr><tr><td>6 TERMINAL</td><td>4 Terminal</td><td>fire light over full violet, near-black</td></tr></tbody></table></div>
+<ul><li>
+Purple starts at game band 5, which is the doc's "purple for band 3+". H uses one glow per band, so Spooky's second accent (the blue arc) is not drawn; the cold blue sits in the grade and sky instead.
+</li><li>
 The mock-up fakes the layer with CSS filters and gradients over one picture. In the game it should be per-band art layers (window sky, monitor glow, floor smoke), as the palette doc already plans. Today's game does not key the office art to doom.
 </li></ul>
 <h3>2.5 Type</h3>
@@ -424,8 +430,8 @@ Grime must never sit under small text at a strength that breaks the contrast flo
 <h3>2.8 The contrast floor</h3>
 <p>All text must reach <b>4.5:1</b> against what is really behind it.</p>
 <p>H was measured on the rendered pixels, not on the CSS colours, so grain, grime, dim layers and antialiasing all count. The background is the median of the text's box. The text colour is the stroke core: the k-th pixel farthest from the background, where k = max(4, 0.5% of the box). Text under a sheet is skipped.</p>
-<div class="tbl-wrap"><table><thead><tr><th>State</th><th>Text boxes</th><th>Lowest at 1920</th><th>Lowest at 1280x720</th></tr></thead><tbody><tr><td>1</td><td>66</td><td>5.44</td><td>4.53</td></tr><tr><td>2</td><td>139</td><td>5.44</td><td>4.53</td></tr><tr><td>3</td><td>201</td><td>5.25</td><td>4.53</td></tr><tr><td>4</td><td>87</td><td>5.42</td><td>4.59</td></tr><tr><td>5</td><td>113</td><td>4.91</td><td>4.53</td></tr><tr><td>6</td><td>64</td><td>4.88</td><td>4.53</td></tr></tbody></table></div>
-<p>The trace take (3.2) measures the same as its state, and screen 1 at every band (0 to 6) measures 5.43 or more at 1920 and 4.53 at 1280x720. The 1280x720 floor is the held panel's small grey note.</p>
+<div class="tbl-wrap"><table><thead><tr><th>State</th><th>Text boxes</th><th>Lowest at 1920</th><th>Lowest at 1280x720</th></tr></thead><tbody><tr><td>1</td><td>66</td><td>5.44</td><td>4.53</td></tr><tr><td>2</td><td>139</td><td>5.44</td><td>4.53</td></tr><tr><td>3</td><td>201</td><td>5.25</td><td>4.53</td></tr><tr><td>4</td><td>87</td><td>5.42</td><td>4.93</td></tr><tr><td>5</td><td>113</td><td>4.91</td><td>4.53</td></tr><tr><td>6</td><td>64</td><td>4.88</td><td>4.53</td></tr></tbody></table></div>
+<p>The trace take (3.2) measures the same as its state (screen 2 with traces: 5.42 and 4.53), and screen 1 at every band (0 to 6) measures 5.41 or more at 1920 and 4.53 at 1280x720. The 1280x720 floor is the held panel's small grey note.</p>
 <p>Three rules came out of the measuring:</p>
 <ul><li>
 Disabled controls are shown with a dashed edge and hatching, not by fading the text. Their labels keep dim colour (5:1 or better).
@@ -453,7 +459,8 @@ States: normal; rising; warning (band 5+).
 </li></ul>
 <h3>3.2 Resources</h3>
 <p>One strip across the top, between the dateline and the P(Doom) meter (right edge at 1384, top 16, 60 px tall). Five cells, left to right: money, compute, research, papers, reputation. Money is the lead cell (level 2, 1.3); the rest are level 3. The plain number always stays beside the picture. A negative value turns warn colour.</p>
-<p>Reputation is drawn here once, with the note "<b>0</b> ends the run" (the 0 in blood red). That is the game's rule: reputation at 0 or below ends the run (<code>game_state.gd:791</code>; <code>death_attribution.gd:46</code> files it as a reputation death). The old tachometer is gone; the mock-up keeps it behind <code>?rep=dial</code> for comparison only.</p>
+<p><b>One shown amount drives the cell.</b> Each cell reads its resource once and turns it into the amount the game prints, at the game's display precision (<code>game_config.gd</code> <code>format_money</code> and <code>format_scalar</code>: whole units, rounded half away from zero, the sign from the raw value). The number, the tier icon, the warn colour and every trace sample all come from that shown amount, never from the raw float. So reputation 60 and 60.25 both print "60" and draw tier 3; 60.5 prints "61" and draws tier 4; 0.25 prints "0" and draws tier 0. The "0 ends the run" note in the mock-up sits beside that same number. The real loss rule is unchanged and stays on game state: reputation at 0 or below ends the run, checked on the raw value (<code>game_state.gd:791</code>).</p>
+<p>Reputation is drawn here once, with the note "<b>0</b> ends the run" (the 0 in blood red), set off from the number by a 12 px gap and a 1 px rule so the two do not read as one figure ("21 | 0 ends the run", not "21 0"). <code>death_attribution.gd:46</code> files a loss there as a reputation death. The old tachometer is gone; the mock-up keeps it behind <code>?rep=dial</code> for comparison only.</p>
 <p>The strip is kept compact: if it crowds the room art, it shrinks first.</p>
 <p><b>Take a: tier icons (the default).</b> Each cell has a dark plate (40 px; 48 px for money) with a tier icon. The tier is read from the amount on screen and nothing else: no forecast, no hidden value (ADR-0001).</p>
 <div class="tbl-wrap"><table><thead><tr><th>Resource</th><th>Tier 0</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th><th>Tier 4</th><th>Where the lines come from</th></tr></thead><tbody><tr><td>Money</td><td>0 or less</td><td>up to $20,000</td><td>up to $99,999</td><td>up to $249,999</td><td>$250,000 and up</td><td>$20,000 is the game's low-funds warning (<code>main_ui.gd:1021</code>)</td></tr><tr><td>Compute</td><td>0 or less</td><td>1-49</td><td>50-99</td><td>100-199</td><td>200 and up</td><td>round steps; the start is 100</td></tr><tr><td>Research</td><td>0 or less</td><td>1-9</td><td>10-19</td><td>20-49</td><td>50 and up</td><td>10 and 20 are the costs of Safety Research and Publish Safety Paper</td></tr><tr><td>Papers</td><td>0</td><td>1</td><td>2-4</td><td>5-9</td><td>10 and up</td><td>round steps</td></tr><tr><td>Reputation</td><td>0 or less</td><td>1-20</td><td>21-30</td><td>31-60</td><td>61 and up</td><td>20 and 30 are the game's reputation warnings (<code>main_ui.gd:1015</code>); 0 ends the run</td></tr></tbody></table></div>
@@ -466,7 +473,7 @@ The thresholds are a proposal. Where the game has no line of its own (compute, p
 </li><li>
 The icons are new art (6.4).
 </li></ul>
-<p><b>Take b: trace windows (<code>?res=trace</code>).</b> Each plate becomes a small monitor (64x48 for money, 52x40 for the rest) with the resource's line.</p>
+<p><b>Take b: trace windows (<code>?res=trace</code>).</b> Each plate becomes a small monitor (48x46 for money, 40x40 for the rest) with the resource's line. Cells are a little tighter (9 px side padding), so the strip with its caption still clears the dateline.</p>
 <ul><li>
 <b>History only.</b> The line is the amount at the start of each month the player has already played, plus the current amount as the last point. Nothing ahead of today: no forecast, no projected point.
 </li><li>
@@ -474,7 +481,9 @@ The icons are new art (6.4).
 </li><li>
 <b>No doom trace</b> (ADR-0015). P(Doom) stays a level on its meter.
 </li><li>
-A tab under the strip reads "TRACE since Jul 2017". In month 1 it reads "no history yet", and each window shows one point on a flat dashed line.
+The caption is the strip's own first cell, inside its 60 px (top 16 to 76), so nothing can sit over it: the plan sheet and the actions sheet start at top 88, the event card at 93. It reads "TRACE" over "since Jul 2017"; in month 1, "no history yet", and each window shows one point on a flat dashed line. With the caption, the strip starts at x 462 to 479, at least 52 px right of the longest dateline in the six screens.
+</li><li>
+Samples are shown amounts (above), so a trace never shows a step the number beside it does not.
 </li><li>
 The mock-up's data is <code>fork/design/hifi/run-state.md</code>, "Resource history". Its Jan-Mar 2018 points are a marked projection, there only so screen 6 has a line.
 </li><li>
@@ -809,7 +818,7 @@ This affects what a player can do, so it is Pip's call too.
 </li><li>
 <b>Take b needs history.</b> The game keeps no month-start amounts today. Recording them is presentation data, but it is new state, so Pip should agree it, and it must not change a run.
 </li><li>
-<b>The Plan sheet and the strip both show money and reputation</b> in screens 2 and 3: the strip today's amount, the sheet the amount after the listed costs. Whether the sheet should show only the change is open.
+<b>The Plan sheet and the strip both show money and reputation</b> in screen 3 only (screen 2 is the Actions card file, which has no AFTER COSTS): the strip today's amount, the sheet's AFTER COSTS the amount after the listed costs. Whether the sheet should show only the change is open.
 </li><li>
 <b>The AFTER COSTS preview</b> is new. It adds no hidden information (it subtracts listed costs), but Pip may not want a preview at all.
 </li><li>
