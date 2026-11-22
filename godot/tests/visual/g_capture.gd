@@ -36,7 +36,8 @@ extends Node
 ##   (the room's debug-only override), then `simple` and `off` at band 3; PNG + JSON as shots.
 ##   Add Godot's --rendering-method gl_compatibility to capture the Compatibility renderer.
 ## roomcost (g only): the room's cost check (spec 5.14 "Cost"): mean frame time of the plain
-##   room against the graded room, same UI, VSync off, and the 2 ms budget verdict. Needs no
+##   room against the graded room (band 6: shader, glows and floor smoke), same UI, VSync off,
+##   and the 2 ms budget verdict. Needs no
 ##   seed in the profile; run it in an isolated profile (APPDATA / XDG_DATA_HOME) on the PC
 ##   being measured, at 1920x1080.
 ##
@@ -158,7 +159,7 @@ func _run() -> void:
 		return
 	if out_dir != "":
 		DirAccess.make_dir_recursive_absolute(out_dir)
-	if mode != "roomcost":
+	if not mode.ends_with("cost"):
 		_check(String(GameConfig.game_seed) == SEED,
 			"user://config.cfg carried last_seed (GameConfig.game_seed=%s)" % GameConfig.game_seed)
 	GameManager.event_triggered.connect(func(ev): _events_seen.append(String(ev.get("id", "?"))))
@@ -191,7 +192,7 @@ func _run() -> void:
 	BaselineSimulator.get_baseline_score_if_ready(String(GameManager.state.game_seed_str))
 	await _frames(10)
 
-	if mode != "roomcost":
+	if not mode.ends_with("cost"):
 		_check(String(GameManager.state.game_seed_str) == SEED,
 			"run seed is %s (got %s)" % [SEED, GameManager.state.game_seed_str])
 	_check(_active_layout() == layout, "active layout is %s (got %s)" % [layout, _active_layout()])
@@ -423,20 +424,21 @@ func _room_shots() -> void:
 
 func _room_cost() -> void:
 	"""roomcost: mean frame time of the plain room (`off`, today's) against the graded room
-	(`full`), same UI, VSync off, band 3. Order plain, graded, graded, plain; each run is
+	(`full`), same UI, VSync off, band 6, the worst case: every layer, floor smoke included
+	(spec 5.14 "Cost"). Order plain, graded, graded, plain; each run is
 	ROOMCOST_WARMUP frames then ROOMCOST_FRAMES samples of wall-clock frame time. Budget: the
 	graded room may cost at most 2 ms a frame more than the plain one (spec 5.14 "Cost")."""
 	var room = _desk().get("room")
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
-	room.call("debug_force_band", 3)
+	room.call("debug_force_band", 6)
 	_say("ROOMCOST renderer %s, adapter %s %s, window %s" % [RenderingServer.get_current_rendering_method(),
 		RenderingServer.get_video_adapter_vendor(), RenderingServer.get_video_adapter_name(),
 		str(get_viewport().get_visible_rect().size)])
 	var runs := {"off": [], "full": []}
 	for m in ["off", "full", "full", "off"]:
 		room.call("set_mode", m)
-		room.call("debug_force_band", 3)
+		room.call("debug_force_band", 6)
 		await _frames(ROOMCOST_WARMUP)
 		var last := Time.get_ticks_usec()
 		for _i in range(ROOMCOST_FRAMES):
