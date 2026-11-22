@@ -562,3 +562,183 @@ fixes (see the fix-round reply).
 Nothing visible on the six screens changed (the button is hidden in
 renders), so the stills were not redone.
 
+
+## Addendum (fork/design/hifi3/designer-brief-H2.md)
+
+What changed, in one list:
+
+- The screen now ranks: P(Doom) first, then Attention left and money, then
+  the plan; everything else is smaller and dimmer.
+- The room's colour follows the doom band, never the month: seven steps,
+  band 0 brighter than H was, each band darker, colder then redder, grimier.
+- The resources are one strip at the top, money to reputation, drawn as
+  tier icons (take a, the default) or as small trace windows (take b,
+  `?res=trace`). Reputation is drawn once; the dial is off unless
+  `?rep=dial`.
+- Every element the mixer lifts carries `data-el` and an id.
+- Kept as they were: the dateline and its sound (SOUND_START..SOUND_END
+  untouched), the agreed rules, no person, Pip's icons.
+
+New URL parameters: `?band=0..6` (forces the room layer only), `?res=trace`
+(take b), `?rep=dial` (the old reputation dial, for comparison).
+
+### Hierarchy
+
+| Level | What | How it is made |
+|---|---|---|
+| 1 | P(Doom) | The largest panel (480 x 330, top right, the first place the eye lands after the dateline). The only panel framed in its own colour: the band's stroke on the border and a top edge, with a soft glow. Percent at 40px mono, band name at 22px, the 7-band ladder lit at the current row. |
+| 2 | Money | The lead cell of the resource strip: 48px icon plate (others 40), 28px value (others 22), label in `--muted` (others `--dim`). First in the strip, nearest the dateline. |
+| 2 | Attention left | The top block of the plan panel, under a "ATTENTION -- HOURS LEFT" header: 22px values, 16 x 26 hour pips, the pool colours (planning amber, operating teal). |
+| 3 | The plan | Queue lines in the plan panel at 16px `--muted`, row numbers muted; the plan sheet in states 2-3 keeps its paper. |
+| 3 | Compute, research, papers, reputation | 22px values in `--bone`, 40px plates, 16px condensed labels in `--dim`. Reputation adds "0 ends the run" with the 0 in red. |
+| 4 | Menu rack, held-for-events, Commit | 16px labels in `--muted`, icons at .82 opacity. Held hours at 22px. Commit is muted (idle) while nothing is queued and lights only when there is something to commit. |
+| -- | Dateline | A title, outside the ranking: it marks the month and then sits still. |
+
+Nothing below level 1 is under 4.5:1 (table below): recession is done with
+size, weight, position and a step from `--bone` to `--muted` to `--dim`,
+never by going under the line.
+
+### Colour by doom band
+
+The room and the panels are two layers. The doom layer sits over the room
+photo only (`room(d)` in concept.html); the panels never change colour with
+the band. The layer is picked by `bandIndex(doom)` from the game's bands
+(DOOM_STATUS_BANDS), not by month.
+
+| Band | Name (P(Doom)) | Room brightness / saturation / contrast | Grade and glow | Sky | Texture: vignette / grain / smut | Extra |
+|---|---|---|---|---|---|---|
+| 0 | NOMINAL (under 15) | .80 / .70 / 1.03 | warm amber grade, amber monitor glow | warm, bright dawn | .18 / .07 / 0 | -- |
+| 1 | ELEVATED (15-37) | .70 / .58 / 1.05 | amber-brown | grey | .28 / .10 / .04 | -- |
+| 2 | HIGH (37-52) | .61 / .46 / 1.08 | cold grey-blue grade, orange glow | blue-grey | .38 / .14 / .08 | -- |
+| 3 | SEVERE (52-67) | .50 / .38 / 1.10 | night blue, red-orange glow | night blue | .46 / .17 / .12 | -- |
+| 4 | EXTREME (67-80) | .44 / .32 / 1.12 | wine-red grade, red glow | red | .54 / .20 / .16 | -- |
+| 5 | CATASTROPHIC (80-92) | .38 / .28 / 1.14 | red grade, violet glow | violet-red (colour blend) | .62 / .23 / .20 | late layer: violet bleed, the cat's aura and smoke |
+| 6 | TERMINAL (92+) | .31 / .26 / 1.18 | as 5, deeper | violet-red | .72 / .26 / .24 | late layer plus fire light from below |
+
+- **Brighter start:** H used .62 brightness for its first month; band 0 is
+  now .80 and band 1 (state 1, ELEVATED 20%) .70. Still a dim, grimy
+  office: the paper (advisor note, plan sheet, review) stays the only light
+  thing, and the room never gets a light source of its own.
+- **What changes per band:** the room darkens (brightness), drains
+  (saturation), hardens (contrast); the grade moves amber, grey-blue, night
+  blue, wine, violet (the palette doc's order); one glow on the far monitor
+  goes amber to red to violet; the window sky follows; soot and grain
+  thicken; the vignette closes in. Bands 5-6 add the late layer.
+- **States:** state 1 band 1; states 2-4 band 2 (HIGH 40.2); state 5 band 3
+  (SEVERE 56.7); state 6 band 5 (CATASTROPHIC 81.4).
+- **Band strip:** `band-0.webp` .. `band-6.webp` are state 1's desk with
+  `?band=N`. The meter in them still reads 20% ELEVATED: `?band` forces the
+  room only, so the strip compares rooms. In the game the band and the
+  meter always agree.
+
+### Resources, take a: tier icons (default)
+
+Five cells, left to right: money (lead), compute, research, papers,
+reputation. Each is a dark plate with a tier icon, then the label and the
+plain amount. The tier is read from that same amount, nothing else: no
+forecast, no hidden value (ADR-0001). Reputation keeps "0 ends the run".
+
+| Resource | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Where the lines come from |
+|---|---|---|---|---|---|---|
+| Money | 0 or less | up to $20,000 | up to $99,999 | up to $249,999 | $250,000+ | $20,000 is the game's low-funds warning (main_ui.gd:1021) |
+| Compute | 0 or less | 1-49 | 50-99 | 100-199 | 200+ | round steps; start is 100 |
+| Research | 0 or less | 1-9 | 10-19 | 20-49 | 50+ | 10 and 20 are the costs of Safety Research and Publish Safety Paper |
+| Papers | 0 | 1 | 2-4 | 5-9 | 10+ | round steps |
+| Reputation | 0 or less | 1-20 | 21-30 | 31-60 | 61+ | 20 and 30 are the game's reputation warnings (main_ui.gd:1015); 0 ends the run |
+
+In the run: money $245,000 is tier 3, $12,400 tier 1; research -12 and -6
+are tier 0 (and the value turns `--warn`); reputation 50 and 34 tier 3, 21
+tier 2.
+
+**New art:** 25 SVGs in `assets/tiers/`, `{money,compute,research,papers,rep}-{0..4}.svg`,
+64 viewBox, painted in Pip's icon manner (dark plate, warm gradients, one
+amber accent, red only on tier 0). Money: empty cash box, one coin, three
+coins, a stack, a pile. Compute: dead chip, lit chip, one server, three
+units, two racks. Research: blank notebook, one sheet, open notebook, three
+books, file box. Papers: empty clipboard, one paper, three fanned, bound
+journal, shelf. Reputation: shattered medal, cracked medal, tarnished,
+brass with star, brass with laurel. They are drafts for Pip's artist, made
+by script, not final art.
+
+### Resources, take b: trace windows (`?res=trace`)
+
+The same five cells with a small monitor in place of the icon (64 x 48 for
+money, 52 x 40 for the rest).
+
+- The line is the amount at the start of each month the player has seen,
+  plus today. Data: run-state.md "Resource history".
+- The y-axis has no anchor: it scales to the line's own min and max, so it
+  shows shape, not size. When the line crosses 0 a dashed red zero line
+  appears (research in states 3, 5, 6).
+- No forecast, no future point, and no doom trace (ADR-0015).
+- A tab under the strip says "TRACE since Jul 2017"; in month 1 it says
+  "no history yet" and each window shows a flat dashed line with one dot.
+- State 6's Jan-Mar points are a marked projection in run-state; a real
+  build draws what the run recorded.
+
+**Compact first:** both takes fit in one 60px strip between the dateline
+and the meter. Take b first ran into the dateline in state 6; the TRACE
+note moved into the tab and the windows shrank, not the art.
+
+### Mixer ids
+
+Every element has `data-el` and the same id (unless several exist):
+
+| data-el / id | Element |
+|---|---|
+| room | the room photo and doom layer |
+| dateline | the typed dateline |
+| doom | P(Doom) meter |
+| resources | the resource strip (both takes) |
+| rack | menu rack |
+| plan | plan panel (the terminal) |
+| feed | the WATCH feed (state 4) |
+| commit (id held) / commit (id commit) | held-for-events panel / the Commit button |
+| actions | the action menu (card file) |
+| plan-sheet | the plan sheet (states 2-3) |
+| event | event card |
+| review | month review |
+| advisor | advisor note |
+| cat | the cat photo |
+| rep-dial | reputation dial (only with `?rep=dial`) |
+
+The mixer's reset matches `?state=3`.
+
+### Contrast (composited pixels, both sizes)
+
+Same method as before: background is the median of the text box, text the
+k-th most distant pixel; 1920 and 1280 x 720. Fixed this round: queue and
+feed row numbers and the "top level" tag moved from `--dim` to `--muted`;
+the lit ladder row uses the band colour lifted to 7.5:1 (it fell to 3.7 at
+720 in SEVERE).
+
+| Render | Lowest at 1920 | Lowest at 720 | Under 4.5 |
+|---|---|---|---|
+| s1 | 5.44 | 4.53 | 0 |
+| s2 | 5.44 | 4.53 | 0 |
+| s3 | 5.25 | 4.53 | 0 |
+| s4 | 5.42 | 4.59 | 0 |
+| s5 | 4.91 | 4.53 | 0 |
+| s6 | 4.88 | 4.53 | 0 |
+| s3-trace | 5.25 | 4.53 | 0 |
+| s5-trace | 4.91 | 4.53 | 0 |
+| s6-trace | 4.88 | 4.53 | 0 |
+| band-0 .. band-6 | 5.43-5.44 | 4.53 | 0 |
+
+The 720 floor (4.53) is the held panel's small grey note. Layout checks
+(`?check=1`): no overflow, overlap or off-stage text in any render.
+
+### Open questions
+
+- `?band` moves only the room, so the band strip's meter reads 20% in every
+  shot. Fine for comparing rooms; a reader may take it as a mismatch.
+- The resource strip and the plan sheet both show money and reputation
+  after the queue (states 2-3): the strip shows today's amount, the sheet
+  the amount after the plan. Keep both, or let the sheet show only the
+  change?
+- The action menu's balance row was removed (the strip now holds it); the
+  menu keeps hours only. Check that no one misses money beside the costs.
+- Tier lines are round steps where the game has no line of its own
+  (compute, papers, the upper money and research tiers). Pip may want
+  different ones.
+- Take b needs the game to record month-start amounts; it does not today.

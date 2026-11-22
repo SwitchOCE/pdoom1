@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Mixer</title>
+<meta name="description" content="Build one P(Doom)1 screen from parts of the interface mock-ups: pick each part's design, move it, change the doom band, and share the arrangement as a code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* the showcase page's house style (warm paper, one accent); the stage itself is the game's dark screen */
+:root{
+  --bg:#efe7d2; --paper:#f6f0e0; --rule:#d9ceb0; --rule-soft:#e4dbc2;
+  --ink:#26221a; --ink-soft:#5f584a; --ink-faint:#6f6651;
+  --accent:#2f6d8e; --accent-soft:#e0ebef; --neg:#b23a2e;
+  --focus:#d9a03a;
+  --display:"Zilla Slab",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --screen:#0d0c0b;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#181510; --paper:#211d16; --rule:#352f22; --rule-soft:#2a2519;
+  --ink:#ece3cd; --ink-soft:#b3a988; --ink-faint:#a39878; --accent:#6fb6d2; --accent-soft:#1e3038; --neg:#e0857a;
+}}
+:root[data-theme="dark"]{
+  --bg:#181510; --paper:#211d16; --rule:#352f22; --rule-soft:#2a2519;
+  --ink:#ece3cd; --ink-soft:#b3a988; --ink-faint:#a39878; --accent:#6fb6d2; --accent-soft:#1e3038; --neg:#e0857a;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:500}
+header{border-bottom:2px solid var(--ink)}
+header .in{max-width:1680px;margin:0 auto;padding:28px 16px 18px}
+h1{font-family:var(--display);font-size:clamp(32px,5vw,48px);font-weight:700;line-height:1.1;margin:.2em 0 .25em}
+.lede{font-size:18px;color:var(--ink-soft);max-width:60ch;margin:0}
+.mx{max-width:1680px;margin:0 auto;padding:18px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
+@media (max-width:1100px){ .mx{grid-template-columns:minmax(0,1fr)} }
+
+/* the stage: one 1920x1080 screen, scaled uniformly to the column */
+.vp{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--screen);border:1px solid var(--rule);border-radius:4px}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#090807}
+#stage .bgimg{position:absolute;left:0;top:0;width:1920px;height:1080px;display:block}
+#stage .dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 34% 50%,rgba(6,5,5,.66),rgba(6,5,5,.5) 70%)}
+#stage .band{position:absolute;inset:0;pointer-events:none}
+.piece{position:absolute;padding:0;margin:0;border:0;background:none;cursor:grab;touch-action:none;display:block;line-height:0}
+.piece img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.piece.sel{outline:3px dashed rgba(111,182,210,.85);outline-offset:2px}
+.piece:focus{outline:none}
+.piece:focus-visible{outline:5px solid var(--focus);outline-offset:3px}
+.piece.dragging{cursor:grabbing}
+.below{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+.below b{color:var(--ink);font-weight:600}
+
+/* controls */
+.panel{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 18px}
+.panel+.panel{margin-top:14px}
+.panel h2{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 10px}
+label,.lbl{font-size:14px}
+select,input[type=text],textarea,button{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:6px}
+select{padding:5px 4px;min-width:0;width:100%}
+.row select{font-size:13px}
+button{padding:7px 12px;cursor:pointer;background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:500}
+button.plain{background:var(--bg);border-color:var(--rule)}
+textarea{width:100%;font-family:var(--mono);font-size:12px;padding:8px;resize:vertical;min-height:58px;word-break:break-all}
+:is(select,input,textarea,button):focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.row{display:grid;grid-template-columns:108px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule-soft)}
+.row:last-child{border-bottom:0}
+.row .nm{font-size:14px;font-weight:500}
+.row .on{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.row input[type=checkbox]{width:18px;height:18px;margin:0}
+@media (max-width:520px){ .row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px} .row select{grid-column:1 / -1;grid-row:2;font-size:14px} }
+.field{display:grid;gap:6px;margin-bottom:12px}
+.band-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.bandname{font-family:var(--mono);font-size:13px;font-weight:600;min-width:12ch;text-align:right}
+.hint{font-size:13px;color:var(--ink-faint);margin:6px 0 0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.status{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);min-height:1.4em;margin-top:8px}
+.status.err{color:var(--neg)}
+.check{display:flex;gap:8px;align-items:center;font-size:14px}
+.check input{width:18px;height:18px;margin:0}
+footer{border-top:2px solid var(--ink);max-width:1680px;margin:0 auto;padding:16px;font-size:13px;color:var(--ink-faint)}
+footer p{margin:0 0 6px}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div class="eyebrow">P(Doom)1 interface mock-ups</div>
+  <h1>Design Mixer</h1>
+  <p class="lede">Build one screen from parts of the different designs. Pick a design for each part, drag it into place, try the doom bands, then copy the code to share the arrangement.</p>
+</div></header>
+
+<main class="mx">
+  <section aria-label="Screen">
+    <div class="vp" id="vp"><div id="stage" role="group" aria-label="The game screen, 1920 by 1080"></div></div>
+    <div class="below" aria-live="polite"><span id="selinfo">Click or Tab to a part to select it. Drag it, or use the arrow keys (Shift for 10 px).</span></div>
+  </section>
+
+  <aside aria-label="Controls">
+    <div class="panel">
+      <h2>Room</h2>
+      <div class="field"><label for="bg">Office art</label><select id="bg"></select></div>
+      <div class="field">
+        <label for="band">Doom band (colour layer over everything)</label>
+        <div class="band-row"><input type="range" id="band" min="0" max="6" step="1"><span class="bandname" id="bandname"></span></div>
+      </div>
+      <label class="check"><input type="checkbox" id="dim"> Dim the room behind open menus</label>
+    </div>
+
+    <div class="panel">
+      <h2>Parts</h2>
+      <div id="slots"></div>
+      <div class="btns"><button type="button" id="reset">Reset to H's layout</button></div>
+      <p class="hint">"Earlier texture" parts come from designs C, E and G as they were before the latest round of changes.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Share</h2>
+      <div class="field"><label for="code">This arrangement as a code</label><textarea id="code" readonly rows="3"></textarea></div>
+      <div class="btns"><button type="button" id="copy">Copy code</button></div>
+      <div class="field" style="margin-top:14px"><label for="paste">Paste a code to load it</label><textarea id="paste" rows="3" placeholder="Paste a code here"></textarea></div>
+      <div class="btns"><button type="button" id="load">Load code</button></div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <p>Every part is a cut-out render of the design's own mock-up page, not a redrawing. Desk parts show November 2017 (the month's plan); the action menu shows the same month with three plays queued; the event card and the feed show 14 November; the month review shows 1 December.</p>
+  <p>The arrangement is saved in this browser. Codes are base64 text of the arrangement.</p>
+</footer>
+
+<script src="pieces.js"></script>
+<script>
+"use strict";
+var DATA = window.MIX_DATA || {pieces:{}, bg:{}};
+// slot order is also the drawing order, back to front
+var SLOTS = [
+  ["att","Attention"], ["rack","Menu rack"], ["feed","Feed"], ["res","Resources"], ["plan","Plan panel"],
+  ["menu","Action menu"], ["review","Month review"], ["event","Event card"], ["commit","Commit and held"],
+  ["doom","P(Doom) meter"], ["rep","Reputation"], ["date","Dateline"]
+];
+var OPT = {
+  "H":"H", "Hb":"H, trace window", "HF":"H-HF, heavier texture",
+  "C":"C (earlier texture)", "E":"E (earlier texture)", "G":"G (earlier texture)"
+};
+var OPT_ORDER = ["H","Hb","HF","C","E","G"];
+var BAND_NAMES = ["NOMINAL","ELEVATED","HIGH","SEVERE","EXTREME","CATASTROPHIC","TERMINAL"];
+var NATIVE_BAND = 2;   // the office art and the parts come from November 2017: P(Doom) 40.2%, HIGH
+/* The band colour layer over everything. Placeholder until the revised H's own band layer
+   is cut in: below the native band a warm lift, above it a colder, redder, darker grade. */
+var BAND_LAYER = {
+  0:"background:rgba(255,214,150,.10);mix-blend-mode:soft-light",
+  1:"background:rgba(255,214,150,.05);mix-blend-mode:soft-light",
+  2:"",
+  3:"background:rgba(60,56,80,.20);mix-blend-mode:multiply",
+  4:"background:rgba(110,40,40,.28);mix-blend-mode:multiply",
+  5:"background:radial-gradient(ellipse 1150px 720px at 50% 46%,rgba(110,40,90,.30) 35%,rgba(30,6,30,.62) 100%);mix-blend-mode:multiply",
+  6:"background:radial-gradient(ellipse 1050px 650px at 50% 46%,rgba(90,20,70,.45) 30%,rgba(16,2,16,.8) 100%);mix-blend-mode:multiply"
+};
+// H's own state-3 screen: which parts it shows (the rest are off)
+var H_ON = {doom:1, rep:1, date:1, rack:1, plan:1, commit:1, res:1};
+var KEY = "pdoom1-mixer-v1";
+
+var stage = document.getElementById("stage"), vp = document.getElementById("vp");
+var state = null, selected = null, els = {};
+
+function options(slot){ var p = DATA.pieces[slot] || {}; return OPT_ORDER.filter(function(k){ return p[k]; }); }
+function piece(slot, key){ return (DATA.pieces[slot] || {})[key]; }
+function defaults(){
+  var s = {v:1, bg: DATA.bg.H ? "H" : Object.keys(DATA.bg)[0], band:NATIVE_BAND, dim:1, s:{}};
+  SLOTS.forEach(function(x){
+    var o = options(x[0]), k = o.indexOf("H") >= 0 ? "H" : (o[0] || "none"), p = piece(x[0], k);
+    s.s[x[0]] = [k, p ? p.x : 0, p ? p.y : 0, (k === "H" && H_ON[x[0]]) ? 1 : 0];
+  });
+  return s;
+}
+function valid(s){
+  if (!s || typeof s !== "object" || !s.s) return false;
+  if (!DATA.bg[s.bg]) s.bg = defaults().bg;
+  s.band = Math.max(0, Math.min(6, parseInt(s.band, 10) || 0));
+  s.dim = s.dim ? 1 : 0;
+  SLOTS.forEach(function(x){
+    var v = s.s[x[0]];
+    if (!Array.isArray(v) || (v[0] !== "none" && !piece(x[0], v[0]))) { s.s[x[0]] = defaults().s[x[0]]; return; }
+    s.s[x[0]] = [v[0], Math.round(+v[1] || 0), Math.round(+v[2] || 0), v[3] ? 1 : 0];
+  });
+  return true;
+}
+function encode(s){ return btoa(JSON.stringify(s)); }
+function decode(code){ var s = JSON.parse(atob(String(code).replace(/\s+/g, ""))); return valid(s) ? s : null; }
+function save(){
+  var c = encode(state);
+  document.getElementById("code").value = c;
+  try { localStorage.setItem(KEY, c); } catch (e) {}
+}
+function status(msg, err){ var e = document.getElementById("status"); e.textContent = msg; e.className = "status" + (err ? " err" : ""); }
+
+/* ---------- drawing ---------- */
+function fit(){ stage.style.transform = "scale(" + (vp.clientWidth / 1920) + ")"; }
+function draw(){
+  stage.innerHTML = ""; els = {};
+  var bg = DATA.bg[state.bg];
+  if (bg){ var im = document.createElement("img"); im.className = "bgimg"; im.alt = ""; im.src = bg.src; stage.appendChild(im); }
+  if (state.dim){ var d = document.createElement("div"); d.className = "dim"; stage.appendChild(d); }
+  SLOTS.forEach(function(x){
+    var slot = x[0], v = state.s[slot], p = piece(slot, v[0]);
+    if (!p || !v[3]) return;
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "piece" + (selected === slot ? " sel" : ""); b.dataset.slot = slot;
+    b.style.left = v[1] + "px"; b.style.top = v[2] + "px";
+    b.setAttribute("aria-label", x[1] + " from " + OPT[v[0]] + ". Arrow keys move it.");
+    var im = document.createElement("img"); im.src = p.src; im.width = p.w; im.height = p.h; im.alt = "";
+    b.appendChild(im); stage.appendChild(b); els[slot] = b;
+    wire(b, slot);
+  });
+  var layer = document.createElement("div"); layer.className = "band"; layer.setAttribute("style", BAND_LAYER[state.band] || ""); stage.appendChild(layer);
+  document.getElementById("bandname").textContent = state.band + " " + BAND_NAMES[state.band];
+  info();
+}
+function info(){
+  var e = document.getElementById("selinfo");
+  if (!selected || !els[selected]){ e.innerHTML = "Click or Tab to a part to select it. Drag it, or use the arrow keys (Shift for 10 px)."; return; }
+  var v = state.s[selected], name = SLOTS.filter(function(x){ return x[0] === selected; })[0][1];
+  e.innerHTML = "<b>" + name + "</b> <span>" + OPT[v[0]] + "</span> <span>x " + v[1] + ", y " + v[2] + "</span>";
+}
+function select(slot){
+  selected = slot;
+  Object.keys(els).forEach(function(k){ els[k].classList.toggle("sel", k === slot); });
+  info();
+}
+function move(slot, x, y){
+  var v = state.s[slot]; v[1] = Math.round(x); v[2] = Math.round(y);
+  var b = els[slot]; if (b){ b.style.left = v[1] + "px"; b.style.top = v[2] + "px"; }
+  info();
+}
+
+/* ---------- drag and keys ---------- */
+function wire(b, slot){
+  b.addEventListener("focus", function(){ select(slot); });
+  b.addEventListener("pointerdown", function(ev){
+    if (ev.button !== 0) return;
+    select(slot); b.focus({preventScroll:true});
+    var sc = vp.clientWidth / 1920, v = state.s[slot], x0 = v[1], y0 = v[2], px = ev.clientX, py = ev.clientY;
+    b.setPointerCapture(ev.pointerId); b.classList.add("dragging");
+    function mv(e){ move(slot, x0 + (e.clientX - px) / sc, y0 + (e.clientY - py) / sc); }
+    function up(){ b.classList.remove("dragging"); b.removeEventListener("pointermove", mv); b.removeEventListener("pointerup", up); b.removeEventListener("pointercancel", up); save(); }
+    b.addEventListener("pointermove", mv); b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
+    ev.preventDefault();
+  });
+  b.addEventListener("keydown", function(ev){
+    var d = ev.shiftKey ? 10 : 1, v = state.s[slot], dx = 0, dy = 0;
+    if (ev.key === "ArrowLeft") dx = -d; else if (ev.key === "ArrowRight") dx = d;
+    else if (ev.key === "ArrowUp") dy = -d; else if (ev.key === "ArrowDown") dy = d; else return;
+    ev.preventDefault(); move(slot, v[1] + dx, v[2] + dy); save();
+  });
+}
+
+/* ---------- controls ---------- */
+function controls(){
+  var bg = document.getElementById("bg"); bg.innerHTML = "";
+  Object.keys(DATA.bg).forEach(function(k){ var o = document.createElement("option"); o.value = k; o.textContent = DATA.bg[k].label; bg.appendChild(o); });
+  var box = document.getElementById("slots"); box.innerHTML = "";
+  SLOTS.forEach(function(x){
+    var slot = x[0], row = document.createElement("div"); row.className = "row";
+    var id = "sl-" + slot;
+    row.innerHTML = "<label class=nm for='" + id + "'>" + x[1] + "</label><select id='" + id + "'></select>" +
+      "<label class=on><input type=checkbox id='" + id + "-on'> show</label>";
+    var sel = row.querySelector("select");
+    options(slot).forEach(function(k){ var o = document.createElement("option"); o.value = k; o.textContent = OPT[k]; sel.appendChild(o); });
+    var n = document.createElement("option"); n.value = "none"; n.textContent = "none"; sel.appendChild(n);
+    sel.addEventListener("change", function(){
+      var p = piece(slot, sel.value), v = state.s[slot];
+      v[0] = sel.value;
+      if (p){ v[1] = p.x; v[2] = p.y; v[3] = 1; } else v[3] = 0;   // a newly picked part starts where its design puts it
+      sync(); draw(); save();
+    });
+    row.querySelector("input").addEventListener("change", function(e){ state.s[slot][3] = e.target.checked ? 1 : 0; draw(); save(); });
+    box.appendChild(row);
+  });
+}
+function sync(){
+  document.getElementById("bg").value = state.bg;
+  document.getElementById("band").value = state.band;
+  document.getElementById("dim").checked = !!state.dim;
+  SLOTS.forEach(function(x){
+    var v = state.s[x[0]], sel = document.getElementById("sl-" + x[0]), on = document.getElementById("sl-" + x[0] + "-on");
+    sel.value = v[0]; on.checked = !!v[3]; on.disabled = v[0] === "none";
+  });
+}
+document.getElementById("bg").addEventListener("change", function(e){ state.bg = e.target.value; draw(); save(); });
+document.getElementById("band").addEventListener("input", function(e){ state.band = parseInt(e.target.value, 10); draw(); save(); });
+document.getElementById("dim").addEventListener("change", function(e){ state.dim = e.target.checked ? 1 : 0; draw(); save(); });
+document.getElementById("reset").addEventListener("click", function(){ state = defaults(); selected = null; sync(); draw(); save(); status("Reset to H's layout."); });
+document.getElementById("copy").addEventListener("click", function(){
+  var t = document.getElementById("code");
+  function done(){ status("Code copied."); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, function(){ t.select(); status("Select the code and copy it."); });
+  else { t.select(); try { document.execCommand("copy"); done(); } catch (e) { status("Select the code and copy it."); } }
+});
+document.getElementById("load").addEventListener("click", function(){
+  var c = document.getElementById("paste").value.trim(), s = null;
+  try { s = decode(c); } catch (e) { s = null; }
+  if (!s){ status("That code could not be read. Check that it was copied whole.", true); return; }
+  state = s; selected = null; sync(); draw(); save(); status("Code loaded.");
+});
+
+/* ---------- start ---------- */
+(function start(){
+  var s = null;
+  try { var c = localStorage.getItem(KEY); if (c) s = decode(c); } catch (e) { s = null; }
+  state = s || defaults();
+  controls(); sync(); fit(); draw(); save();
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(vp); else window.addEventListener("resize", fit);
+})();
+</script>
+</body>
+</html>

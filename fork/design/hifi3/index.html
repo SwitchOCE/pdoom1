@@ -92,7 +92,7 @@ footer .files{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);ma
 button.tab{font:600 13px var(--mono);color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:7px 11px;cursor:pointer}
 button.tab[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 button.tab:focus-visible,button.act:focus-visible,#lbx:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.designs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.designs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .designs .card{margin:0;padding:0;overflow:hidden}
 .designs .card .body{padding:14px 16px}
 .designs h3{margin:0 0 4px;font-family:var(--display);font-size:20px}
@@ -101,6 +101,11 @@ button.tab:focus-visible,button.act:focus-visible,#lbx:focus-visible{outline:3px
 .viewhead h3{margin:0 0 4px;font-family:var(--display);font-size:22px}
 .viewhead p{margin:0;color:var(--ink-soft);max-width:760px;font-size:15.5px}
 
+.bandstrip{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.bandstrip .shot figcaption{font-size:12.5px;padding:6px 10px}
+.shot .na{aspect-ratio:16/9;display:grid;place-items:center;text-align:center;padding:12px;color:#b9ae94;font:12.5px/1.4 var(--mono);background:repeating-linear-gradient(135deg,#141210 0 10px,#1a1714 10px 20px)}
+a.act-link{display:inline-block;font:600 15px var(--mono);color:var(--paper);background:var(--ink);border-radius:6px;padding:11px 16px;text-decoration:none}
+a.act-link:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 /* Dateline demo: a slice of the game screen */
 .dl{background:var(--screen);border-radius:10px;border:1px solid var(--rule);padding:26px 24px 20px;color:#d8cdb2;box-shadow:0 10px 30px var(--shadow)}
 .dl-line{font:700 clamp(22px,4.6vw,34px)/1.2 "Courier Prime","Courier New",monospace;letter-spacing:.16em;min-height:1.3em;color:#e0d5ba;white-space:pre-wrap;word-break:break-word}
@@ -140,6 +145,7 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
 
 @media (max-width:900px){
   .designs{grid-template-columns:minmax(0,1fr)}
+  .bandstrip{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g2{grid-template-columns:minmax(0,1fr)}
   .matrix{grid-template-columns:minmax(0,1fr)}
   .matrix .ch{display:none}
@@ -154,7 +160,7 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
   <div class="wrap">
     <div class="eyebrow">P(Doom)1 . interface mock-ups</div>
     <h1>A darker desk</h1>
-    <p class="lede">One preferred direction for the game's main screen, three alternatives in the same look, and a spec to build from.</p>
+    <p class="lede">One preferred direction for the game's main screen, a heavier-textured take on it, three alternatives, a mixer and a spec to build from.</p>
     <div class="byline"><span>Alex's fork of P(Doom)1</span><span>Mock-ups only: no game rules change</span><span>November 2026</span></div>
   </div>
 </header>
@@ -170,8 +176,27 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
   <p class="figcap">H at the start of a new game: July 2017, nothing queued, P(Doom) at 20.0%. Click any screen to see it full size.</p>
 </section>
 
+<section class="wrap" id="bands">
+  <div class="sec-head"><span class="n">02</span><h2>How the room darkens</h2></div>
+  <div class="reading">
+    <p>The colour follows P(Doom), never the calendar. At the lowest band the office is a little brighter: still dim and worn, never cheerful. Each band darkens the room and shifts its palette and texture further, so the pressure rises visibly as doom climbs. The controls stay where they are and stay readable. Below is the same first screen at each of the game's seven doom bands.</p>
+  </div>
+  <div class="grid bandstrip" id="bandstrip"></div>
+  <p class="figcap">Only the doom band changes between these screens: the room's light, palette and texture. Click any one to see it full size.</p>
+</section>
+
+<section class="wrap" id="resources">
+  <div class="sec-head"><span class="n">03</span><h2>Two ways to show resources</h2></div>
+  <div class="reading">
+    <p>The game sets no maximum for money, compute, research, papers or reputation, so a meter has nothing to fill towards. H shows them in one of two ways instead. <b>Tier icons</b> (the default) change with the amount, like one coin becoming a stack and then a pile, so you can tell rich from poor at a glance. A <b>trace window</b> draws each amount over the months you have already played, scaled to fill its small window like a heartbeat monitor. Both keep the number beside them, and neither forecasts anything. Attention keeps its hour bars, because a month has a fixed number of hours.</p>
+  </div>
+  <div class="tabs" id="resPick"><span class="lab">Moment</span></div>
+  <div class="grid g2" id="resPair"></div>
+  <p class="figcap">The same screen with each take. The thresholds for each tier are in the spec.</p>
+</section>
+
 <section class="wrap" id="dateline">
-  <div class="sec-head"><span class="n">02</span><h2>The date, typed in</h2></div>
+  <div class="sec-head"><span class="n">04</span><h2>The date, typed in</h2></div>
   <div class="reading">
     <p>A typewritten date replaces the calendar. It types itself in when a new month starts, with the heavy, punchy key strikes of a spy-film title card. The sound is made in the browser as it plays: there are no recorded samples. Press the button to hear it. Turn your sound on first.</p>
   </div>
@@ -188,9 +213,9 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
 
 <section class="wide" id="screens">
   <div class="wrap" style="padding:0">
-    <div class="sec-head"><span class="n">03</span><h2>Six moments of one run</h2></div>
+    <div class="sec-head"><span class="n">05</span><h2>Six moments of one run</h2></div>
     <div class="reading">
-      <p>Every design shows the same company at the same six moments. The run starts in month 1. In November 2017 the player chooses an action, plans the month, answers an event while the month plays out, and reads the month review. The last screen is a late month at high P(Doom). Names, costs and rules come from the game's data.</p>
+      <p>Every design shows the same company at the same six moments. The run starts in month 1. In November 2017 the player chooses an action, plans the month, answers an event while the month plays out, and reads the month review. The last screen is a late month at high P(Doom). Names, costs and rules come from the game's data. H-HF is drawn for three of the moments.</p>
     </div>
   </div>
   <div class="tabs" id="views"><span class="lab">View</span></div>
@@ -199,15 +224,23 @@ details.spec-box>summary{cursor:pointer;font:600 15px var(--mono);padding:12px 0
 </section>
 
 <section class="wrap" id="alternatives">
-  <div class="sec-head"><span class="n">04</span><h2>Three alternatives, same look</h2></div>
+  <div class="sec-head"><span class="n">06</span><h2>Other takes</h2></div>
   <div class="reading">
-    <p>The three other layouts from the same study, rebuilt in H's darker look. Each keeps its own layout. Only the texture changed: the palette, meters, paper, the date and a smaller Commit button.</p>
+    <p><b>H-HF</b> is the same design as H with a heavier texture, drawn from the worn instrument panels of games like HighFleet: painted metal, needles, stencilled labels and rivets. Its layout, hierarchy, colours and resources are H's. <b>C, E and G</b> are the three other layouts from the same study. They show the earlier texture: they have H's dark look, but not this round's hierarchy, resource or colour changes.</p>
   </div>
   <div class="designs" id="designs"></div>
 </section>
 
+<section class="wrap" id="mixer">
+  <div class="sec-head"><span class="n">07</span><h2>Mix your own</h2></div>
+  <div class="reading">
+    <p>The mixer puts pieces from every design on one screen: the P(Doom) meter from one, the resources from another, the event card from a third. Drag pieces to move them, switch them on and off, pick the office art and slide the doom band. It gives you a short code for your arrangement, which you can send to someone and they can paste it back in.</p>
+  </div>
+  <p><a class="act-link" href="mixer/index.html">Open the mixer</a></p>
+</section>
+
 <section class="wrap spec" id="spec">
-  <div class="sec-head"><span class="n">05</span><h2>The spec for H</h2></div>
+  <div class="sec-head"><span class="n">08</span><h2>The spec for H</h2></div>
   <div class="reading">
     <p>The spec covers the design's tokens, its components and their states, the six screens and their keys, how H maps onto today's Godot scene, the art and sound it needs, and the open rule questions. The repo copy is <a href="https://github.com/SwitchOCE/pdoom1/blob/design/ui-concepts/fork/design/hifi3/spec.md">fork/design/hifi3/spec.md</a>.</p>
   </div>
@@ -745,12 +778,12 @@ This affects what a player can do, so it is Pip's call too.
 <footer>
   <div class="wrap">
     <div>Mock-ups built as HTML pages and captured at 1920x1080. Like the game, the stage scales uniformly, so at 1280x720 everything is drawn at two-thirds size. Icons and office art are Pip Foweraker's, toned to sit in the darker look. Some art would need darker versions to match; the spec lists it.</div>
-    <div class="files">fork/design/hifi3/ . H/ C/ E/ G/ (concept.html, notes.md, six screens each) . spec.md . branch design/ui-concepts of github.com/SwitchOCE/pdoom1</div>
+    <div class="files">fork/design/hifi3/ . H/ H-HF/ C/ E/ G/ (concept.html, notes.md, screens) . mixer/ . spec.md . branch design/ui-concepts of github.com/SwitchOCE/pdoom1</div>
   </div>
 </footer>
 
 <div id="lb" role="dialog" aria-modal="true" aria-label="Full-size screen">
-  <div class="bar"><b id="lbt"></b><span>Left / Right: moment . Up / Down: design . Esc: close</span><button id="lbx" type="button">Close</button></div>
+  <div class="bar"><b id="lbt"></b><span>Left / Right: next . Up / Down: design . Esc: close</span><button id="lbx" type="button">Close</button></div>
   <div class="stage"><img id="lbi" alt=""></div>
 </div>
 
@@ -878,10 +911,11 @@ function playDateline(text, opts){
 /* ---- end of the dateline sound ---- */
 
 const DESIGNS = [
-  { id: "H", name: "H. The Desk", short: "Preferred", line: "The founder's desk faces the player. Menus open from a rack of plates on the right; the month's plan sits on the desk; the meters hang on the wall." },
-  { id: "C", name: "C. The Paperwork Desk", short: "Alternative", line: "The month is run as a register of forms: actions in a card file, a printed ledger and an in-tray memo." },
-  { id: "E", name: "E. Rooms and Stations", short: "Alternative", line: "A fixed instrument frame over the office, with stations (Actions, Plan, Lab Floor, Procurement, Records) and a card for this month." },
-  { id: "G", name: "G. Today's Layout, Modernised", short: "Alternative", line: "The game's current layout kept (resource bar, plan banner, doom ring, queue), with menus on a rail at the left." }
+  { id: "H", name: "H. The Desk", short: "Preferred", line: "The founder's desk faces the player. Menus open from a rack of plates on the right; the month's plan sits on the desk; P(Doom) leads, then Attention and money." },
+  { id: "H-HF", name: "H-HF. The Desk, heavier texture", short: "Same design, heavier texture", states: [1, 4, 5], line: "H's layout, hierarchy, colours and resources, with worn painted metal, needles, stencilled labels and rivets. Drawn for moments 1, 4 and 5." },
+  { id: "C", name: "C. The Paperwork Desk", short: "Alternative, earlier texture", line: "The month is run as a register of forms: actions in a card file, a printed ledger and an in-tray memo." },
+  { id: "E", name: "E. Rooms and Stations", short: "Alternative, earlier texture", line: "A fixed instrument frame over the office, with stations (Actions, Plan, Lab Floor, Procurement, Records) and a card for this month." },
+  { id: "G", name: "G. Today's Layout, Modernised", short: "Alternative, earlier texture", line: "The game's current layout kept (resource bar, plan banner, doom ring, queue), with menus on a rail at the left." }
 ];
 const STATES = [
   { n: 1, name: "First screen", line: "Month 1, July 2017: the first screen a new player sees. Nothing is queued; $245,000 in the bank; P(Doom) 20.0%." },
@@ -891,23 +925,36 @@ const STATES = [
   { n: 5, name: "The month review", line: "Before December's plan: what each play did, how funds and staff moved, and that doom moved from HIGH to SEVERE. It is shown as a band, never a number." },
   { n: 6, name: "Late game", line: "April 2018 (projected): P(Doom) 81.4%, CATASTROPHIC. Doom is a layer over the room, which darkens further; the controls stay where they were." }
 ];
+const BANDS = ["NOMINAL", "ELEVATED", "HIGH", "SEVERE", "EXTREME", "CATASTROPHIC", "TERMINAL"];
+const des = id => DESIGNS.find(x => x.id === id);
+const dname = id => des(id).name;
+const has = (d, s) => !des(d).states || des(d).states.includes(s);
 const src = (d, s) => `${d}/s${s}.webp`;
-const dname = id => DESIGNS.find(x => x.id === id).name;
-let view = "design", pickState = 3, pickDesign = "H", lastThumb = null;
+let view = "design", pickState = 3, pickDesign = "H", pickRes = 3, lastThumb = null;
 try { const v = localStorage.getItem("pd3-view"); if (v) view = v; } catch (e) {}
 
-function shot(d, s, cap) {
+/* every clickable screen opens the lightbox on a list it belongs to */
+function fig(item, list, cap) {
   const f = document.createElement("figure"); f.className = "shot";
   const i = new Image();
-  i.alt = `${dname(d)}, moment ${s}: ${STATES[s - 1].name}`;
-  i.src = src(d, s); i.width = 1920; i.height = 1080;
+  i.alt = item.title; i.src = item.src; i.width = 1920; i.height = 1080;
   i.onerror = () => { const m = document.createElement("div"); m.className = "missing"; m.textContent = "screen not rendered yet"; i.replaceWith(m); };
   const b = document.createElement("button"); b.type = "button";
-  b.setAttribute("aria-label", `Open full size: ${i.alt}`);
-  b.onclick = () => { lastThumb = b; openLb(d, s); };
+  b.setAttribute("aria-label", `Open full size: ${item.title}`);
+  b.onclick = () => { lastThumb = b; openList(list, list.indexOf(item)); };
   b.appendChild(i); f.appendChild(b);
   if (cap) { const c = document.createElement("figcaption"); c.innerHTML = cap; f.appendChild(c); }
   return f;
+}
+function designItem(d, s) { return { src: src(d, s), title: `${dname(d)} -- ${s}. ${STATES[s - 1].name}`, d: d, s: s }; }
+function shot(d, s, cap) {
+  if (!has(d, s)) {
+    const f = document.createElement("figure"); f.className = "shot";
+    f.innerHTML = `<div class="na">${d} is drawn for moments ${des(d).states.join(", ")} only</div>` + (cap ? `<figcaption>${cap}</figcaption>` : "");
+    return f;
+  }
+  const list = (des(d).states || [1, 2, 3, 4, 5, 6]).map(n => designItem(d, n));
+  return fig(list.find(x => x.s === s), list, cap);
 }
 function tab(label, on, fn) {
   const b = document.createElement("button");
@@ -920,17 +967,17 @@ function render() {
   try { localStorage.setItem("pd3-view", view); } catch (e) {}
   const v = document.getElementById("views");
   v.querySelectorAll("button").forEach(b => b.remove());
-  [["design", "One design, six moments"], ["state", "One moment, four designs"], ["all", "All designs by moment"]].forEach(([k, l]) =>
+  [["design", "One design, six moments"], ["state", "One moment, every design"], ["all", "All designs by moment"]].forEach(([k, l]) =>
     v.appendChild(tab(l, view === k, () => { view = k; render(); })));
   const p = document.getElementById("picks"); p.innerHTML = "";
   const m = document.getElementById("view"); m.innerHTML = "";
   if (view === "design") {
     p.innerHTML = '<span class="lab">Design</span>';
     DESIGNS.forEach(d => p.appendChild(tab(d.name, d.id === pickDesign, () => { pickDesign = d.id; render(); })));
-    const d = DESIGNS.find(x => x.id === pickDesign);
+    const d = des(pickDesign);
     m.insertAdjacentHTML("beforeend", `<div class="viewhead"><h3>${d.name}${d.id === "H" ? " (preferred)" : ""}</h3><p>${d.line}</p></div>`);
     const g = document.createElement("div"); g.className = "grid g2";
-    STATES.forEach(s => g.appendChild(shot(d.id, s.n, `<b>${s.n}. ${s.name}</b> <span>-- ${s.line}</span>`)));
+    STATES.filter(s => has(d.id, s.n)).forEach(s => g.appendChild(shot(d.id, s.n, `<b>${s.n}. ${s.name}</b> <span>-- ${s.line}</span>`)));
     m.appendChild(g);
   } else if (view === "state") {
     p.innerHTML = '<span class="lab">Moment</span>';
@@ -938,7 +985,7 @@ function render() {
     const st = STATES[pickState - 1];
     m.insertAdjacentHTML("beforeend", `<div class="viewhead"><h3>${st.n}. ${st.name}</h3><p>${st.line}</p></div>`);
     const g = document.createElement("div"); g.className = "grid g2";
-    DESIGNS.forEach(d => g.appendChild(shot(d.id, pickState, `<b>${d.name}</b>${d.id === "H" ? " <span>-- preferred</span>" : ""}`)));
+    DESIGNS.filter(d => has(d.id, pickState)).forEach(d => g.appendChild(shot(d.id, pickState, `<b>${d.name}</b> <span>-- ${d.short.toLowerCase()}</span>`)));
     m.appendChild(g);
   } else {
     const g = document.createElement("div"); g.className = "grid matrix";
@@ -952,37 +999,60 @@ function render() {
     m.appendChild(g);
   }
 }
+function renderRes() {
+  const p = document.getElementById("resPick");
+  p.querySelectorAll("button").forEach(b => b.remove());
+  [3, 5, 6].forEach(n => p.appendChild(tab(`${n}. ${STATES[n - 1].name}`, n === pickRes, () => { pickRes = n; renderRes(); })));
+  const box = document.getElementById("resPair"); box.innerHTML = "";
+  const list = [
+    { src: `H/s${pickRes}.webp`, title: `H -- ${pickRes}. ${STATES[pickRes - 1].name}, tier icons` },
+    { src: `H/s${pickRes}-trace.webp`, title: `H -- ${pickRes}. ${STATES[pickRes - 1].name}, trace window` }
+  ];
+  box.appendChild(fig(list[0], list, "<b>Tier icons</b> <span>-- the default</span>"));
+  box.appendChild(fig(list[1], list, "<b>Trace window</b> <span>-- the months already played</span>"));
+}
 function hero() {
   document.getElementById("hero").appendChild(shot("H", 1));
+  const bl = BANDS.map((b, i) => ({ src: `H/band-${i}.webp`, title: `H, first screen, doom band ${i + 1} of 7: ${b}` }));
+  const strip = document.getElementById("bandstrip");
+  bl.forEach((it, i) => strip.appendChild(fig(it, bl, `<b>${i + 1}. ${BANDS[i]}</b>`)));
   const box = document.getElementById("designs");
   DESIGNS.filter(d => d.id !== "H").forEach(d => {
     const c = document.createElement("div"); c.className = "card";
-    c.appendChild(shot(d.id, 3));
+    c.appendChild(shot(d.id, d.states ? d.states[0] : 3));
     c.insertAdjacentHTML("beforeend", `<div class="body"><span class="tag">${d.short}</span><h3>${d.name}</h3><p class="small muted" style="margin:0">${d.line}</p></div>`);
     box.appendChild(c);
   });
 }
-function openLb(d, s) {
-  lbD = d; lbS = s;
-  const i = document.getElementById("lbi");
-  i.src = src(d, s); i.alt = `${dname(d)}, moment ${s}: ${STATES[s - 1].name}`;
-  document.getElementById("lbt").textContent = `${dname(d)} -- ${s}. ${STATES[s - 1].name}`;
+let lbList = [], lbI = 0;
+function openList(list, i) {
+  lbList = list; lbI = i;
+  const it = list[i], img = document.getElementById("lbi");
+  img.src = it.src; img.alt = it.title;
+  document.getElementById("lbt").textContent = it.title;
   document.getElementById("lb").classList.add("on");
   document.getElementById("lbx").focus();
 }
-let lbD = "H", lbS = 1;
 function closeLb() { document.getElementById("lb").classList.remove("on"); if (lastThumb && document.body.contains(lastThumb)) lastThumb.focus(); }
+function otherDesign(step) {
+  const cur = lbList[lbI]; if (!cur || !cur.d) return;
+  const ids = DESIGNS.map(x => x.id);
+  let k = ids.indexOf(cur.d);
+  for (let n = 0; n < ids.length; n++) {
+    k = (k + step + ids.length) % ids.length;
+    if (has(ids[k], cur.s)) { const list = (des(ids[k]).states || [1, 2, 3, 4, 5, 6]).map(x => designItem(ids[k], x)); openList(list, list.findIndex(x => x.s === cur.s)); return; }
+  }
+}
 document.getElementById("lbx").onclick = closeLb;
 document.getElementById("lb").addEventListener("click", e => { if (e.target.id === "lb" || e.target.classList.contains("stage")) closeLb(); });
 document.addEventListener("keydown", e => {
   if (!document.getElementById("lb").classList.contains("on")) return;
-  const di = DESIGNS.findIndex(x => x.id === lbD);
   if (e.key === "Tab") { e.preventDefault(); document.getElementById("lbx").focus(); }
   else if (e.key === "Escape") closeLb();
-  else if (e.key === "ArrowRight") openLb(lbD, lbS % 6 + 1);
-  else if (e.key === "ArrowLeft") openLb(lbD, (lbS + 4) % 6 + 1);
-  else if (e.key === "ArrowDown") { e.preventDefault(); openLb(DESIGNS[(di + 1) % 4].id, lbS); }
-  else if (e.key === "ArrowUp") { e.preventDefault(); openLb(DESIGNS[(di + 3) % 4].id, lbS); }
+  else if (e.key === "ArrowRight") openList(lbList, (lbI + 1) % lbList.length);
+  else if (e.key === "ArrowLeft") openList(lbList, (lbI + lbList.length - 1) % lbList.length);
+  else if (e.key === "ArrowDown") { e.preventDefault(); otherDesign(1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); otherDesign(-1); }
 });
 
 /* ---- Dateline demo ---- */
@@ -1023,6 +1093,7 @@ document.getElementById("dlPlay").onclick = () => typeDate(true);
 document.getElementById("dlNext").onclick = () => { if (typing) return; mi = (mi + 1) % MONTHS.length; document.getElementById("dlLine").textContent = MONTHS[mi]; document.getElementById("dlNote").textContent = ""; };
 
 hero();
+renderRes();
 render();
 </script>
 </body>

@@ -1,0 +1,366 @@
+{
+ "bg": {
+  "C": {
+   "label": "C office with desk (earlier texture)",
+   "src": "bg/C.webp"
+  },
+  "E": {
+   "label": "E mezzanine office (earlier texture)",
+   "src": "bg/E.webp"
+  },
+  "G": {
+   "label": "G office (day; earlier texture)",
+   "src": "bg/G.webp"
+  },
+  "H": {
+   "label": "H office (dawn)",
+   "src": "bg/H.webp"
+  }
+ },
+ "pieces": {
+  "att": {
+   "C": {
+    "h": 304,
+    "src": "cut/att-C.webp",
+    "state": 3,
+    "w": 426,
+    "x": 321,
+    "y": 776
+   },
+   "G": {
+    "h": 433,
+    "src": "cut/att-G.webp",
+    "state": 3,
+    "w": 478,
+    "x": 1442,
+    "y": 627
+   }
+  },
+  "commit": {
+   "C": {
+    "h": 236,
+    "src": "cut/commit-C.webp",
+    "state": 3,
+    "w": 372,
+    "x": 1546,
+    "y": 836
+   },
+   "E": {
+    "h": 236,
+    "src": "cut/commit-E.webp",
+    "state": 3,
+    "w": 408,
+    "x": 1502,
+    "y": 836
+   },
+   "G": {
+    "h": 64,
+    "src": "cut/commit-G.webp",
+    "state": 3,
+    "w": 660,
+    "x": 1260,
+    "y": 1016
+   },
+   "H": {
+    "h": 236,
+    "src": "cut/commit-H.webp",
+    "state": 3,
+    "w": 372,
+    "x": 1546,
+    "y": 836
+   }
+  },
+  "date": {
+   "C": {
+    "h": 24,
+    "src": "cut/date-C.webp",
+    "state": 3,
+    "w": 347,
+    "x": 47,
+    "y": 34
+   },
+   "E": {
+    "h": 24,
+    "src": "cut/date-E.webp",
+    "state": 3,
+    "w": 347,
+    "x": 55,
+    "y": 34
+   },
+   "G": {
+    "h": 56,
+    "src": "cut/date-G.webp",
+    "state": 3,
+    "w": 444,
+    "x": 0,
+    "y": 0
+   },
+   "H": {
+    "h": 24,
+    "src": "cut/date-H.webp",
+    "state": 3,
+    "w": 347,
+    "x": 55,
+    "y": 34
+   }
+  },
+  "doom": {
+   "C": {
+    "h": 276,
+    "src": "cut/doom-C.webp",
+    "state": 3,
+    "w": 536,
+    "x": 742,
+    "y": 4
+   },
+   "E": {
+    "h": 256,
+    "src": "cut/doom-E.webp",
+    "state": 3,
+    "w": 616,
+    "x": 652,
+    "y": 0
+   },
+   "G": {
+    "h": 328,
+    "src": "cut/doom-G.webp",
+    "state": 3,
+    "w": 478,
+    "x": 1442,
+    "y": 112
+   },
+   "H": {
+    "h": 406,
+    "src": "cut/doom-H.webp",
+    "state": 3,
+    "w": 356,
+    "x": 1362,
+    "y": 20
+   }
+  },
+  "event": {
+   "C": {
+    "h": 588,
+    "src": "cut/event-C.webp",
+    "state": 4,
+    "w": 777,
+    "x": 516,
+    "y": 224
+   },
+   "E": {
+    "h": 719,
+    "src": "cut/event-E.webp",
+    "state": 4,
+    "w": 725,
+    "x": 568,
+    "y": 194
+   },
+   "G": {
+    "h": 723,
+    "src": "cut/event-G.webp",
+    "state": 4,
+    "w": 788,
+    "x": 580,
+    "y": 112
+   }
+  },
+  "feed": {
+   "C": {
+    "h": 648,
+    "src": "cut/feed-C.webp",
+    "state": 4,
+    "w": 666,
+    "x": 1241,
+    "y": 215
+   },
+   "E": {
+    "h": 538,
+    "src": "cut/feed-E.webp",
+    "state": 4,
+    "w": 448,
+    "x": 1462,
+    "y": 196
+   },
+   "G": {
+    "h": 364,
+    "src": "cut/feed-G.webp",
+    "state": 4,
+    "w": 622,
+    "x": 0,
+    "y": 696
+   }
+  },
+  "menu": {
+   "C": {
+    "h": 868,
+    "src": "cut/menu-C.webp",
+    "state": 2,
+    "w": 1588,
+    "x": 10,
+    "y": 212
+   },
+   "E": {
+    "h": 884,
+    "src": "cut/menu-E.webp",
+    "state": 2,
+    "w": 1272,
+    "x": 10,
+    "y": 196
+   },
+   "G": {
+    "h": 948,
+    "src": "cut/menu-G.webp",
+    "state": 2,
+    "w": 1180,
+    "x": 242,
+    "y": 112
+   }
+  },
+  "plan": {
+   "C": {
+    "h": 868,
+    "src": "cut/plan-C.webp",
+    "state": 3,
+    "w": 1588,
+    "x": 10,
+    "y": 212
+   },
+   "E": {
+    "h": 884,
+    "src": "cut/plan-E.webp",
+    "state": 3,
+    "w": 1548,
+    "x": 346,
+    "y": 196
+   },
+   "G": {
+    "h": 948,
+    "src": "cut/plan-G.webp",
+    "state": 3,
+    "w": 844,
+    "x": 662,
+    "y": 112
+   },
+   "H": {
+    "h": 1012,
+    "src": "cut/plan-H.webp",
+    "state": 3,
+    "w": 1272,
+    "x": 18,
+    "y": 68
+   }
+  },
+  "rack": {
+   "C": {
+    "h": 242,
+    "src": "cut/rack-C.webp",
+    "state": 3,
+    "w": 1574,
+    "x": 10,
+    "y": 838
+   },
+   "E": {
+    "h": 538,
+    "src": "cut/rack-E.webp",
+    "state": 6,
+    "w": 486,
+    "x": 10,
+    "y": 310
+   },
+   "G": {
+    "h": 411,
+    "src": "cut/rack-G.webp",
+    "state": 3,
+    "w": 1920,
+    "x": 0,
+    "y": 56
+   },
+   "H": {
+    "h": 488,
+    "src": "cut/rack-H.webp",
+    "state": 3,
+    "w": 352,
+    "x": 1230,
+    "y": 592
+   }
+  },
+  "rep": {
+   "C": {
+    "h": 276,
+    "src": "cut/rep-C.webp",
+    "state": 3,
+    "w": 316,
+    "x": 1602,
+    "y": 4
+   },
+   "E": {
+    "h": 256,
+    "src": "cut/rep-E.webp",
+    "state": 3,
+    "w": 336,
+    "x": 1574,
+    "y": 0
+   },
+   "G": {
+    "h": 56,
+    "src": "cut/rep-G.webp",
+    "state": 3,
+    "w": 260,
+    "x": 1359,
+    "y": 0
+   },
+   "H": {
+    "h": 406,
+    "src": "cut/rep-H.webp",
+    "state": 3,
+    "w": 260,
+    "x": 1658,
+    "y": 20
+   }
+  },
+  "res": {
+   "C": {
+    "h": 200,
+    "src": "cut/res-C.webp",
+    "state": 3,
+    "w": 788,
+    "x": 10,
+    "y": 80
+   },
+   "G": {
+    "h": 56,
+    "src": "cut/res-G.webp",
+    "state": 3,
+    "w": 915,
+    "x": 444,
+    "y": 0
+   }
+  },
+  "review": {
+   "C": {
+    "h": 864,
+    "src": "cut/review-C.webp",
+    "state": 5,
+    "w": 1288,
+    "x": 314,
+    "y": 216
+   },
+   "E": {
+    "h": 884,
+    "src": "cut/review-E.webp",
+    "state": 5,
+    "w": 1204,
+    "x": 288,
+    "y": 196
+   },
+   "G": {
+    "h": 535,
+    "src": "cut/review-G.webp",
+    "state": 5,
+    "w": 786,
+    "x": 581,
+    "y": 112
+   }
+  }
+ }
+}

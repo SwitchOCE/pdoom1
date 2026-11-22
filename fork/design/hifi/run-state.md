@@ -278,3 +278,32 @@ Two errors in the first version, found by designer E and the orchestrator:
   list for how the mock-ups treat it.
 - (Council, agreed) Do not mark Safety Audit or Strategic as NEW in
   November.
+
+## Resource history (2026-11-22, hifi3 addendum)
+
+Added for H's trace-window take (`?res=trace`): the amounts at the start of
+each month, as the player saw them. The trace draws only these past months
+plus the current amount. No forecast, and no doom trace (ADR-0015).
+
+| Month | Money | Compute | Research | Papers | Reputation | Source |
+|---|---|---|---|---|---|---|
+| Jul 2017 | $245,000 | 100 | 0 | 0 | 50 | game screenshot `main.png` |
+| Aug 2017 | $245,000 | 100 | 2 | 0 | 46 | game screenshot `m2_plan_queued.png` |
+| Sep 2017 | $245,000 | 65 | 4 | 0 | 44 | game screenshot m3 |
+| Oct 2017 | $195,000 | 65 | 4 | 0 | 30 | game screenshot m4 |
+| Nov 2017 | $140,000 | 65 | -12 | 0 | 32 | game screenshot m5 (state 2's numbers) |
+| Dec 2017 | $12,400 | 65 | -6 | 0 | 34 | this file's state 5 (fixture) |
+| Jan 2018 | $12,375 | 65 | -4 | 0 | 31 | **projection** |
+| Feb 2018 | $12,350 | 65 | -1 | 0 | 28 | **projection** |
+| Mar 2018 | $12,325 | 65 | 2 | 0 | 24 | **projection** |
+| Apr 2018 | $12,300 | 65 | 4 | 0 | 21 | this file's state 6 (fixture) |
+
+- Screenshots are in `fork/design/research/ui-pass/game-shots/`.
+- **Projection:** Jan-Mar 2018 are a straight line between the Dec and Apr
+  fixtures, rounded. No game ran those months; they exist only so the
+  state 6 trace has a line to draw. A real build draws what the run
+  recorded.
+- The game's own m6 shot (December) shows $140,000, research -9 and
+  reputation 32, because the scripted run did not play the queue this file
+  uses for November. The mock-ups keep the fixture ($12,400, -6, 34) so
+  state 5 and the trace agree.

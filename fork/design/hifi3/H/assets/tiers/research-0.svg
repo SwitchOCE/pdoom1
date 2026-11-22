@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfa863"/><stop offset="1" stop-color="#94723b"/></linearGradient>
+<linearGradient id="goldedge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a431f"/><stop offset=".45" stop-color="#7d5f2f"/><stop offset="1" stop-color="#4a3618"/></linearGradient>
+<linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7f786b"/><stop offset="1" stop-color="#4e4940"/></linearGradient>
+<linearGradient id="metaldk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4740"/><stop offset="1" stop-color="#2a2824"/></linearGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfc3a7"/><stop offset="1" stop-color="#a99c80"/></linearGradient>
+<linearGradient id="paperdim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8f8670"/><stop offset="1" stop-color="#6c6452"/></linearGradient>
+<linearGradient id="cover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f5a55"/><stop offset="1" stop-color="#26363a"/></linearGradient>
+<linearGradient id="coverdk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#36403c"/><stop offset="1" stop-color="#1e2422"/></linearGradient>
+<linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d4b06a"/><stop offset=".55" stop-color="#a8854b"/><stop offset="1" stop-color="#6e5428"/></linearGradient>
+<linearGradient id="tarn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8e7d5c"/><stop offset="1" stop-color="#4f4532"/></linearGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b4a36"/><stop offset="1" stop-color="#3a2f22"/></linearGradient>
+<radialGradient id="amberglow"><stop offset="0" stop-color="#ffcf6a"/><stop offset=".45" stop-color="#d9a03a"/><stop offset="1" stop-color="#d9a03a" stop-opacity="0"/></radialGradient>
+</defs><ellipse cx="32" cy="57" rx="24" ry="4" fill="rgba(0,0,0,.35)"/><path d="M8,20 Q20,16 32,21 L32,52 Q20,47 8,51 Z" fill="url(#paperdim)" stroke="#2b261d" stroke-width="1"/><path d="M56,20 Q44,16 32,21 L32,52 Q44,47 56,51 Z" fill="url(#paperdim)" stroke="#2b261d" stroke-width="1"/><path d="M7,52 Q20,48 32,54 Q44,48 57,52 L57,55 Q44,51 32,57 Q20,51 7,55 Z" fill="url(#cover)"/><line x1="32" y1="21" x2="32" y2="53" stroke="rgba(0,0,0,.35)" stroke-width="1.4"/><path d="M40,18 L40,40 L43,36 L46,40 L46,18 Z" fill="#b0392c"/><path d="M50,21 L54,24 L50,27 L54,30" fill="none" stroke="#2b261d" stroke-width="1"/></svg>
