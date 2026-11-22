@@ -9,9 +9,12 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 
 - [in-lean] ui -- the main screen shows too much at once and the cold-open hand-off is one hint line: G desk (rail, sheets, advisor note), plain look, playable by mouse; squash 19de9ba3 -- -- ui/g-desk (deleted)
 - [doing] ui -- G desk look (2a theme), WATCH faces (1c), paper, room, dateline, tier icons, motion -- -- ui/g-*
-- [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction'); the baseline game is also folded into the live run's verification hash -- Refs #1377 --
+- [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction'); the baseline game is also folded into the live run's verification hash; the thread can also outlive the game at exit -- Refs #1377 --
 - [todo] bug -- Undo removes the first queued copy of the last action, not the last entry (changing it is mechanics: ask Alex) -- Refs #1378 --
 - [todo] bug -- queued plays never book their typed hours, so a month with 12 planning hours accepts 20 planning plays and all resolve (mechanics: Pip's call) -- Refs #1379 --
+- [todo] bug -- the WATCH 'reserve N' readout shows the hours set aside at Commit, not the hours still held (display only; fork-scope UI fix possible) -- Refs #1380 --
+- [todo] bug -- month 1 opens at workday 2 of 21: turn 1 is Tue 4 Jul, the start day says Mon 3 Jul (mechanics: Pip's call) -- Refs #1381 --
+- [todo] bug -- run_godot_tests.py reuses the user:// sandbox between runs, so one run's config.cfg can fail the next (tooling) -- Refs #1382 --
 
 (Empty. Candidates from Pip's open issues, titles only, untriaged -- check each
 against AGENTS.md section 1 before taking it:
