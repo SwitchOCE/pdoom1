@@ -1,0 +1,14 @@
+Working folder: /data/pdoom1-art/paper-run1/ (cd there first; save every file there).
+Guide file: none.
+Do not run git or commit anything. Do not change any file in the repo.
+
+You are making a paper texture for a dark, satirical strategy game about running an AI safety lab. Use your built-in image generation tool. For EACH item below, generate exactly one image, then copy the PNG into the current working folder under the given filename, overwriting any existing file. One item at a time. Do not write code or other files. No logos, watermarks, titles or captions. Reply with just the saved filenames.
+
+Look: painted, chunky and readable at small size, like the art of a moody management game: weathered metal, worn paper and brass, a little grime, warm low light from one side, deep shadows. Not photoreal and not fussy.
+
+Items:
+1. paper-sheet-a.png -- a sheet of old, handled office paper filling the whole frame edge to edge, flat and seen from straight above, even light, tan, a little darker toward the bottom, scorched and worn at the edges and corners, no text, no objects, nothing on it.
+2. paper-sheet-b.png -- a sheet of old, handled office paper filling the whole frame edge to edge, flat and seen from straight above, even light, tan, a little darker toward the bottom, scorched and worn at the edges and corners, no text, no objects, nothing on it.
+3. paper-sheet-c.png -- a sheet of old, handled office paper filling the whole frame edge to edge, flat and seen from straight above, even light, tan, a little darker toward the bottom, scorched and worn at the edges and corners, no text, no objects, nothing on it.
+
+Never run rm -rf, or any other delete, anywhere: Codex stops for the owner's approval on it, and the run stalls for hours. Instead, list every file you made that should be removed afterwards. End your report with a Disk section: every folder you wrote into outside the working folder, each with its du -sh size, and df -h /data at the start and the end.

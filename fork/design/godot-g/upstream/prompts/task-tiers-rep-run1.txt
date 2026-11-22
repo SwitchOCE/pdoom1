@@ -1,0 +1,22 @@
+Working folder: /data/pdoom1-art/tiers-rep-run1/ (cd there first; save every file there).
+Guide file: none.
+Do not run git or commit anything. Do not change any file in the repo.
+
+You are making resource icons for a dark, satirical strategy game about running an AI safety lab. Use your built-in image generation tool. For EACH item below, generate exactly one image, then copy the PNG into the current working folder under the given filename, overwriting any existing file. One item at a time. Do not write code or other files. No logos, watermarks, titles or captions. Every design is original: do not depict or closely imitate any existing game's icons. Reply with just the saved filenames.
+
+Every item: a square 1:1 image of one game icon: a single object, centred, filling most of the frame, on a transparent background (if the tool cannot make one transparent, a plain flat black background). The five items are one set: the same things growing from nothing to plenty, seen from the same three-quarter angle and lit the same way, so they read as steps when placed side by side at 48 pixels.
+
+No numerals, text, currency signs or lettering anywhere.
+
+Look: painted, chunky and readable at small size, like the icons of a moody management game: weathered metal, worn paper and brass, a little grime, warm low light from one side, deep shadows. Not photoreal and not fussy.
+
+The design, the same for every item: things found in a cramped lab office late at night, lit by an amber monitor glow. Warm amber is the only strong colour; red appears only in the empty one. Draw every item at the same scale, as if all five sit on the same desk seen from the same distance: a single small thing is small in the frame, the largest pile fills it.
+
+Items:
+1. rep-0.png -- A shattered medal, a faint red glow along its cracks.
+2. rep-1.png -- A cracked medal.
+3. rep-2.png -- A tarnished medal.
+4. rep-3.png -- A brass medal with a star.
+5. rep-4.png -- A brass medal with a laurel wreath.
+
+Never run rm -rf, or any other delete, anywhere: Codex stops for the owner's approval on it, and the run stalls for hours. Instead, list every file you made that should be removed afterwards. End your report with a Disk section: every folder you wrote into outside the working folder, each with its du -sh size, and df -h /data at the start and the end.

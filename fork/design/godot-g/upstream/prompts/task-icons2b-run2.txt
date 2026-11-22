@@ -1,0 +1,23 @@
+Working folder: /data/pdoom1-art/icons2b-run2/ (cd there first; save every file there).
+Guide file: none.
+Do not run git or commit anything. Do not change any file in the repo.
+
+You are making action icons for a dark, satirical strategy game about running an AI safety lab. Use your built-in image generation tool. For EACH item below, generate exactly one image, then copy the PNG into the current working folder under the given filename, overwriting any existing file. One item at a time. Do not write code or other files. No logos, watermarks, titles or captions. Every design is original: do not depict or closely imitate any existing game's icons. Reply with just the saved filenames.
+
+Every item: a square 1:1 image of one game icon: a single object, centred, filling most of the frame, on a transparent background (if the tool cannot make one transparent, a plain flat black background). The six items are one set of buttons for things the player can do, seen from the same three-quarter angle and lit the same way, so they sit together in a column at 40 pixels.
+
+No numerals, text, currency signs or lettering anywhere.
+
+Look: painted, chunky and readable at small size, like the icons of a moody management game: weathered metal, worn paper and brass, a little grime, warm low light from one side, deep shadows. Not photoreal and not fussy.
+
+The design, the same for every item: things found in a cramped lab office late at night, lit by an amber monitor glow. Warm amber is the only strong colour.
+
+Items:
+1. g_act_advertise.png -- A notice pinned to a cork board, its corner curling.
+2. g_act_travel.png -- A battered suitcase with a strap and a travel tag.
+3. g_act_publicity.png -- A dented hand megaphone.
+4. g_act_post_online.png -- A speech bubble cut from card, propped up like a sign.
+5. g_act_meetups.png -- Two glasses clinked together, a little drink in each.
+6. g_act_supplies.png -- An open cardboard carton with pencils and a ruler sticking out.
+
+Never run rm -rf, or any other delete, anywhere: Codex stops for the owner's approval on it, and the run stalls for hours. Instead, list every file you made that should be removed afterwards. End your report with a Disk section: every folder you wrote into outside the working folder, each with its du -sh size, and df -h /data at the start and the end.
