@@ -15,8 +15,6 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 - [todo] bug -- the WATCH 'reserve N' readout shows the hours set aside at Commit, not the hours still held (display only; fork-scope UI fix possible) -- Refs #1380 --
 - [todo] bug -- month 1 opens at workday 2 of 21: turn 1 is Tue 4 Jul, the start day says Mon 3 Jul (mechanics: Pip's call) -- Refs #1381 --
 - [todo] bug -- run_godot_tests.py reuses the user:// sandbox between runs, so one run's config.cfg can fail the next (tooling) -- Refs #1382 --
-- [todo] bug -- door submenu key hints are unreadable: 10 px, 60% alpha, under the option icon (UI: in scope for a fork fix; G's skin lifts them in G only) -- Refs #1383 --
-- [todo] bug -- Scouting submenu options show the missing-icon placeholder: scout_read, scout_meetups, scout_shitpost have no entry in icon_mapping.json (display data: in scope for a fork fix; G maps its own icons) -- Refs #1384 --
 
 (Empty. Candidates from Pip's open issues, titles only, untriaged -- check each
 against AGENTS.md section 1 before taking it:
@@ -41,3 +39,6 @@ Alex's calls on this fork, one line each, newest last:
 - 2026-11-22 -- G desk is on by default in fork builds; classic one switch away in Settings -- Alex: "G on by default (Recommended)".
 - 2026-11-22 -- G's Attention card shows the TOTAL hours left (total - committed - queued - reserved, what the queue check uses); no per-pool "N left" until the game enforces the pools (#1379) -- Alex: "I'm happy with the recommendations" (checkpoint A Q1).
 - 2026-11-22 -- In G, hide today's "Doom X -> Y (change: +Z)" feed line (ADR-0015, G drops the doom chip); classic unchanged; the P(Doom) card keeps the level -- Alex: "I'm happy with the recommendations" (checkpoint A Q2; built in 1c).
+- 2026-11-22 -- G keeps 2a's compact mode for small windows, but 1280x720 is no longer tested; the target is 1920x1080 and up (1600x900 the smallest worth a look) -- Alex: "a compact mode's fine if you want to add it in and it's small to maintain we just don't need to rigorously test for it".
+- 2026-11-22 -- G's feed shows a choice's player-facing name, never a raw id ("Event choice: respond_publicly"); classic unchanged -- Alex: "obviously for raw IDs shouldn't be shown".
+- 2026-11-22 -- Classic-only display bugs that G already covers (#1383, #1384) are not fixed in the fork; classic is expected to give way to G -- Alex: "we don't need to fix those unless they affect us in some way".
