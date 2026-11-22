@@ -8,7 +8,11 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 ## Items
 
 - [in-lean] ui -- the main screen shows too much at once and the cold-open hand-off is one hint line: G desk (rail, sheets, advisor note), plain look, playable by mouse; squash 19de9ba3 -- -- ui/g-desk (deleted)
-- [in-lean] ui -- G desk look (2a fb92bbcd), WATCH faces (1c 90e057a5), paper (2b 1d0383ad), room by doom band (3a 4c193364), floor smoke (3b a8aeafc4), typed dateline with mute (4 e097bf09), tier icons (5 b7a849d3), trace windows (6 3bfe6779), motion and reduced motion (7 4ebd9911) -- -- ui/g-* (deleted)
+- [in-lean] ui -- G desk look (2a fb92bbcd), WATCH faces (1c 90e057a5), paper (2b 1d0383ad), room by doom band (3a 4c193364), floor smoke (3b a8aeafc4, removed in build E 5358478d), typed dateline with mute (4 e097bf09), tier icons (5 b7a849d3), trace windows (6 3bfe6779), motion and reduced motion (7 4ebd9911) -- -- ui/g-* (deleted)
+- [in-lean] ui -- build E from Alex's build D notes: no floor smoke (5358478d); research and papers at 0 read neutral, no red warning on turn 1 (3e348af5); paper with clean straight edges (2f3da71b) -- -- ui/g-no-smoke, ui/g-tier-zero-neutral, ui/g-paper-straight (deleted)
+- [in-lean] bug -- G's feed showed raw lines like 'FEED | unknown -- Talent Opportunity'; now the item's name only; squash 56f845f6 -- -- fix/g-feed-source (deleted)
+- [in-lean] bug -- in G the build badge covered the reputation note ('0 ends the r...') and MENU; it now sits in G's bottom strip; squash f03deb42 -- -- fix/g-badge-strip (deleted)
+- [todo] ui -- G at 1600x900: a few small labels lose contrast; scaling the compact layout to about 0.85 would fix it (Alex has not answered) --
 - [in-lean] bug -- G desk options opened half off screen, hiding the switch back to classic; squash 0648a54d -- -- fix/g-options-offscreen (deleted)
 - [todo] bug -- test_music_player_controls.gd fails on a slow machine (the conductor-nudge timer leaks between tests; test isolation) -- Refs #1385 --
 - [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction'); the baseline game is also folded into the live run's verification hash; the thread can also outlive the game at exit -- Refs #1377 --
@@ -44,3 +48,5 @@ Alex's calls on this fork, one line each, newest last:
 - 2026-11-22 -- G keeps 2a's compact mode for small windows, but 1280x720 is no longer tested; the target is 1920x1080 and up (1600x900 the smallest worth a look) -- Alex: "a compact mode's fine if you want to add it in and it's small to maintain we just don't need to rigorously test for it".
 - 2026-11-22 -- G's feed shows a choice's player-facing name, never a raw id ("Event choice: respond_publicly"); classic unchanged -- Alex: "obviously for raw IDs shouldn't be shown".
 - 2026-11-22 -- Classic-only display bugs that G already covers (#1383, #1384) are not fixed in the fork; classic is expected to give way to G -- Alex: "we don't need to fix those unless they affect us in some way".
+- 2026-11-23 -- G room cost on Alex's PC (RX 7800 XT, forward_plus): delta 0.018 ms per frame, WITHIN the 2 ms budget, so the full room stays the default -- Alex's PC check.
+- 2026-11-23 -- G: no smoke; no warning look on resources that start at 0 (research, papers); no torn edges on the paper -- Alex: "Get rid of the smoke... we shouldn't have warnings if you're starting at zero... No [torn edges] on paper".
