@@ -36,6 +36,15 @@ var lose_label: Label
 
 
 const TOP_EDGE := 3.0
+## Spec 6.2: the arc's drawn value eases from the old doom to the new one; the % text and the
+## band name switch at once (a counting number would show values the game never had).
+const ARC_SECONDS := 0.4
+
+## The doom value the arc is drawn at right now (a float between the old and the new doom
+## while the arc tween runs). Display only.
+var shown_doom: float = 0.0
+var _arc_tween: Tween
+var _has_doom := false
 
 var _stroke: Color = Color(0, 0, 0, 0)
 
@@ -156,8 +165,33 @@ func update_from_state(state: Dictionary) -> void:
 		_stroke = stroke
 		frame_override = band_frame(stroke)
 		queue_redraw()
-	_ring.queue_redraw()
+	_tween_arc(doom, not _has_doom)
+	_has_doom = true
 	_ladder.queue_redraw()
+
+
+func _tween_arc(to: float, instant: bool) -> void:
+	"""Spec 6.1-6.2: one tween on this card, killed before the next starts, which runs from the
+	value the arc is drawn at now (a change mid-tween never jumps back). The first state, a
+	reduced-motion profile (6.5) or a card outside the tree lands at once."""
+	if _arc_tween != null and _arc_tween.is_valid():
+		_arc_tween.kill()
+	_arc_tween = null
+	if instant or GPrefs.reduced_motion() or not is_inside_tree() or is_equal_approx(shown_doom, to):
+		_set_shown_doom(to)
+		return
+	_arc_tween = create_tween()
+	_arc_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_arc_tween.tween_method(_set_shown_doom, shown_doom, to, ARC_SECONDS)
+
+
+func _set_shown_doom(v: float) -> void:
+	shown_doom = v
+	_ring.queue_redraw()
+
+
+func arc_tweening() -> bool:
+	return _arc_tween != null and _arc_tween.is_valid() and _arc_tween.is_running()
 
 
 static func band_frame(stroke: Color) -> StyleBoxFlat:
@@ -188,7 +222,9 @@ func _draw_ring() -> void:
 	var a0 := deg_to_rad(START_DEG)
 	var a1 := deg_to_rad(START_DEG + SWEEP_DEG)
 	_ring.draw_arc(center, r, a0, a1, 64, Color(1, 1, 1, 0.07), STROKE, true)
-	var frac := clampf(doom / 100.0, 0.0, 1.0)
+	# The arc's length follows the eased value; its colour is the band's now (the band switches
+	# at once with the % text and the band name).
+	var frac := clampf(shown_doom / 100.0, 0.0, 1.0)
 	if frac > 0.0:
 		_ring.draw_arc(center, r, a0, a0 + (a1 - a0) * frac, 64,
 			ThemeManager.get_doom_stroke_color(doom), STROKE, true)

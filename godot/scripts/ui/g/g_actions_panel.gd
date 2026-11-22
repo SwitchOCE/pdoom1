@@ -473,13 +473,44 @@ func _refresh_hint() -> void:
 	var row: Control = _row_nodes.get(hint_id, null) if hint_id != "" else null
 	if row != null and row == _hint_row and visible and hint_pulsing():
 		return
+	if row != null and row == _hint_row and visible and GPrefs.reduced_motion() \
+			and row.get_node_or_null(HINT_RING) != null:
+		return
 	_stop_hint()
 	if row == null or not visible:
 		return
 	_hint_row = row
+	# Like the rail plate (spec 5.13, 6.2): the steady amber ring, and the pulse on top of it
+	# (alpha 1 -> 0.4 -> 1, 0.6 s each way). Reduced motion (6.5): the ring only.
+	row.add_child(_make_hint_ring())
+	if GPrefs.reduced_motion():
+		return
 	_hint_tween = row.create_tween().set_loops()
 	_hint_tween.tween_property(row, "modulate:a", 0.4, 0.6)
 	_hint_tween.tween_property(row, "modulate:a", 1.0, 0.6)
+
+
+const HINT_RING := "HintRing"
+
+
+static func _make_hint_ring() -> Panel:
+	"""The hinted row's ring: the GPlateHint plate's 2 px amber border at 50%, no fill."""
+	var ring := Panel.new()
+	ring.name = HINT_RING
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.focus_mode = Control.FOCUS_NONE
+	var sb := StyleBoxFlat.new()
+	sb.draw_center = false
+	sb.border_color = Color(GDesk.C.amber, 0.5)
+	sb.set_border_width_all(2)
+	ring.add_theme_stylebox_override("panel", sb)
+	ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	return ring
+
+
+func hint_ring_shown() -> bool:
+	return _hint_row != null and is_instance_valid(_hint_row) \
+		and _hint_row.get_node_or_null(HINT_RING) != null
 
 
 func _reveal_hint_later(take_focus: bool = false) -> void:
@@ -540,6 +571,10 @@ func _stop_hint() -> void:
 	_hint_tween = null
 	if _hint_row != null and is_instance_valid(_hint_row):
 		_hint_row.modulate.a = 1.0
+		var ring := _hint_row.get_node_or_null(HINT_RING)
+		if ring != null:
+			_hint_row.remove_child(ring)
+			ring.queue_free()
 	_hint_row = null
 
 

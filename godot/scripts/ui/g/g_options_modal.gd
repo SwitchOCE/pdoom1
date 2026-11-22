@@ -1,10 +1,11 @@
 extends Control
 ## G desk options (fork/design/godot-g/spec.md 2.1), opened from the Settings board's
 ## "G desk options" row. It shows only the switches that do something today: the G desk on/off
-## switch, since phase 3a room effects (full / simple / off, spec 5.14), and since phase 4 the
-## typewriter sound on/off (Alex: "include a mute option for it"). Reduced motion and
-## the resources take join them in the phases that make them work (phases 7 and 6). Applies on
-## next game load, like today's layout checkbox.
+## switch, room effects (full / simple / off, spec 5.14, phase 3a), the typewriter sound
+## on/off (phase 4; Alex: "include a mute option for it") and, since phase 7, reduced
+## motion (spec 6.5: every motion of the 6.2 table takes its "Reduced motion" column). The
+## resources take joins them in the phase that makes it work (phase 6). Each row's caption
+## says when it applies (most on next game load, like today's layout checkbox).
 ##
 ## Escape contract (docs/game-design/UI_ESCAPE_CONTRACT.md): Esc, the x and Close all close it,
 ## standalone-safe (tests/unit/test_ui_no_dead_ends.gd opens it with no host).
@@ -14,6 +15,7 @@ signal closed
 var desk_toggle: CheckButton
 var typewriter_toggle: CheckButton
 var room_picker: OptionButton
+var motion_toggle: CheckButton
 var _panel: PanelContainer
 var _barrier: ColorRect
 
@@ -129,6 +131,24 @@ func _build() -> void:
 	tcap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tcap.custom_minimum_size = Vector2(500, 0)
 	vb.add_child(tcap)
+	var motion_row := HBoxContainer.new()
+	motion_row.name = "MotionRow"
+	motion_row.add_theme_constant_override("separation", 16)
+	vb.add_child(motion_row)
+	var ml := _label("Reduced motion", "body", Color("#d6cebd"))
+	ml.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	motion_row.add_child(ml)
+	motion_toggle = CheckButton.new()
+	motion_toggle.name = "MotionToggle"
+	motion_toggle.tooltip_text = "On: no fades, slides or pulses on the G desk."
+	motion_toggle.set_pressed_no_signal(GPrefs.reduced_motion())
+	motion_toggle.toggled.connect(_on_motion_toggled)
+	motion_row.add_child(motion_toggle)
+	var mcap := _label("On: sheets, papers and the P(Doom) ring change at once, the office changes with doom at once with still grain, the advisor's button glows without pulsing, and the date shows without typing or its sound. Applies at once; the office on next game load.",
+		"small", Color("#aaa08e"))
+	mcap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mcap.custom_minimum_size = Vector2(500, 0)
+	vb.add_child(mcap)
 
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_END
@@ -173,6 +193,8 @@ func show_panel() -> void:
 		room_picker.select(_room_index(GPrefs.room_effects()))
 	if typewriter_toggle != null:
 		typewriter_toggle.set_pressed_no_signal(GPrefs.typewriter_sound())
+	if motion_toggle != null:
+		motion_toggle.set_pressed_no_signal(GPrefs.reduced_motion())
 	visible = true
 	_barrier.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -208,3 +230,7 @@ func _on_desk_toggled(on: bool) -> void:
 
 func _on_typewriter_toggled(on: bool) -> void:
 	GPrefs.set_typewriter_sound(on)
+
+
+func _on_motion_toggled(on: bool) -> void:
+	GPrefs.set_reduced_motion(on)

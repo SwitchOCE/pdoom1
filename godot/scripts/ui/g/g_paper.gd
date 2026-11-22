@@ -40,6 +40,13 @@ const DOOR_KEYCAP := "Space"
 ## (a dark red that keeps 4.5:1 on the darker bottom of the sheet).
 const INK_ALERT := Color("#5c140c")
 
+## The arrival (spec 6.2 "Event paper arrives", "Month review arrives"): modulate.a 0 -> 1 and
+## y +12 -> 0 over 0.2 s, display only; the dialog's buttons are live from the first frame.
+const ARRIVE_SECONDS := 0.2
+const ARRIVE_SHIFT := 12.0
+const META_BASE_Y := "g_base_y"
+const META_SLIDE := "g_slide"
+
 static var _paper_tex: Texture2D = null
 
 
@@ -138,7 +145,11 @@ static func autosize(dialog: Control, content: Control, width: float, viewport_s
 		dialog.custom_minimum_size.y = h
 		dialog.size.y = h
 		var room := viewport_size.y - BOTTOM_GAP - h
-		dialog.position.y = clampf(minf(top, room), 20.0, top)
+		var y := clampf(minf(top, room), 20.0, top)
+		# The arrival slide (arrive) is an offset on top of the resting place, so a content
+		# resize mid-slide moves the resting place without cutting the slide short.
+		dialog.set_meta(META_BASE_Y, y)
+		dialog.position.y = y + float(dialog.get_meta(META_SLIDE, 0.0))
 	content.minimum_size_changed.connect(fit)
 	content.resized.connect(fit)
 	dialog.set_meta("g_fit", fit)
@@ -163,6 +174,51 @@ static func padded(dialog: Control, left: int, top: int, right: int, bottom: int
 	vb.add_theme_constant_override("separation", sep)
 	m.add_child(vb)
 	return [m, vb]
+
+
+# --- the arrival (spec 6.2) ------------------------------------------------------------
+
+static func arrive(dialog: Control) -> Tween:
+	"""Fade and slide a paper in as it lands. The tween is created on the dialog itself, so it
+	is pausable like the dialog (spec 6.3) and dies with it when an answer frees the dialog
+	mid-fade. Input is untouched: modulate and an offset change neither the buttons nor the
+	blocker. Reduced motion (6.5), or a dialog not in the tree: no tween, it is simply there.
+	Returns the tween (null when instant)."""
+	if dialog == null or not is_instance_valid(dialog):
+		return null
+	var running = (dialog.get_meta("g_arrive") if dialog.has_meta("g_arrive") else null)
+	if running is Tween and (running as Tween).is_valid():
+		(running as Tween).kill()
+	_set_slide(0.0, dialog)
+	dialog.modulate.a = 1.0
+	if GPrefs.reduced_motion() or not dialog.is_inside_tree():
+		if dialog.has_meta("g_arrive"):
+			dialog.remove_meta("g_arrive")
+		return null
+	dialog.modulate.a = 0.0
+	_set_slide(ARRIVE_SHIFT, dialog)
+	var t := dialog.create_tween().set_parallel(true)
+	t.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(dialog, "modulate:a", 1.0, ARRIVE_SECONDS)
+	t.tween_method(_set_slide.bind(dialog), ARRIVE_SHIFT, 0.0, ARRIVE_SECONDS)
+	dialog.set_meta("g_arrive", t)
+	return t
+
+
+static func _set_slide(v: float, dialog: Control) -> void:
+	if not is_instance_valid(dialog):
+		return
+	var base := float(dialog.get_meta(META_BASE_Y, dialog.position.y - float(dialog.get_meta(META_SLIDE, 0.0))))
+	dialog.set_meta(META_SLIDE, v)
+	dialog.position.y = base + v
+
+
+static func arriving(dialog: Control) -> bool:
+	"""True while a paper's arrival runs (tests)."""
+	if dialog == null or not is_instance_valid(dialog):
+		return false
+	var t = (dialog.get_meta("g_arrive") if dialog.has_meta("g_arrive") else null)
+	return t is Tween and (t as Tween).is_valid() and (t as Tween).is_running()
 
 
 # --- the event paper (spec 5.11) -------------------------------------------------------

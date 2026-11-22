@@ -126,6 +126,11 @@ var commit_path: String = ""
 
 var _guide: Control = null
 var _advisor_pulse: Tween
+## Spec 6.2 motion: the last paper's arrival, and the PLAN <-> WATCH fade of the feed panel and
+## the playback bar (one tween per node, created on that node; spec 6.1).
+var paper_tween: Tween
+var view_fades: Dictionary = {}     # Control -> Tween
+const VIEW_FADE_SECONDS := 0.15
 
 # Phase 1b: the sheets (persistent children of Sheets, never freed while G is on), the feed.
 var sheets: Control
@@ -799,7 +804,35 @@ func _refresh_feed_visibility() -> void:
 		and host.screen_mode.current_mode == ScreenModeController.Mode.WATCH
 	if watching and not feed_panel.visible:
 		feed_panel.render()
-	feed_panel.visible = watching
+	_set_view_part(feed_panel, watching)
+
+
+func _set_view_part(part: Control, on: bool) -> void:
+	"""Spec 6.2 "PLAN <-> WATCH": a WATCH part (the feed panel, the playback bar) fades in over
+	0.15 s when it appears; it hides at once, and hiding kills a fade still running, so a second
+	flip mid-fade never leaves a half-faded part. The view and phase change themselves are
+	immediate (screen_mode's), and nothing waits on the fade. Reduced motion: no fade."""
+	if part == null:
+		return
+	if part.visible == on:
+		return
+	var t: Tween = view_fades.get(part, null)
+	if t != null and t.is_valid():
+		t.kill()
+	view_fades.erase(part)
+	part.modulate.a = 1.0
+	part.visible = on
+	if not on or GPrefs.reduced_motion() or not part.is_inside_tree():
+		return
+	part.modulate.a = 0.0
+	t = part.create_tween()
+	t.tween_property(part, "modulate:a", 1.0, VIEW_FADE_SECONDS)
+	view_fades[part] = t
+
+
+func view_fading(part: Control) -> bool:
+	var t: Tween = view_fades.get(part, null)
+	return t != null and t.is_valid() and t.is_running()
 
 
 func _on_feed_changed() -> void:
@@ -982,14 +1015,29 @@ func _refresh_watch() -> void:
 	_refresh_playback()
 
 
-func _on_event_dialog_opened(_dialog: Control, _buttons: Array) -> void:
+func _on_event_dialog_opened(dialog: Control, _buttons: Array) -> void:
 	# The feed names the player's choice from the event on screen (no raw ids in G).
 	if is_instance_valid(feed_panel):
 		feed_panel.note_event(current_event())
+	# Spec 6.2: the event paper and the month review arrive with a 0.2 s fade and slide. The
+	# presenter emits this just before it mounts the dialog, so the arrival starts once the
+	# dialog is in the tree (same frame, before it is first drawn). Display only: the buttons
+	# are live at once, as today.
+	if not _detached and dialog != null and is_instance_valid(dialog):
+		if dialog.is_inside_tree():
+			paper_tween = GPaper.arrive(dialog)
+		else:
+			dialog.tree_entered.connect(_on_paper_mounted.bind(dialog), CONNECT_ONE_SHOT)
 	# State and phase signals can arrive before an event is on ModalStack; refresh after
 	# modal_stack.present has run (spec 5.5, R2-4).
 	if not _detached:
 		_refresh_watch.call_deferred()
+
+
+func _on_paper_mounted(dialog: Control) -> void:
+	if _detached or not is_instance_valid(dialog):
+		return
+	paper_tween = GPaper.arrive(dialog)
 
 
 func _on_event_dialog_closed() -> void:
@@ -1001,7 +1049,7 @@ func _refresh_playback() -> void:
 	"""The banner's playback bar and speed segments (WATCH view only)."""
 	if playback_bar == null or host == null:
 		return
-	playback_bar.visible = _watching()
+	_set_view_part(playback_bar, _watching())
 	if not playback_bar.visible:
 		return
 	var ws := watch_state()
@@ -1319,11 +1367,14 @@ func _show_plain_hint() -> void:
 
 func _start_advisor_pulse() -> void:
 	_stop_advisor_pulse()
-	# The hinted plate pulses like today's nudge (alpha 1 -> 0.4 -> 1, 0.6 s each way).
+	# The hinted plate carries the amber ring (GPlateHint) and pulses like today's nudge
+	# (alpha 1 -> 0.4 -> 1, 0.6 s each way). Reduced motion (spec 6.5): the steady ring only.
+	plate_actions.set_hint(true)
+	if GPrefs.reduced_motion():
+		return
 	_advisor_pulse = plate_actions.create_tween().set_loops()
 	_advisor_pulse.tween_property(plate_actions, "modulate:a", 0.4, 0.6)
 	_advisor_pulse.tween_property(plate_actions, "modulate:a", 1.0, 0.6)
-	plate_actions.set_hint(true)
 
 
 func _stop_advisor_pulse() -> void:

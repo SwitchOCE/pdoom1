@@ -10,10 +10,11 @@ extends RefCounted
 ## Keys:
 ##   desk           bool   -- G on or off (default DESK_DEFAULT)
 ##   room_effects   String -- "full" | "simple" | "off" (default "full"; spec 5.14, phase 3a)
-##   reduced_motion bool   -- default false (spec 6.5). Read by the room (phase 3a), the tier
-##                            icons (phase 5) and the dateline (phase 4: shown set, no sound);
-##                            the switch joins the options modal in phase 7, when every G
-##                            motion honours it.
+##   reduced_motion bool   -- default false (spec 6.5). Every G motion of the spec 6.2 table
+##                            reads it: each fade and slide is instant, the room changes band
+##                            at once with static grain, the dateline shows set with no sound,
+##                            the first-lever hint is a steady ring. The switch is in the G
+##                            desk options modal (phase 7).
 ##   typewriter_sound bool -- the dateline's typewriter strikes; default true (Alex, 2026-11-23:
 ##                            "include a mute option for it"). Off: the date still types, silently.
 ## (resources arrives with its reader in phase 6.)

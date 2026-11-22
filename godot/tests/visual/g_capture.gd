@@ -28,6 +28,8 @@ extends Node
 ##   Phase 1c adds the WATCH sub-states: 12_w1_peek (the V peek before Commit), 05_watch and
 ##   13_w2_mid (playback right after Commit and mid-month, the feed folded), 14_feed_full (G:
 ##   the feed's full log, opened by a click on its header), 06_event (W3) and 07_review (W4).
+##   Phase 7 adds 15_late_band5 (12.3 state 6: the debug doom nudge, after the hash) and waits
+##   for every G motion (6.2) to end before each shot.
 ## tiers (g, phase 5): month 1 (t1_month1), three Purchase Compute through the action slots,
 ##   the month played as in parity, and month 2 (t2_month2) with other tiers. Not a same-seed run.
 ##   JSON format: {"boxes":[{x,y,w,h,text,node}]} in the PNG's pixel space, as
@@ -410,6 +412,8 @@ func _run() -> void:
 		await get_tree().create_timer(6.0, false).timeout
 		_hide_dev_badge()
 		await _shot("t2_month2")
+	if mode == "shots":
+		await _late_band_shot()
 	if mode == "shots" and layout == "classic":
 		# Today's guide is a scene of its own, reached from the menus, not over the run.
 		SceneTransition.go_to(GUIDE_SCENE)
@@ -854,6 +858,11 @@ func _shots_queued() -> void:
 
 
 func _shot(name: String, hold_pulse: bool = true) -> void:
+	# Phase 7: the G motions of spec 6.2 (a sheet's open fade, the PLAN <-> WATCH fade, a
+	# paper's arrival, the P(Doom) arc, the room's band tween, a tier crossfade) end before the
+	# frame is taken, so every shot is the state at rest. Display only: the wait moves the
+	# moment of the shot, never the run (playback's timer does not wait for it).
+	await _settle_motion()
 	# The contrast gate measures the rest state: hold today's hint pulses (the ACTIONS plate
 	# and the hinted Actions row, alpha 1 -> 0.4 -> 1) at full alpha for this frame only.
 	var held := _hold_pulses() if hold_pulse else []
@@ -873,6 +882,82 @@ func _shot(name: String, hold_pulse: bool = true) -> void:
 	jf.store_string(JSON.stringify({"size": [img.get_width(), img.get_height()], "boxes": boxes}, " "))
 	jf.close()
 	_say("shot %s (%dx%d, %d boxes, err %d)" % [png, img.get_width(), img.get_height(), boxes.size(), err])
+
+
+func _g_moving() -> Array:
+	"""The G motions (spec 6.2) still running, by name. Empty in classic. While the month
+	plays, only the fades that change text alpha count: each workday moves doom, so the arc,
+	the room and a tier icon may ease again every day, and waiting for them would let the
+	month run on past the state being shot."""
+	var out: Array = []
+	var d := _desk()
+	if d == null:
+		return out
+	var playing := _phase() != "ACTION_SELECTION"
+	for k in ["actions_panel", "plan_panel", "upgrades_panel"]:
+		var sh = d.get(k)
+		if sh != null and bool(sh.call("opening")):
+			out.append(k)
+	for k in ["feed_panel", "playback_bar"]:
+		var part = d.get(k)
+		if part != null and bool(d.call("view_fading", part)):
+			out.append(k)
+	var dlg = _main_ui.get("active_dialog")
+	if dlg is Control and is_instance_valid(dlg) and dlg.has_meta("g_arrive"):
+		var pt = dlg.get_meta("g_arrive")
+		if pt is Tween and (pt as Tween).is_valid() and (pt as Tween).is_running():
+			out.append("paper")
+	if playing:
+		return out
+	var dc = d.get("doom_card")
+	if dc != null and bool(dc.call("arc_tweening")):
+		out.append("arc")
+	var room = d.get("room")
+	if room != null:
+		var rt = room.get("_tween")
+		if rt is Tween and (rt as Tween).is_valid() and (rt as Tween).is_running():
+			out.append("room")
+	var cells = d.get("resource_cells")
+	if cells is Dictionary:
+		for k in cells:
+			if bool((cells[k] as Node).call("is_fading")):
+				out.append("tier_" + String(k))
+	return out
+
+
+func _settle_motion() -> void:
+	var t0 := Time.get_ticks_msec()
+	var moving := _g_moving()
+	while not moving.is_empty() and Time.get_ticks_msec() - t0 < 5000:
+		await _frames(1)
+		moving = _g_moving()
+	if not moving.is_empty():
+		_say("note: still moving at the shot: %s" % str(moving))
+
+
+func _late_band_shot() -> void:
+	"""12.3 state 6: late game, a band 5 room, reached with today's debug doom nudge (PageUp,
+	main_ui._input, debug builds only). It writes game state, so it runs only in shots mode,
+	after the hash. main_ui's nudge refreshes classic's own UI by calling its handler, not by
+	the game's state signal, so the G desk is handed the same state the same way."""
+	for _i in range(5):
+		var cont := _visible_button("Continue")
+		if cont == null:
+			break
+		cont.pressed.emit()
+		await _frames(5)
+	await _close_g_sheets()
+	for _i in range(12):
+		if ThemeManager.get_doom_band_index(float(GameManager.state.doom)) >= 5:
+			break
+		await _key(KEY_PAGEUP)
+		var d := _desk()
+		if d != null:
+			d.call("_on_state", GameManager.get_game_state())
+	var band := ThemeManager.get_doom_band_index(float(GameManager.state.doom))
+	_check(band == 5, "late game: doom %.1f is in band index 5 (got %d)" % [float(GameManager.state.doom), band])
+	await _frames(10)
+	await _shot("15_late_band5")
 
 
 func _hold_pulses() -> Array:

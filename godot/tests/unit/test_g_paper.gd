@@ -185,6 +185,10 @@ func test_review_on_paper_keeps_its_door() -> void:
 	await _frames(3)
 	var dialog: Control = ed._showing_dialog
 	assert_eq(String(dialog.name), "GReviewPaper")
+	# Phase 7: the review arrives with a 0.2 s slide (spec 6.2); its resting place is top 132.
+	var arrival = (dialog.get_meta("g_arrive") if dialog.has_meta("g_arrive") else null)
+	if arrival is Tween and (arrival as Tween).is_valid():
+		(arrival as Tween).custom_step(1.0)
 	assert_eq(dialog.size.x, 700.0)
 	assert_eq(dialog.position.y, 132.0)
 	assert_true(dialog.get_meta("space_advances", false), "B1: Space still opens the door")

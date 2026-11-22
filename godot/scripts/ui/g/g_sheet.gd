@@ -159,7 +159,8 @@ func is_open() -> bool:
 
 func show_panel() -> void:
 	"""Shown at once and top from the first frame (it takes keys and clicks at once); the
-	0.12 s fade and slide is display only, and Esc or its letter mid-open kills it."""
+	0.12 s fade and slide is display only, and Esc or its letter mid-open kills it. With
+	reduced motion (spec 6.5) there is no fade: the sheet is there at once."""
 	_kill_tween()
 	visible = true
 	barrier.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -167,14 +168,17 @@ func show_panel() -> void:
 		_esc.set_process_unhandled_input(true)
 	refresh()
 	_panel_base_x = panel.position.x
+	focus_first()
+	if GPrefs.reduced_motion():
+		return   # spec 6.5: the sheet is simply there
 	modulate.a = 0.0
 	panel.position.x = _panel_base_x - OPEN_SHIFT
 	_tween = create_tween()
 	_tween.set_parallel(true)
-	_tween.set_ease(Tween.EASE_OUT)
+	# Ease out (spec 6.2): a linear transition would ignore the ease.
+	_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_tween.tween_property(self, "modulate:a", 1.0, OPEN_SECONDS)
 	_tween.tween_property(panel, "position:x", _panel_base_x, OPEN_SECONDS)
-	focus_first()
 
 
 func hide_panel() -> void:
