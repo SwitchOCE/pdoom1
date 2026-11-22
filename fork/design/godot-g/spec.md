@@ -45,7 +45,7 @@ Sections:
 16. Not in this build
 17. Council round 1 changes
 18. Council round 2 changes
-19. Still open after the council (resolve before phase 1a)
+19. Council round 3 changes
 
 ---
 
@@ -158,18 +158,28 @@ autoload, bug fixes only):
   (`main_ui.gd:309-317`). So:
   - the call at `main_ui.gd:444` stays and applies `GameConfig.ui_layout`
     (classic or proposed) exactly as today;
-  - if `GPrefs.desk` is true, one more call runs after `_inflight_hiring_box`
-    is in the tree (right after `main_ui.gd:316-317`), so every node G moves
-    already exists. It must be **deferred**:
-    `_apply_ui_layout.call_deferred("g")` (R2-1). That point is still inside
-    `MainUI._ready()` (`main_ui.gd:153-362`), and `_apply_g()` adds `GDesk` to
-    `TabManager`, MainUI's parent; Godot 4.5.1 refuses that while the parent
-    is setting up its children ("Parent node is busy setting up children,
-    add_child() failed"). The deferred call runs at the end of the frame;
-    `_boot_game()` itself waits one whole frame first (`main_ui.gd:360-362`),
-    so `GDesk` exists before the first game state arrives and the new-game
-    dateline trigger still sees it. F9 and Settings flips happen at run time
-    and need no deferral.
+  - if `GPrefs.desk` is true, one more call, `_apply_ui_layout("g")` (plain,
+    not deferred), runs **after the existing `await get_tree().process_frame`
+    and immediately before `_boot_game()`** (`main_ui.gd:360-362`; R3-1).
+    Why there:
+    - every node G moves exists by then (`_inflight_hiring_box` is built at
+      `main_ui.gd:309-317`);
+    - `_apply_g()` adds `GDesk` to `TabManager`, MainUI's parent, which Godot
+      4.5.1 refuses while that parent is still setting up its children
+      ("Parent node is busy setting up children, add_child() failed"). After
+      the await, `_ready()` has returned and the tree has finished setting up,
+      so the plain call is allowed (Sol's 4.5.1 probe:
+      `G_DESK_BEFORE_BOOT=true`);
+    - it runs strictly before `_boot_game()`, so `GDesk` is connected before
+      the first game state, whichever way `main.tscn` was reached. The two
+      launch paths run deferred calls in a different order (as the startup
+      scene, a deferred call ran after `_boot_game()`; through
+      `SceneTransition`'s scene change, before it; Opus's and Sol's probes),
+      but this call is not deferred, so both paths do the same thing: await
+      one frame, build G, boot.
+    So the new-game state reaches `GDesk` and the dateline types (5.1.1) on
+    both paths, and no extra "fresh game found at setup" trigger is needed.
+    F9 and Settings flips happen at run time and are unaffected.
   With G on, `GameConfig.ui_layout` keeps whatever it held; G does not
   overwrite it.
 - **F9 (debug builds):** cycles classic -> proposed -> g -> classic. Classic and
@@ -1019,9 +1029,22 @@ plus the other signals named.
   `autoload/icon_loader.gd:33-59`): `scout_read` ->
   `actions_research/action_research_ml_fundamentals_64.png`, `tour_offices` ->
   `actions_facilities/action_facility_expand_office_64.png`. Until a Sol icon
-  is picked, its id keeps today's icon. Phases 1b and 2b check the rendered
-  texture for each mapped and fallback id on all three surfaces (a
-  screenshot of each, not only the resolver's return). Second line:
+  is picked, its id keeps today's icon. The rendered texture of each id is
+  checked (a screenshot, not only the resolver's return) **only on the
+  surfaces where that id can appear** (R3-3):
+  - Actions sheet: top-level actions only (`GameActions` top-level list,
+    `scripts/core/actions.gd:207`): `advertise`, `travel`, `publicity`;
+  - submenu grid: ids that are options of a submenu: `scout_read`,
+    `scout_meetups`, `scout_shitpost`, `order_supplies`, `tour_offices`;
+  - Plan drawer: ids that can enter the queue, i.e. plays. Doors such as
+    `travel` and `publicity` open a submenu instead of queueing
+    (`main_ui.gd:1707`), and `advertise` is coming soon, so none of the three
+    top-level ids is checked there.
+  The test derives each id's surfaces from the data (top-level list, submenu
+  options, door or play) rather than a hand list, and fails if an id has no
+  surface. The two fallbacks (`scout_read`, `tour_offices`) are checked in
+  phase 1b; the six commissioned textures are checked in phase 2b, after
+  import. Second line:
   - **door** (`action.is_submenu`): "N choices" (`submenu_controller.option_count(id)`;
     for the bespoke hiring, financing and travel builders that have no option
     list, the line reads "choices" without a count) and a `>` tab;
@@ -1998,11 +2021,25 @@ On the change branch, before squashing (AGENTS.md sections 4 and 7):
      (`game_manager.gd:72-73`). Before queueing anything, assert
      `GameManager.state.game_seed_str == "g-parity-1"`
      (`scripts/core/game_state.gd:209`).
-   - **Queue (R2-3).** Phase 1a (no G sheets yet): both layouts queue three
-     plays through the retained action slots,
-     `main_ui._trigger_action_by_index(i)` (`main_ui.gd:725-743`), using the
-     first three slots whose action is a play, not a submenu door, the same
-     indices in both runs. From phase 1b on: both layouts open the Scouting
+   - **Queue (R2-3, R3-2).** Phase 1a (no G sheets yet): both layouts press
+     the **Purchase Compute** slot three times through the retained action
+     slots, `main_ui._trigger_action_by_index(i)` (`main_ui.gd:725-743`). The
+     fixture finds `i` as the slot whose button carries
+     `action_id == "buy_compute"` (the renderer's meta,
+     `action_bar_renderer.gd:305`) and asserts, before the first press: that
+     id, that the button is not disabled, and the active layout (classic or
+     g, the run's own). Why it is admissible at the start of the standard
+     profile: `buy_compute` is a play, not a door, and not in the
+     coming-soon or hidden lists (`action_bar_renderer.gd:73-83`); it costs
+     money 50,000 and no hours (`data/actions/core.json:13-20`; no
+     `attention` key, so `attention_cost` is 0, `scripts/core/actions.gd:50-55`);
+     starting money is 245,000 (`scripts/core/game_state.gd:312`), and queue
+     admission checks money against current money without deducting queued
+     costs (`game_manager.gd:249-252`), so three presses pass. (The first
+     non-door slot is Advertise a Role, which is coming soon and disabled,
+     `action_bar_renderer.gd:289-291`, and `_trigger_action_by_index` skips
+     disabled buttons, so "the first three plays" would fail.) From phase 1b
+     on: both layouts open the Scouting
      door (classic: its action-bar button; G: its Actions sheet row) and pick
      `scout_read`, `scout_read`, `scout_meetups` from the submenu (they are
      Scouting choices, `data/actions/scouting.json`, not top-level rows).
@@ -2056,8 +2093,8 @@ provenance file are never committed on these branches (2.5, A8).
   refusal toast for an early UI refusal and a backend rejection (A5); blocked
   rows match refusals for an empty queue, a reserved pool and an
   unaffordable action (A5); 1-9 parity (same action id queued as from the
-  classic bar); the G icons rendered on the Actions sheet, a submenu grid and
-  the Plan drawer (R2-7); same-seed check through the Scouting door from
+  classic bar); the two fallback icons rendered on the surfaces where they
+  can appear (5.7.1, R3-3); same-seed check through the Scouting door from
   here on (12.1 item 5).
 - 1c `ui/g-watch`: WATCH banner (playback bar, speeds), WATCH and closed faces
   of the Attention card, feed panel with `feed_changed`, Commit's WATCH states,
@@ -2078,7 +2115,9 @@ provenance file are never committed on these branches (2.5, A8).
 - 2b `ui/g-paper`: event paper, review paper (the G-only path and its
   geometry test, 5.12), advisor note, submenu and ledger panel restyle; the
   paper batch (Sol, 11.2a; script stand-in until picked); the six new action
-  icons batch (Sol) and their map; provenance audit. Contrast on paper.
+  icons batch (Sol) and their map, each imported texture checked on the
+  surfaces where its id can appear (5.7.1, R3-3); provenance audit. Contrast
+  on paper.
 
 **Phase 3: the room by doom band.**
 - 3a `ui/g-room`: the shader, band table, glows, window mask, noise
@@ -2310,46 +2349,15 @@ Re-check by Opus and Sol, 2026-11-22 (`fork/design/godot-g/council/r2-*.md`).
 | R2-6 | provenance guard run with the real worktree as root and the tracked pin from history; only once Q15 is approved or on `up/<slug>`; verified output | 11.5; build-prompt.md 3, 6 |
 | R2-7 | `GIcons` resolver on the Actions sheet, the submenu grid (`submenu_controller.gd:229`) and the Plan drawer, with the fallbacks; rendered textures checked on all three | 2.5, 5.7.1, 5.8, 11.2, 12.2 (1b) |
 
-## 19. Still open after the council (resolve before phase 1a)
+## 19. Council round 3 changes
 
-The brief allows two fix rounds. After round 2, the round 3 re-check gave
-Opus GOOD TO GO (9/10) and Sol CHANGES NEEDED (9/10) with the three items
-below, so the run stopped here and Neon was not asked to re-check. The items
-are relayed from Sol's and Opus's round 3 answers
-(`fork/design/godot-g/council/r3-*.md`), not yet settled by the council and
-not yet written into the sections above. The build orchestrator settles
-them first (they are small and local) and records the outcome in its report.
-The orchestrator of this run checked the evidence lines named here against
-the code and they hold.
+Round 3 re-check: Opus GOOD TO GO (9/10), Sol CHANGES NEEDED (9/10) with three
+small items (`fork/design/godot-g/council/r3-*.md`). At Alex's request they
+are closed here, in the sections they belong to, rather than left to the
+build.
 
-1. **Boot into G still races the first state (Sol, NEW; Opus note 1 says the
-   same from the other side).** With `main.tscn` as the startup scene, the
-   deferred call from R2-1 runs after `_boot_game()` (Sol's 4.5.1 probe:
-   `G_DESK_BEFORE_BOOT=false`; Opus's: `AFTER_AWAIT_boot` printed before
-   `DEFERRED_apply_g`). Through `SceneTransition` the order is the other way
-   round. Sol's fix: call `_apply_ui_layout("g")` (not deferred) after the
-   existing `await get_tree().process_frame` and immediately before
-   `_boot_game()` (`main_ui.gd:360-362`); by then `_ready` has returned, so
-   adding to MainUI's parent is allowed (Sol's probe:
-   `G_DESK_BEFORE_BOOT=true`). Opus's alternative: when `GDesk.setup` finds a
-   fresh game (turn 0, not a load), treat it as the new-game dateline
-   trigger. Sol's fix covers both launch paths and replaces the deferred
-   call in 2.1.
-2. **The phase 1a fixture picks a disabled action (Sol, NEW).** The first
-   non-door slot is Advertise a Role, which is "coming soon" and disabled
-   (`action_bar_renderer.gd:289-291`); `_trigger_action_by_index` skips
-   disabled buttons, so the first queue-growth assert fails. Fix: pin three
-   known admissible inputs, for example three presses of the Purchase
-   Compute slot in the standard starting profile (`data/actions/core.json:13`),
-   and assert the slot's action id, the active layout and the queue growth.
-   The 1b Scouting fixture stays.
-3. **The icon screenshot gate asks for views the game cannot produce (Sol,
-   NEW).** 5.7.1/12.2 require every mapped id on every surface, but Scouting
-   choices never appear in the top-level Actions sheet and door ids such as
-   Travel open a submenu without entering the queue (`actions.gd:207`,
-   `main_ui.gd:1707`). Fix: require each id on the surfaces where it can
-   appear; check fallbacks in 1b and the commissioned textures after import
-   in 2b.
-
-Opus's round 3 note 1 is folded into item 1. Nothing else is open from the
-council.
+| Item | What | Where it landed |
+|---|---|---|
+| R3-1 | boot into G: `_apply_ui_layout("g")`, not deferred, after the existing `await get_tree().process_frame` and immediately before `_boot_game()` (`main_ui.gd:360-362`); replaces R2-1's deferred call; same order on the startup-scene and `SceneTransition` paths, so Opus's "fresh game at setup" trigger is not needed | 2.1 |
+| R3-2 | phase 1a fixture: three presses of the Purchase Compute slot, found by its `action_id` meta; asserts the id, not disabled, the active layout and queue growth; admissibility checked against the data and code | 12.1 item 5 |
+| R3-3 | icon gate: each id checked only on the surfaces where it can appear, derived from the data; fallbacks in 1b, commissioned textures after import in 2b | 5.7.1, 12.2 (1b, 2b) |
