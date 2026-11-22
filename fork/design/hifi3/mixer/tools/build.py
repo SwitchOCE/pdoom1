@@ -73,6 +73,24 @@ BG = [
 BANDS = 7
 NATIVE = {1: 1, 2: 2, 3: 2, 4: 2, 5: 3, 6: 5}   # H's band per state (notes.md Addendum)
 
+MASK_CELL = 4   # the hit mask's cell, stage px
+
+def alpha_mask(path, cell=MASK_CELL, cut_alpha=128):
+    """Where a piece can be grabbed: cells of cell x cell px holding a pixel at alpha >= cut_alpha.
+    Run lengths (base 36, '.'-separated), alternating hidden/visible, starting with hidden."""
+    from PIL import Image
+    a = Image.open(path).convert("RGBA").getchannel("A").point(lambda v: 255 if v >= cut_alpha else 0)
+    cols, rows = -(-a.width // cell), -(-a.height // cell)
+    pad = Image.new("L", (cols * cell, rows * cell), 0); pad.paste(a, (0, 0))
+    bits = [1 if v > 0 else 0 for v in pad.resize((cols, rows), Image.BOX).getdata()]
+    runs, cur, n = [], 0, 0
+    for b in bits:
+        if b == cur: n += 1
+        else: runs.append(n); cur, n = b, 1
+    runs.append(n)
+    b36 = lambda v: "0" if v == 0 else (b36(v // 36).lstrip("0") + "0123456789abcdefghijklmnopqrstuvwxyz"[v % 36])
+    return {"c": cell, "w": cols, "h": rows, "r": ".".join(b36(r) for r in runs)}
+
 def grain_css():
     import re
     t = open(os.path.join(HIFI3, "H", "concept.html"), encoding="utf-8").read()
@@ -108,6 +126,8 @@ def main(only):
                     crop=[0, 0, 1920, 1080], opaque=True, quality=92, extra=extra)
                 srcs.append("bg/%s.webp" % name); print("bg", name, flush=True)
             man["bg"][key] = {"label": label, "bands": srcs}
+    for slot in man["pieces"]:
+        for k, pc in man["pieces"][slot].items(): pc["m"] = alpha_mask(os.path.join(MIX, pc["src"]))
     man["layers"] = grain_css()
     man["native"] = {"band": NATIVE[3]}
     json.dump(man, open(man_path, "w"), indent=1, sort_keys=True)

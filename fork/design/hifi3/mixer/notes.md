@@ -136,6 +136,59 @@ are lossless because of this (4.9 MB of cut-outs; the page is 5.8 MB in all).
 - Pixel check unchanged: mean 0.50, 0.04% of pixels off by more than 2,
   largest 16.
 
+## Fix round 1 (S1, S2)
+
+- **S1, grabbing by visible pixels.** Each piece carries a hit mask built from
+  its cut-out's alpha (cells of 4 x 4 stage px; a cell counts if any pixel in
+  it has alpha 128 or more), stored in `pieces.js` as run lengths (32 KB for
+  all 60). A press goes to the topmost shown piece whose mask is set under the
+  pointer, so a transparent margin of an upper piece passes the drag to the
+  visible piece below; a press on a margin over bare room does nothing. The
+  masks come from the build, not from reading the images in the browser, so
+  this also works when the page is opened from disk. Pieces are still buttons:
+  Tab selects, arrows nudge, the focus ring shows. The cursor shows "grab" only
+  over visible pixels.
+- **S2, kept on the stage.** A piece's whole box stays inside 1920 x 1080: on
+  drag, on arrow nudges and when a code or the saved arrangement is loaded.
+  The selection and focus rings are drawn just inside the box, so they show
+  even at the stage edge.
+- **Tested** in headless Chromium, with presses aimed through
+  `elementFromPoint` like a real click:
+  - the repro (Reset, Plan hidden, C's menu rack, H's cat, 40 px drag at
+    (714, 885), where the rack's box is on top): the cat moves 629 -> 669, the
+    rack stays at 10, 838; a press on the cat box's transparent corner moves
+    nothing;
+  - a 1600 px wide window: H's rack dragged far right and down stops at
+    1546, 581 (the stage edge), more Shift+arrow and arrow nudges keep it
+    there, dragged far up and left it stops at 0, 0; a code with rack at
+    2378, -300 and P(Doom) at -999, 5000 loads them at 1546, 0 and 0, 652;
+  - a screenshot with the rack focused at the bottom-right corner shows the
+    whole focus ring;
+  - the earlier checks again: 81 images, 74 options (each with a usable mask),
+    band slider, code round-trip, broken code refused, nudges, storage.
+- Reset pixel check, run during this round while H is being re-rendered:
+  differences only inside H's resource strip (y 16-76), which is changing in
+  H. To be re-cut and re-checked when the new H is ready.
+
+## Re-cut after the H and H-HF fix round
+
+- All H and H-HF pieces were cut again from the fixed pages (the reputation
+  cell's gap and rule, the event badge ink, take b's TRACE caption as the
+  strip's first cell, H-HF's strip 27 px wider to the left); the masks were
+  rebuilt from the new cut-outs. The band backgrounds did not change.
+- The first re-cut left `cut/att-H.webp` empty (0 bytes; the disk was not
+  full; cause not found) and stopped before saving the manifest. That piece
+  was cut again and the full H and H-HF build re-run; no file in `cut/` or
+  `bg/` is empty.
+- **Reset pixel check against H state 3:** mean 0.496 per channel (0-255),
+  0.04% of pixels off by more than 2, largest 16, nothing off by more than 16.
+- **Take b with the plan sheet:** Reset plus "H, trace windows" against H's
+  own `?state=3&res=trace`: mean 0.496 over the screen, 0.481 over the strip,
+  largest 16. The TRACE caption shows whole above the sheet.
+- S1/S2 re-tested on the new pieces: the cat/rack repro, the transparent
+  corner, dragging the trace strip by its caption, the edge clamps on drag,
+  nudge and code; 81 images, 74 options with masks, code round-trip.
+
 ## Open questions
 
 - Should Attention stay its own slot? In H it is the desk terminal, which the

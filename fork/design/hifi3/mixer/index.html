@@ -42,12 +42,14 @@ h1{font-family:var(--display);font-size:clamp(32px,5vw,48px);font-weight:700;lin
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#090807}
 #stage .bgimg{position:absolute;left:0;top:0;width:1920px;height:1080px;display:block}
 #stage .dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 34% 50%,rgba(6,5,5,.66),rgba(6,5,5,.5) 70%)}
-.piece{position:absolute;padding:0;margin:0;border:0;background:none;cursor:grab;touch-action:none;display:block;line-height:0}
+/* a piece's box is kept wholly on the stage, and its rings are drawn just inside the box, so they always show */
+.piece{position:absolute;padding:0;margin:0;border:0;background:none;cursor:inherit;touch-action:none;display:block;line-height:0}
 .piece img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
-.piece.sel{outline:3px dashed rgba(111,182,210,.85);outline-offset:2px}
+.piece.sel{outline:3px dashed rgba(111,182,210,.85);outline-offset:-3px}
 .piece:focus{outline:none}
-.piece:focus-visible{outline:5px solid var(--focus);outline-offset:3px}
-.piece.dragging{cursor:grabbing}
+.piece:focus-visible{outline:6px solid var(--focus);outline-offset:-6px}
+#stage.over{cursor:grab}
+#stage.dragging{cursor:grabbing}
 .below{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
 .below b{color:var(--ink);font-weight:600}
 
@@ -163,6 +165,32 @@ var state = null, selected = null, els = {};
 
 function options(slot){ var p = DATA.pieces[slot] || {}; return OPT_ORDER.filter(function(k){ return p[k]; }); }
 function piece(slot, key){ return (DATA.pieces[slot] || {})[key]; }
+// keep a piece's whole box on the 1920x1080 stage (so its grab area and focus ring stay reachable)
+function clampXY(slot, key, x, y){
+  var p = piece(slot, key); if (!p) return [Math.round(x) || 0, Math.round(y) || 0];
+  return [Math.round(Math.max(0, Math.min(1920 - p.w, x))) || 0, Math.round(Math.max(0, Math.min(1080 - p.h, y))) || 0];
+}
+/* where a piece can be grabbed: its visible pixels (alpha 128 and up), from the build's mask in cells of m.c px */
+var MASKS = {};
+function maskOf(slot, key){
+  var id = slot + "-" + key; if (MASKS[id]) return MASKS[id];
+  var m = (piece(slot, key) || {}).m; if (!m) return null;
+  var bits = new Uint8Array(m.w * m.h), at = 0, on = 0;
+  m.r.split(".").forEach(function(t){ var n = parseInt(t, 36); if (on) bits.fill(1, at, at + n); at += n; on = 1 - on; });
+  return (MASKS[id] = {c: m.c, w: m.w, h: m.h, bits: bits});
+}
+function hits(slot, sx, sy){
+  var v = state.s[slot], p = piece(slot, v[0]); if (!p || !v[3]) return false;
+  var lx = sx - v[1], ly = sy - v[2]; if (lx < 0 || ly < 0 || lx >= p.w || ly >= p.h) return false;
+  var m = maskOf(slot, v[0]); if (!m) return true;
+  return m.bits[Math.floor(ly / m.c) * m.w + Math.floor(lx / m.c)] === 1;
+}
+// the topmost shown piece whose visible pixels are under a stage point, or null
+function pieceAt(sx, sy){
+  for (var i = DRAW.length - 1; i >= 0; i--){ var k = DRAW[i]; if (k.charAt(0) !== "|" && els[k] && hits(k, sx, sy)) return k; }
+  return null;
+}
+function stageXY(ev){ var r = stage.getBoundingClientRect(), sc = r.width / 1920; return [(ev.clientX - r.left) / sc, (ev.clientY - r.top) / sc]; }
 function defaults(){
   var s = {v:2, bg: DATA.bg.dawn ? "dawn" : Object.keys(DATA.bg)[0], band:NATIVE_BAND, dim:1, s:{}};
   SLOTS.forEach(function(x){
@@ -179,7 +207,8 @@ function valid(s){
   SLOTS.forEach(function(x){
     var v = s.s[x[0]];
     if (!Array.isArray(v) || (v[0] !== "none" && !piece(x[0], v[0]))) { s.s[x[0]] = defaults().s[x[0]]; return; }
-    s.s[x[0]] = [v[0], Math.round(+v[1] || 0), Math.round(+v[2] || 0), v[3] ? 1 : 0];
+    var xy = clampXY(x[0], v[0], +v[1] || 0, +v[2] || 0);
+    s.s[x[0]] = [v[0], xy[0], xy[1], v[3] ? 1 : 0];
   });
   return true;
 }
@@ -197,7 +226,7 @@ function fit(){ stage.style.transform = "scale(" + (vp.clientWidth / 1920) + ")"
 function draw(){
   stage.innerHTML = ""; els = {};
   var bg = DATA.bg[state.bg];
-  if (bg){ var im = document.createElement("img"); im.className = "bgimg"; im.alt = ""; im.src = bg.bands[state.band] || bg.bands[NATIVE_BAND]; stage.appendChild(im); }
+  if (bg){ var im = document.createElement("img"); im.className = "bgimg"; im.alt = ""; im.draggable = false; im.src = bg.bands[state.band] || bg.bands[NATIVE_BAND]; stage.appendChild(im); }
   DRAW.forEach(function(slot){
     if (slot === "|dim"){ if (state.dim){ var d = document.createElement("div"); d.className = "dim"; stage.appendChild(d); } return; }
     if (slot === "|grain"){ if (DATA.layers && DATA.layers.grainRule){ var g = document.createElement("div"); g.setAttribute("style", DATA.layers.grainRule); stage.appendChild(g); } return; }
@@ -226,24 +255,34 @@ function select(slot){
   info();
 }
 function move(slot, x, y){
-  var v = state.s[slot]; v[1] = Math.round(x); v[2] = Math.round(y);
+  var v = state.s[slot], xy = clampXY(slot, v[0], x, y); v[1] = xy[0]; v[2] = xy[1];
   var b = els[slot]; if (b){ b.style.left = v[1] + "px"; b.style.top = v[2] + "px"; }
   info();
 }
 
 /* ---------- drag and keys ---------- */
+/* A press picks the topmost piece whose visible pixels are under it, so the transparent margin of an
+   upper cut-out passes the press to the piece showing underneath. Pieces stay buttons for the keyboard. */
+var dragging = null;
+stage.addEventListener("pointerdown", function(ev){
+  if (ev.button !== 0) return;
+  var xy = stageXY(ev), slot = pieceAt(xy[0], xy[1]);
+  if (!slot){ if (ev.target.closest && ev.target.closest(".piece")) ev.preventDefault(); return; }   // a transparent margin over the room: no drag, no focus
+  ev.preventDefault();
+  var b = els[slot]; select(slot); b.focus({preventScroll:true});
+  var v = state.s[slot], sc = stage.getBoundingClientRect().width / 1920;
+  dragging = {slot:slot, x0:v[1], y0:v[2], px:ev.clientX, py:ev.clientY, sc:sc, id:ev.pointerId};
+  try { stage.setPointerCapture(ev.pointerId); } catch (e) {}
+  stage.classList.add("dragging");
+});
+window.addEventListener("pointermove", function(ev){
+  if (dragging){ move(dragging.slot, dragging.x0 + (ev.clientX - dragging.px) / dragging.sc, dragging.y0 + (ev.clientY - dragging.py) / dragging.sc); return; }
+  if (ev.target === stage || stage.contains(ev.target)){ var xy = stageXY(ev); stage.classList.toggle("over", !!pieceAt(xy[0], xy[1])); }
+});
+function endDrag(){ if (!dragging) return; dragging = null; stage.classList.remove("dragging"); save(); }
+window.addEventListener("pointerup", endDrag); window.addEventListener("pointercancel", endDrag);
 function wire(b, slot){
   b.addEventListener("focus", function(){ select(slot); });
-  b.addEventListener("pointerdown", function(ev){
-    if (ev.button !== 0) return;
-    select(slot); b.focus({preventScroll:true});
-    var sc = vp.clientWidth / 1920, v = state.s[slot], x0 = v[1], y0 = v[2], px = ev.clientX, py = ev.clientY;
-    b.setPointerCapture(ev.pointerId); b.classList.add("dragging");
-    function mv(e){ move(slot, x0 + (e.clientX - px) / sc, y0 + (e.clientY - py) / sc); }
-    function up(){ b.classList.remove("dragging"); b.removeEventListener("pointermove", mv); b.removeEventListener("pointerup", up); b.removeEventListener("pointercancel", up); save(); }
-    b.addEventListener("pointermove", mv); b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
-    ev.preventDefault();
-  });
   b.addEventListener("keydown", function(ev){
     var d = ev.shiftKey ? 10 : 1, v = state.s[slot], dx = 0, dy = 0;
     if (ev.key === "ArrowLeft") dx = -d; else if (ev.key === "ArrowRight") dx = d;
