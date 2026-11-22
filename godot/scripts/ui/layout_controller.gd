@@ -55,6 +55,9 @@ var _g_hidden: Dictionary = {}         # node -> visibility before g hid it
 # Live nodes moved into the G sheets (spec 2.2 step 4), with where they came from:
 # [{node, parent, index, size_flags_v, min_size}], restored in reverse before the desk is freed.
 var _g_moved: Array = []
+# Today's room before g took it (spec 2.2 step 3): {backdrop, modulate, material, scrim,
+# scrim_visible}, restored when the layout leaves g.
+var _g_room_saved: Dictionary = {}
 
 # Proposed column split: tighten the instrument column (D5/D6 dead-zone) and hand the reclaimed
 # width to WATCH so the office floor breathes (P11). PLAN holds so the hand doesn't reflow.
@@ -246,8 +249,9 @@ func _apply_g() -> void:
 	for n in chrome:
 		_g_hidden[n] = (n as CanvasItem).visible
 		(n as CanvasItem).visible = false
-	# 3. The room (Backdrop modulate/material, scrim) is phase 3a. Until the room layer exists
-	#    the desk keeps today's room, which is G's own "room effects: off" (spec 5.14).
+	# 3. The room (spec 5.14): save today's Backdrop modulate and material and the scrim's
+	#    visibility, then hand both to the desk's room layer, which applies GPrefs.room_effects.
+	_g_take_room(desk)
 	# 4. Reparent four live nodes into the persistent G sheets, exactly as _dock_upgrades does,
 	#    recording parent and index: the upgrades label and scroll -> the Upgrades sheet; the
 	#    research-quality selector and the in-flight hiring box -> the Plan drawer.
@@ -262,6 +266,49 @@ func _apply_g() -> void:
 		if _g_move(rqs, pl.quality_slot, false) and rqs.has_method("set_g_style"):
 			rqs.set_g_style(true)
 		_g_move(_host.get("_inflight_hiring_box"), pl.underway_slot, false)
+
+
+func _g_room_nodes() -> Array:
+	"""[Backdrop, BackdropScrim] of main.tscn (siblings of TabManager), or nulls."""
+	if _host == null or not is_instance_valid(_host):
+		return [null, null]
+	var tm: Node = _host.get_parent()
+	var main: Node = tm.get_parent() if tm != null else null
+	if main == null:
+		return [null, null]
+	return [main.get_node_or_null("Backdrop"), main.get_node_or_null("BackdropScrim")]
+
+
+func _g_take_room(desk: Node) -> void:
+	var nodes := _g_room_nodes()
+	var bd = nodes[0]
+	var scrim = nodes[1]
+	_g_room_saved = {}
+	if bd is TextureRect:
+		_g_room_saved["backdrop"] = bd
+		_g_room_saved["modulate"] = (bd as TextureRect).modulate
+		_g_room_saved["material"] = (bd as TextureRect).material
+	if scrim is CanvasItem:
+		_g_room_saved["scrim"] = scrim
+		_g_room_saved["scrim_visible"] = (scrim as CanvasItem).visible
+	var room = desk.get("room")
+	if room != null and bd is TextureRect:
+		room.attach(bd, scrim if scrim is CanvasItem else null)
+
+
+func _g_restore_room(desk: Node) -> void:
+	if desk != null and is_instance_valid(desk):
+		var room = desk.get("room")
+		if room != null and is_instance_valid(room):
+			room.release()
+	var bd = _g_room_saved.get("backdrop")
+	if bd != null and is_instance_valid(bd):
+		(bd as TextureRect).modulate = _g_room_saved.get("modulate", Color(1, 1, 1, 1))
+		(bd as TextureRect).material = _g_room_saved.get("material")
+	var scrim = _g_room_saved.get("scrim")
+	if scrim != null and is_instance_valid(scrim):
+		(scrim as CanvasItem).visible = bool(_g_room_saved.get("scrim_visible", true))
+	_g_room_saved = {}
 
 
 func _g_move(node, target: Node, expand: bool) -> bool:
@@ -308,7 +355,8 @@ func _leave_g() -> void:
 			guard += 1
 	# 2. Reparent the sheet nodes back, before anything is freed.
 	_g_restore_moved()
-	# 3. (3a: restore Backdrop modulate/material and the scrim.)
+	# 3. Backdrop modulate and material and the scrim back to what they were.
+	_g_restore_room(desk)
 	# 4. Chrome back, then the CURRENT mode's visibility (a flip in WATCH keeps WATCH).
 	for n in _g_hidden:
 		if n != null and is_instance_valid(n):

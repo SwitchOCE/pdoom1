@@ -118,6 +118,9 @@ var actions_panel: GActionsPanel
 var plan_panel: GPlanPanel
 var upgrades_panel: GUpgradesPanel
 var feed_panel: GFeedPanel
+## Phase 3a: the room and its doom layer (spec 5.14). GDesk/RoomLayers, the first child, under
+## every panel. LayoutController hands it the Backdrop and the scrim (spec 2.2 step 3).
+var room: GRoom
 ## G binds a saved non-g_ bind already uses (V7): skipped by GKeys, keycaps hidden.
 var skipped_binds: Array = []
 var _keycap_top := "?"
@@ -249,6 +252,8 @@ func _connect() -> void:
 # --- build -------------------------------------------------------------------------------
 
 func _build() -> void:
+	room = GRoom.new()
+	add_child(room)
 	_build_top_strip()
 	_build_banner()
 	_build_rail()
@@ -630,6 +635,7 @@ func _on_state(state: Dictionary) -> void:
 	_refresh_ledger_plate()
 	_refresh_delta_chips()
 	doom_card.update_from_state(state)
+	room.update_from_state(state)
 	_refresh_attention()
 	_refresh_held()
 	_refresh_commit()

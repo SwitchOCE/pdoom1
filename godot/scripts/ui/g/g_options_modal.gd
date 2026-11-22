@@ -1,9 +1,9 @@
 extends Control
 ## G desk options (fork/design/godot-g/spec.md 2.1), opened from the Settings board's
-## "G desk options" row. It shows only the switches that do something today: in phase 1 that
-## is the G desk on/off switch. Reduced motion, room effects and the resources take join it in
-## the phases that make them work (GPrefs gains each setting then). Applies on next game load,
-## like today's layout checkbox.
+## "G desk options" row. It shows only the switches that do something today: the G desk on/off
+## switch and, since phase 3a, room effects (full / simple / off, spec 5.14). Reduced motion and
+## the resources take join them in the phases that make them work (phases 7 and 6). Applies on
+## next game load, like today's layout checkbox.
 ##
 ## Escape contract (docs/game-design/UI_ESCAPE_CONTRACT.md): Esc, the x and Close all close it,
 ## standalone-safe (tests/unit/test_ui_no_dead_ends.gd opens it with no host).
@@ -11,6 +11,7 @@ extends Control
 signal closed
 
 var desk_toggle: CheckButton
+var room_picker: OptionButton
 var _panel: PanelContainer
 var _barrier: ColorRect
 
@@ -85,6 +86,29 @@ func _build() -> void:
 	cap.custom_minimum_size = Vector2(500, 0)
 	vb.add_child(cap)
 
+	var room_row := HBoxContainer.new()
+	room_row.name = "RoomRow"
+	room_row.add_theme_constant_override("separation", 16)
+	vb.add_child(room_row)
+	var rl := _label("Room effects", "body", Color("#d6cebd"))
+	rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	room_row.add_child(rl)
+	room_picker = OptionButton.new()
+	room_picker.name = "RoomPicker"
+	room_picker.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
+	for i in range(ROOM_CHOICES.size()):
+		room_picker.add_item(String(ROOM_CHOICES[i][1]), i)
+	room_picker.tooltip_text = "How the office behind the desk shows the doom level."
+	room_picker.custom_minimum_size = Vector2(140, 0)
+	room_picker.select(_room_index(GPrefs.room_effects()))
+	room_picker.item_selected.connect(_on_room_selected)
+	room_row.add_child(room_picker)
+	var rcap := _label("Full: the office darkens as doom rises, with film grain. Simple: the colour change only, for slow graphics. Off: the classic dim office. Applies on next game load.",
+		"small", Color("#aaa08e"))
+	rcap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rcap.custom_minimum_size = Vector2(500, 0)
+	vb.add_child(rcap)
+
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	vb.add_child(foot)
@@ -95,6 +119,22 @@ func _build() -> void:
 	close.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
 	close.pressed.connect(_request_close)
 	foot.add_child(close)
+
+
+## Room effects choices: GPrefs value, shown name.
+const ROOM_CHOICES := [["full", "Full"], ["simple", "Simple"], ["off", "Off"]]
+
+
+static func _room_index(value: String) -> int:
+	for i in range(ROOM_CHOICES.size()):
+		if String(ROOM_CHOICES[i][0]) == value:
+			return i
+	return 0
+
+
+func _on_room_selected(i: int) -> void:
+	if i >= 0 and i < ROOM_CHOICES.size():
+		GPrefs.set_room_effects(String(ROOM_CHOICES[i][0]))
 
 
 func _label(text: String, size_name: String, color: Color) -> Label:
@@ -108,6 +148,8 @@ func _label(text: String, size_name: String, color: Color) -> Label:
 func show_panel() -> void:
 	if desk_toggle != null:
 		desk_toggle.set_pressed_no_signal(GPrefs.desk())
+	if room_picker != null:
+		room_picker.select(_room_index(GPrefs.room_effects()))
 	visible = true
 	_barrier.mouse_filter = Control.MOUSE_FILTER_STOP
 

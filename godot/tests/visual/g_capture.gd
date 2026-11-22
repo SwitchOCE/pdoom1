@@ -30,6 +30,13 @@ extends Node
 ##   the feed's full log, opened by a click on its header), 06_event (W3) and 07_review (W4).
 ##   JSON format: {"boxes":[{x,y,w,h,text,node}]} in the PNG's pixel space, as
 ##   fork/design/godot-g/tools/contrast_godot.py reads it.
+## room (g only, phase 3a): the room forced to each doom band 0-6 with the production material
+##   (the room's debug-only override), then `simple` and `off` at band 3; PNG + JSON as shots.
+##   Add Godot's --rendering-method gl_compatibility to capture the Compatibility renderer.
+## roomcost (g only): the room's cost check (spec 5.14 "Cost"): mean frame time of the plain
+##   room against the graded room, same UI, VSync off, and the 2 ms budget verdict. Needs no
+##   seed in the profile; run it in an isolated profile (APPDATA / XDG_DATA_HOME) on the PC
+##   being measured, at 1920x1080.
 ##
 ## Output lines start with "G_CAPTURE". Exit code 0 = every assert passed, 1 = a failure.
 
@@ -143,14 +150,15 @@ func _key(code: int) -> void:
 # --- the run ------------------------------------------------------------------------------
 
 func _run() -> void:
-	if mode == "shots" and out_dir == "":
-		_check(false, "--out=DIR is required for shots")
+	if (mode == "shots" or mode == "room") and out_dir == "":
+		_check(false, "--out=DIR is required for %s" % mode)
 		_finish()
 		return
 	if out_dir != "":
 		DirAccess.make_dir_recursive_absolute(out_dir)
-	_check(String(GameConfig.game_seed) == SEED,
-		"user://config.cfg carried last_seed (GameConfig.game_seed=%s)" % GameConfig.game_seed)
+	if mode != "roomcost":
+		_check(String(GameConfig.game_seed) == SEED,
+			"user://config.cfg carried last_seed (GameConfig.game_seed=%s)" % GameConfig.game_seed)
 	GameManager.event_triggered.connect(func(ev): _events_seen.append(String(ev.get("id", "?"))))
 	if mode == "shots" and not no_handoff:
 		# A first run reaches main.tscn through the cold open, which hands off to the first-lever
@@ -178,15 +186,28 @@ func _run() -> void:
 	# finish and harvest it. Neither touches GameState or its RNG; both layouts do the same.
 	while BaselineSimulator._is_computing:
 		await _frames(1)
-	BaselineSimulator.get_baseline_score_if_ready(SEED)
+	BaselineSimulator.get_baseline_score_if_ready(String(GameManager.state.game_seed_str))
 	await _frames(10)
 
-	_check(String(GameManager.state.game_seed_str) == SEED,
-		"run seed is %s (got %s)" % [SEED, GameManager.state.game_seed_str])
+	if mode != "roomcost":
+		_check(String(GameManager.state.game_seed_str) == SEED,
+			"run seed is %s (got %s)" % [SEED, GameManager.state.game_seed_str])
 	_check(_active_layout() == layout, "active layout is %s (got %s)" % [layout, _active_layout()])
 	if layout == "g":
 		_check(_desk() != null, "the G desk is up")
 	_say("boot hash %s" % state_hash())
+
+	if mode == "room" or mode == "roomcost":
+		if layout != "g" or _desk() == null or _desk().get("room") == null:
+			_check(false, "mode %s needs the G desk (--layout=g, G on in the profile)" % mode)
+			_finish()
+			return
+		if mode == "room":
+			await _room_shots()
+		else:
+			await _room_cost()
+		_finish()
+		return
 
 	if mode == "shots" and no_handoff:
 		# Month 1 without the hand-off: the note carries classic's first-turns line instead.
@@ -343,6 +364,84 @@ func _run() -> void:
 		await _frames(20)
 		await _shot("04_guide")
 	_finish()
+
+
+# --- the room (phase 3a, spec 5.14) ------------------------------------------------------------
+
+func _room_shots() -> void:
+	"""room: the room forced to each band 0-6 with the production material, then `simple` and
+	`off` at band 3. The override is the room's debug-only one; it holds the band instantly.
+	Doom is never touched, so the state hash must not move."""
+	var room = _desk().get("room")
+	var before := state_hash()
+	await _frames(20)
+	_check(String(room.get("mode")) == "full", "room effects is full (the default)")
+	var bd = room.get("backdrop")
+	_check(bd != null and bd.material == room.get("material_room"), "the Backdrop carries the room material")
+	_say("room renderer %s, adapter %s" % [RenderingServer.get_current_rendering_method(),
+		RenderingServer.get_video_adapter_name()])
+	for b in range(7):
+		_check(bool(room.call("debug_force_band", b)), "debug override takes band %d (debug build)" % b)
+		await _frames(8)
+		await _shot("room-band-%d" % b)
+	for m in ["simple", "off"]:
+		room.call("set_mode", m)
+		room.call("debug_force_band", 3)
+		await _frames(8)
+		await _shot("room-%s-band-3" % m)
+	room.call("set_mode", "full")
+	room.call("debug_force_band", -1)
+	await _frames(4)
+	_check(state_hash() == before, "the room shots left the game state as it was")
+	_say("HASH layout=%s seed=%s turn=%d %s" % [layout, SEED, int(GameManager.state.turn), state_hash()])
+
+
+func _room_cost() -> void:
+	"""roomcost: mean frame time of the plain room (`off`, today's) against the graded room
+	(`full`), same UI, VSync off, band 3. Order plain, graded, graded, plain; each run is
+	ROOMCOST_WARMUP frames then ROOMCOST_FRAMES samples of wall-clock frame time. Budget: the
+	graded room may cost at most 2 ms a frame more than the plain one (spec 5.14 "Cost")."""
+	var room = _desk().get("room")
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	room.call("debug_force_band", 3)
+	_say("ROOMCOST renderer %s, adapter %s %s, window %s" % [RenderingServer.get_current_rendering_method(),
+		RenderingServer.get_video_adapter_vendor(), RenderingServer.get_video_adapter_name(),
+		str(get_viewport().get_visible_rect().size)])
+	var runs := {"off": [], "full": []}
+	for m in ["off", "full", "full", "off"]:
+		room.call("set_mode", m)
+		room.call("debug_force_band", 3)
+		await _frames(ROOMCOST_WARMUP)
+		var last := Time.get_ticks_usec()
+		for _i in range(ROOMCOST_FRAMES):
+			await get_tree().process_frame
+			var now := Time.get_ticks_usec()
+			runs[m].append(float(now - last) / 1000.0)
+			last = now
+	var plain := _stats(runs["off"])
+	var graded := _stats(runs["full"])
+	var delta: float = graded["mean"] - plain["mean"]
+	_say("ROOMCOST plain  mean %.3f ms  p95 %.3f ms  (%d frames)" % [plain["mean"], plain["p95"], runs["off"].size()])
+	_say("ROOMCOST graded mean %.3f ms  p95 %.3f ms  (%d frames)" % [graded["mean"], graded["p95"], runs["full"].size()])
+	_say("ROOMCOST delta %.3f ms per frame; budget 2.0 ms: %s" % [delta, "WITHIN" if delta <= 2.0 else "OVER -> make simple the default"])
+	room.call("set_mode", "full")
+	room.call("debug_force_band", -1)
+
+
+const ROOMCOST_WARMUP := 45
+const ROOMCOST_FRAMES := 240
+
+
+static func _stats(xs: Array) -> Dictionary:
+	if xs.is_empty():
+		return {"mean": 0.0, "p95": 0.0}
+	var s := xs.duplicate()
+	s.sort()
+	var total := 0.0
+	for v in s:
+		total += float(v)
+	return {"mean": total / float(s.size()), "p95": float(s[mini(s.size() - 1, int(floor(0.95 * s.size())))])}
 
 
 func _slot_container() -> Container:
