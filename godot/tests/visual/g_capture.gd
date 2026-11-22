@@ -43,7 +43,7 @@ extends Node
 ##   (the room's debug-only override), then `simple` and `off` at band 3; PNG + JSON as shots.
 ##   Add Godot's --rendering-method gl_compatibility to capture the Compatibility renderer.
 ## roomcost (g only): the room's cost check (spec 5.14 "Cost"): mean frame time of the plain
-##   room against the graded room (band 6: shader, glows and floor smoke), same UI, VSync off,
+##   room against the graded room (band 6: shader, glows and the fire light), same UI, VSync off,
 ##   and the 2 ms budget verdict. Needs no
 ##   seed in the profile; run it in an isolated profile (APPDATA / XDG_DATA_HOME) on the PC
 ##   being measured, at 1920x1080.
@@ -565,7 +565,7 @@ func _room_shots() -> void:
 
 func _room_cost() -> void:
 	"""roomcost: mean frame time of the plain room (`off`, today's) against the graded room
-	(`full`), same UI, VSync off, band 6, the worst case: every layer, floor smoke included
+	(`full`), same UI, VSync off, band 6, the worst case: every layer, the fire light included
 	(spec 5.14 "Cost"). Order plain, graded, graded, plain; each run is
 	ROOMCOST_WARMUP frames then ROOMCOST_FRAMES samples of wall-clock frame time. Budget: the
 	graded room may cost at most 2 ms a frame more than the plain one (spec 5.14 "Cost")."""

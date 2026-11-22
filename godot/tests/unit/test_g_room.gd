@@ -1,11 +1,9 @@
 extends GutTest
-## G desk, phases 3a and 3b (fork/design/godot-g/spec.md 12.2, 5.14): the room by doom band. The
+## G desk, phase 3a (fork/design/godot-g/spec.md 12.2 "3a", 5.14): the room by doom band. The
 ## band comes from doom, never the month; the band tween reaches the new band and is instant
 ## with reduced motion; grain freezes in pause and is static with reduced motion; `simple` and
 ## `off` set what 5.14 says; the band override is debug-only; no global RNG draw; classic keeps
-## today's room, and leaving G puts it back. 3b: the floor smoke shows at bands 5-6 (blended by
-## the shown band), hides in simple and off, drifts on a pausable looping tween, is static with
-## reduced motion, and sits under every panel.
+## today's room, and leaving G puts it back.
 
 const MAIN_SCENE := "res://scenes/main.tscn"
 const TEST_PREFS := "user://g_ui_room_test.cfg"
@@ -209,124 +207,6 @@ func test_glows_sit_on_the_lit_crts_at_1080() -> void:
 	assert_almost_eq(c.y, 606.0 * 1.25 - 100.0, 0.5)
 
 
-# --- floor smoke (phase 3b, spec 5.14) ----------------------------------------------------------
-
-func test_smoke_amount_is_zero_to_band_four_and_042_at_five_and_six() -> void:
-	for b in range(5):
-		assert_eq(GRoom.smoke_amount(float(b)), 0.0, "band %d: no smoke" % b)
-	assert_almost_eq(GRoom.smoke_amount(5.0), 0.42, 0.0001, "band 5")
-	assert_almost_eq(GRoom.smoke_amount(6.0), 0.42, 0.0001, "band 6")
-	assert_almost_eq(GRoom.smoke_amount(4.5), 0.21, 0.0001, "between 4 and 5: blended")
-	assert_almost_eq(GRoom.smoke_amount(4.25), 0.105, 0.0001, "a quarter of the way")
-
-
-func test_smoke_follows_the_shown_band_and_fades_in_with_the_band_tween() -> void:
-	var room := _room("full", false)
-	assert_not_null(room.smoke, "the smoke layer exists")
-	assert_eq(room.smoke.texture.resource_path, GRoom.SMOKE_PATH)
-	room.set_band(4, true)
-	assert_false(room.smoke.visible, "band 4: no smoke shown")
-	assert_eq(room.smoke.self_modulate.a, 0.0, "band 4: amount 0")
-	room.set_band(5)
-	room._tween.custom_step(GRoom.TWEEN_S * 0.5)
-	assert_almost_eq(room.smoke.self_modulate.a, GRoom.smoke_amount(room.shown_band), 0.0001,
-		"mid-tween the smoke uses the same float band as the shader")
-	assert_between(room.smoke.self_modulate.a, 0.01, 0.41, "half way in")
-	assert_true(room.smoke.visible, "shown as soon as it has any amount")
-	room._tween.custom_step(GRoom.TWEEN_S)
-	assert_almost_eq(room.smoke.self_modulate.a, 0.42, 0.0001, "band 5: .42")
-	var c: Color = room.smoke.self_modulate
-	assert_eq(Color(c.r, c.g, c.b), Color(GRoom.SMOKE_TINT.r, GRoom.SMOKE_TINT.g, GRoom.SMOKE_TINT.b), "violet")
-	assert_null(room.smoke.material, "normal blend (no additive material)")
-	room.set_band(6, true)
-	assert_almost_eq(room.smoke.self_modulate.a, 0.42, 0.0001, "band 6: .42")
-
-
-func test_smoke_is_bottom_anchored_over_the_room() -> void:
-	var room := _room("full", true)
-	room.set_band(6, true)
-	room._layout_smoke()
-	var r: TextureRect = room.smoke
-	assert_almost_eq(r.position.y + r.size.y, 1080.0, 0.5, "sits on the bottom edge")
-	assert_almost_eq(r.size.y, 520.0, 0.5, "the mock-up's 520 of 1080")
-	assert_almost_eq(r.size.x, 1920.0 + GRoom.SMOKE_DRIFT_PX, 0.5, "the room's width plus the drift")
-	assert_true(r.position.x <= 0.0 and r.position.x + r.size.x >= 1920.0, "covers the room at any drift")
-	assert_eq(r.mouse_filter, Control.MOUSE_FILTER_IGNORE, "takes no clicks")
-
-
-func test_smoke_hidden_in_simple_and_off() -> void:
-	for m in ["simple", "off"]:
-		var room := _room(m, false)
-		room.set_band(6, true)
-		assert_false(room.smoke.visible, "%s: no smoke at band 6" % m)
-		assert_true(room._drift_tween == null, "%s: no drift" % m)
-	var full := _room("full", false)
-	full.set_band(6, true)
-	assert_true(full.smoke.visible, "full: smoke at band 6")
-	full.set_mode("simple")
-	assert_false(full.smoke.visible, "flip to simple hides it")
-	full.set_mode("full")
-	assert_true(full.smoke.visible, "back to full shows it")
-
-
-func test_smoke_drifts_freezes_in_a_real_pause_and_goes_on() -> void:
-	var room := _room("full", false)
-	room.set_band(6, true)
-	assert_true(room._drift_tween != null and room._drift_tween.is_valid(), "full: the drift tween runs")
-	assert_eq(room._drift_tween.get_loops_left(), -1, "it loops for ever")
-	# Into the steep middle of the 20 s leg, so real frames move it measurably.
-	room._drift_tween.custom_step(GRoom.SMOKE_DRIFT_S * 0.5)
-	assert_almost_eq(room.smoke_drift, GRoom.SMOKE_DRIFT_PX * 0.5, 0.01, "half way at 10 s")
-	assert_almost_eq(room.smoke.position.x, -GRoom.SMOKE_DRIFT_PX + room.smoke_drift, 0.001, "the layer moves")
-	var before := room.smoke_drift
-	for _i in range(30):
-		await get_tree().process_frame
-	assert_gt(room.smoke_drift, before, "drifts while running")
-	get_tree().paused = true
-	await get_tree().process_frame
-	var held := room.smoke_drift
-	for _i in range(30):
-		await get_tree().process_frame
-	assert_eq(room.smoke_drift, held, "frozen in pause")
-	get_tree().paused = false
-	for _i in range(30):
-		await get_tree().process_frame
-	assert_gt(room.smoke_drift, held, "goes on after pause")
-
-
-func test_smoke_drift_turns_back_after_twenty_seconds() -> void:
-	var room := _room("full", false)
-	room.set_band(5, true)
-	room._drift_tween.custom_step(GRoom.SMOKE_DRIFT_S)
-	assert_almost_eq(room.smoke_drift, GRoom.SMOKE_DRIFT_PX, 0.01, "40 px out at 20 s")
-	room._drift_tween.custom_step(GRoom.SMOKE_DRIFT_S)
-	assert_almost_eq(room.smoke_drift, 0.0, 0.01, "back at 40 s")
-	room._drift_tween.custom_step(GRoom.SMOKE_DRIFT_S * 0.5)
-	assert_almost_eq(room.smoke_drift, GRoom.SMOKE_DRIFT_PX * 0.5, 0.01, "and round again")
-
-
-func test_smoke_is_static_with_reduced_motion() -> void:
-	var room := _room("full", true)
-	room.set_band(6, true)
-	assert_true(room.smoke.visible, "the smoke still shows")
-	assert_true(room._drift_tween == null, "no drift tween")
-	var x := room.smoke.position.x
-	for _i in range(30):
-		await get_tree().process_frame
-	assert_eq(room.smoke_drift, 0.0, "no drift")
-	assert_eq(room.smoke.position.x, x, "static")
-
-
-func test_smoke_sits_under_every_panel() -> void:
-	var room := _room("full", true)
-	assert_eq(room.smoke.get_parent(), room.smoke_slot, "in SmokeSlot")
-	assert_eq(room.smoke_slot.get_parent(), room, "SmokeSlot in RoomLayers")
-	for n in [room.smoke, room.smoke_slot]:
-		assert_eq((n as CanvasItem).z_index, 0, "%s: no z lift" % n.name)
-		assert_false((n as CanvasItem).top_level, "%s: not top level" % n.name)
-	assert_eq(room.smoke_slot.mouse_filter, Control.MOUSE_FILTER_IGNORE)
-
-
 # --- debug-only override ---------------------------------------------------------------------------
 
 func test_override_holds_the_band_in_debug_builds_only() -> void:
@@ -383,13 +263,9 @@ func test_the_room_draws_no_global_random_number() -> void:
 	room.set_band(2)
 	room.set_mode("off")
 	room.set_mode("full")
-	room.debug_force_band(6)
-	room._drift_tween.custom_step(27.0)
 	room.debug_force_band(4)
 	room._layout_glows()
-	room._layout_smoke()
 	assert_gt(room.grain_step, 0, "grain did step")
-	assert_gt(room.smoke_drift, 0.0, "the smoke did drift")
 	assert_eq([randi(), randi(), randi()], expect, "the global sequence is unchanged")
 
 
@@ -418,7 +294,6 @@ func test_live_g_desk_grades_the_backdrop_and_classic_comes_back() -> void:
 	assert_not_null(desk, "G is up")
 	var room: GRoom = desk.room
 	assert_eq(desk.get_child(0), room, "RoomLayers is the desk's first child, under every panel")
-	assert_true(room.is_ancestor_of(room.smoke), "the floor smoke is inside RoomLayers, so under every panel")
 	assert_eq(room.z_index, 0, "RoomLayers has no z lift")
 	for i in range(1, desk.get_child_count()):
 		var c: Node = desk.get_child(i)
@@ -447,4 +322,3 @@ func test_classic_keeps_todays_room() -> void:
 	assert_eq(bd.modulate, GRoom.OFF_MODULATE, "0.35 as main.tscn sets it")
 	assert_true(root.get_node("BackdropScrim").visible, "scrim shown")
 	assert_null(root.find_child("RoomLayers", true, false), "no room layer")
-	assert_null(root.find_child("FloorSmoke", true, false), "no floor smoke")

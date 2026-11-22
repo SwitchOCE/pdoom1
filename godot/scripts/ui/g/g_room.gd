@@ -8,18 +8,13 @@ extends Control
 ## - full: Backdrop gets g_room_doom.gdshader (tone, grade, window sky, smut, grain, vignette,
 ##   band 6 fire light) at modulate white; the scrim hides; the glows show.
 ## - simple: no shader; Backdrop modulate = the band's brightness x grade tint; glows kept; no
-##   smoke, grain or sky.
+##   grain or sky.
 ## - off: today's room (modulate 0.35 and the scrim, as main.tscn sets them); no glows.
 ## - Band change: one `band` value (shader uniform, glow colour and strength) tweens from where
 ##   it is to the new band over 1.2 s, ease in-out; instant with reduced motion (spec 6.2).
 ## - Grain: `grain_offset` steps 12 times a second in _process, from a step counter (no random
 ##   number, no shader TIME). This node is pausable, so grain freezes in pause; static with
 ##   reduced motion.
-## - Floor smoke (bands 5-6, phase 3b): smoke_floor.png in SmokeSlot, bottom-anchored over the
-##   room, self_modulate violet at the SMOKE column's amount, blended by the same float
-##   shown_band the shader uses (so it fades in with the band tween). Normal blend. It drifts
-##   40 px sideways over 20 s and back on a looping Tween this pausable node owns (freezes in
-##   pause); static with reduced motion; hidden in simple and off.
 ## - Panels never change with the band: only the Backdrop and this layer do.
 ##
 ## VIEW-ONLY: reads the state dict GDesk passes in, writes no game state, draws no random
@@ -29,7 +24,6 @@ const SHADER_PATH := "res://assets/shaders/g_room_doom.gdshader"
 const WINDOW_MASK_PATH := "res://assets/textures/g/room_window_mask.png"
 const NOISE_LO_PATH := "res://assets/textures/g/room_noise_lo.png"
 const NOISE_HI_PATH := "res://assets/textures/g/room_noise_hi.png"
-const SMOKE_PATH := "res://assets/textures/g/smoke_floor.png"
 
 const MODES := ["full", "simple", "off"]
 const TWEEN_S := 1.2
@@ -71,17 +65,6 @@ const GLOW := [
 	Color(110.0 / 255.0, 52.0 / 255.0, 130.0 / 255.0, 0.32),
 	Color(150.0 / 255.0, 113.0 / 255.0, 143.0 / 255.0, 0.30),
 ]
-## Floor smoke strength per band (H's late layer, bands 5-6): the smoke layer's alpha.
-const SMOKE := [0.0, 0.0, 0.0, 0.0, 0.0, 0.42, 0.42]
-## The smoke's violet (the G mock-up's smoke colour, hifi3/G/concept.html: .40/.26/.44), as a
-## tint over the picture's own violet-grey (mean 140,119,133): mock-up colour / picture colour,
-## so the tinted smoke lands on the mock-up's violet.
-const SMOKE_TINT := Color(0.729, 0.557, 0.844)
-## The smoke band's height as a share of the room's height (the mock-up's 520 of 1080).
-const SMOKE_HEIGHT := 520.0 / 1080.0
-## Drift: 40 px sideways over 20 s, then back over 20 s (spec 5.14), ease in-out.
-const SMOKE_DRIFT_PX := 40.0
-const SMOKE_DRIFT_S := 20.0
 
 var mode := "full"
 var reduced_motion := false
@@ -95,15 +78,8 @@ var backdrop: TextureRect = null
 var scrim: CanvasItem = null
 var material_room: ShaderMaterial = null
 var glows: Array = []            # TextureRect, one per GLOWS entry
-## GDesk/RoomLayers/SmokeSlot: holds the floor smoke layer (phase 3b).
-var smoke_slot: Control = null
-## The floor smoke (TextureRect in smoke_slot).
-var smoke: TextureRect = null
-## The smoke's sideways drift in px, 0..SMOKE_DRIFT_PX (the drift tween moves it).
-var smoke_drift := 0.0
 
 var _tween: Tween = null
-var _drift_tween: Tween = null
 var _grain_clock := 0.0
 var _forced := -1                 # debug-only band override (-1 = none)
 var _attached := false
@@ -120,10 +96,6 @@ func _ready() -> void:
 	if glows.is_empty():
 		_build()
 	resized.connect(_layout_glows)
-	resized.connect(_layout_smoke)
-	_layout_smoke()
-	if _attached and mode == "full" and not reduced_motion:
-		_start_drift()   # attached before it entered the tree
 
 
 func _build() -> void:
@@ -149,19 +121,6 @@ func _build() -> void:
 		r.stretch_mode = TextureRect.STRETCH_SCALE
 		add_child(r)
 		glows.append(r)
-	smoke_slot = Control.new()
-	smoke_slot.name = "SmokeSlot"
-	smoke_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(smoke_slot)
-	smoke_slot.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	smoke = TextureRect.new()
-	smoke.name = "FloorSmoke"
-	smoke.texture = load(SMOKE_PATH)
-	smoke.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	smoke.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	smoke.stretch_mode = TextureRect.STRETCH_SCALE
-	smoke.visible = false
-	smoke_slot.add_child(smoke)
 
 
 # --- attach / release (LayoutController, spec 2.2 step 3) ----------------------------------
@@ -179,13 +138,11 @@ func attach(p_backdrop: TextureRect, p_scrim: CanvasItem, p_mode: String = "", p
 	_apply_mode()
 	_apply_band()
 	_layout_glows()
-	_layout_smoke()
 
 
 func release() -> void:
 	"""Stop driving the Backdrop (the caller restores today's values)."""
 	_kill_tween()
-	_stop_drift()
 	if backdrop != null and is_instance_valid(backdrop) and backdrop.material == material_room:
 		backdrop.material = null
 	_attached = false
@@ -230,10 +187,6 @@ func _apply_mode() -> void:
 	for r in glows:
 		(r as CanvasItem).visible = mode != "off"
 	set_process(mode == "full" and not reduced_motion)
-	if mode == "full" and not reduced_motion:
-		_start_drift()
-	else:
-		_stop_drift()
 
 
 static func make_material() -> ShaderMaterial:
@@ -300,10 +253,6 @@ func _apply_band() -> void:
 	var gc := glow_color(shown_band)
 	for r in glows:
 		(r as CanvasItem).self_modulate = gc
-	if smoke != null:
-		var amount := smoke_amount(shown_band)
-		smoke.self_modulate = Color(SMOKE_TINT.r, SMOKE_TINT.g, SMOKE_TINT.b, amount)
-		smoke.visible = mode == "full" and amount > 0.0
 
 
 static func _row(table: Array, v: float):
@@ -320,11 +269,6 @@ static func _row(table: Array, v: float):
 
 static func glow_color(v: float) -> Color:
 	return _row(GLOW, v)
-
-
-static func smoke_amount(v: float) -> float:
-	"""The floor smoke's alpha at the float band v (0 at bands 0-4, .42 at 5-6, blended)."""
-	return float(_row(SMOKE, v))
 
 
 static func simple_modulate(v: float) -> Color:
@@ -386,48 +330,6 @@ func _layout_glows() -> void:
 		var c: Vector2 = cr.position + g["centre"] * k
 		r.position = c - half
 		r.size = half * 2.0
-
-
-# --- floor smoke (phase 3b) ---------------------------------------------------------------------
-
-func _layout_smoke() -> void:
-	"""Bottom-anchored over the room: as wide as the room plus the drift, SMOKE_HEIGHT of its
-	height, sitting on the bottom edge; smoke_drift moves it sideways."""
-	if smoke == null:
-		return
-	var h := size.y * SMOKE_HEIGHT
-	smoke.size = Vector2(size.x + SMOKE_DRIFT_PX, h)
-	smoke.position = Vector2(-SMOKE_DRIFT_PX + smoke_drift, size.y - h)
-
-
-func _set_smoke_drift(v: float) -> void:
-	smoke_drift = v
-	if smoke != null:
-		smoke.position.x = -SMOKE_DRIFT_PX + smoke_drift
-
-
-func _start_drift() -> void:
-	"""A looping tween owned by this node (pausable: it freezes with the game, spec 6.3).
-	It runs from where the drift is, so a mode flip does not jump the smoke."""
-	if _drift_tween != null and _drift_tween.is_valid():
-		return
-	if not is_inside_tree():
-		return
-	_drift_tween = create_tween()
-	_drift_tween.set_loops()
-	_drift_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	var out_s := SMOKE_DRIFT_S * (1.0 - smoke_drift / SMOKE_DRIFT_PX)
-	if out_s > 0.0:
-		_drift_tween.tween_method(_set_smoke_drift, smoke_drift, SMOKE_DRIFT_PX, out_s)
-	_drift_tween.tween_method(_set_smoke_drift, SMOKE_DRIFT_PX, 0.0, SMOKE_DRIFT_S)
-	if out_s < SMOKE_DRIFT_S:
-		_drift_tween.tween_method(_set_smoke_drift, 0.0, smoke_drift, SMOKE_DRIFT_S - out_s)
-
-
-func _stop_drift() -> void:
-	if _drift_tween != null and _drift_tween.is_valid():
-		_drift_tween.kill()
-	_drift_tween = null
 
 
 # --- debug-only band override (the mock-up's ?band=) ------------------------------------------
