@@ -20,6 +20,76 @@
       "confidence": "high",
       "author": "unattributed",
       "author_evidence": ""
+    },
+    "textures/g/paper_sheet.png": {
+      "sha256": "2fd4c3cc60d5ae5abe65addf4c340b829114e4e45e1543bc1d539f9e858dae5b",
+      "bytes": 1021661,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b paper batch (spec 11.2a prompt, /data/pdoom1-art/prompts/task-paper-run1.txt), variant b (source sha256 9e4f184d350a5736d1c1d8990b98187a3df4ccbf05286a190a87bea411f4c60d, 1086x1448); cut by cut_paper.py (G 2b): backing strips trimmed 4/4/4/3 px, whole sheet resized to 1024x1024 Lanczos; fork tool; then recoloured to the spec 4.1 paper tokens by fork/design/godot-g/tools/tint_paper.py (luminance times token mid #b9ac91, scaled so the sheet middle averages #b9ac91; Alex: the first cut was \"far too yellow\")",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/advertise.png": {
+      "sha256": "fe668a38818b91cc87a36b8f5ffa772557d821afc1a7051294110fc0b3ec35d0",
+      "bytes": 24284,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run1 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run1.txt), g_act_advertise.png (source sha256 a248018a707c9b0df8fbe81747351e2515bb6e27e9d7edde960849c2e3d563f1); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/travel.png": {
+      "sha256": "08d9e5182447da2b19170d9635b624acbaeac852d92b27d0e4196a009382430d",
+      "bytes": 24953,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run1 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run1.txt), g_act_travel.png (source sha256 bf8d477a39eadc3d3d427a81c05d8c376abc01d20392fae7910423576bada436); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/publicity.png": {
+      "sha256": "06ade9b6bc4f5885981cb5907c1f577b3b4f1a9c4552330c8307d19dceaa1c68",
+      "bytes": 22084,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run2 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run2.txt), g_act_publicity.png (source sha256 6cd3f40ab5180072f91f36a07e3b050cee1e3381bb0b68b2a723ff541c7ac21a); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/post_online.png": {
+      "sha256": "5b5e076ecd4a31aac7368812ca33e8f9a6a6587a84008cb2b4d0f29e0442aca7",
+      "bytes": 19027,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run1 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run1.txt), g_act_post_online.png (source sha256 d3971faad88c7f630ade99b9d7ce84710f0b844873cf5d5ab75f74044415797c); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/meetups.png": {
+      "sha256": "6a5ae9faa76dbc9407e7fb410b37726da7d2aacd2f3fa20249daaa74ea6da8b8",
+      "bytes": 20038,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run2 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run2.txt), g_act_meetups.png (source sha256 d0c02bd2badfb2e0987c33f4bf22e354f8dacd684c6c9076c92da8ec7f129998); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_new/supplies.png": {
+      "sha256": "48f3bdb5f3abfdd510ed1ef0c01d3c358a533d89aa6bd25554a1930f6ea26b39",
+      "bytes": 22087,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G 2b action icon batch run1 (spec 11.2 prompt, /data/pdoom1-art/prompts/task-icons2b-run1.txt), g_act_supplies.png (source sha256 505b07656fb26325324e0313f306250e25f8ef5a3d4de00393a294b2c76e15af); cut to 128x128 RGBA by fork/design/godot-g/tools/cut_icons.py (lean); toned in G with self_modulate only, pixels as cut",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
     }
   }
 }
