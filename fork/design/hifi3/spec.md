@@ -6,6 +6,14 @@ the game. The mock-up it describes is `fork/design/hifi3/H/concept.html`
 (open it with `?state=1` to `?state=6`). The stills are `H/s1.webp` to
 `H/s6.webp`. The full working notes are `H/notes.md`.
 
+The mock-up has three more switches:
+- `?band=0..6` forces the room's doom layer to one band (the meter keeps
+  the state's real value). `H/band-0.webp` to `H/band-6.webp` are screen 1
+  at each band.
+- `?res=trace` shows the resources as trace windows instead of tier icons
+  (3.2). Stills: `H/s3-trace.webp`, `H/s5-trace.webp`, `H/s6-trace.webp`.
+- `?rep=dial` brings back the old reputation dial, for comparison only.
+
 Every number below was checked against `godot/data/`, the code or the ADRs,
 and the source is named. Where the mock-up differs from today's game, the
 text says so.
@@ -42,7 +50,8 @@ H is a UI and presentation change only.
 - **ADR-0015, no printed doom deltas.** The P(Doom) meter shows the level
   the game already shows (for example 40.2%), its band name and a RISING
   label. Nowhere does H print a change in doom as a number. The month
-  review reports doom by band only: "HIGH -> SEVERE (crossed up)".
+  review reports doom by band only: "HIGH -> SEVERE (crossed up)". The
+  resource traces (3.2) carry no doom line.
 - **ADR-0001, spending buys sight.** H shows only what the player already
   sees today, or what can be worked out from it. Things the game hides
   stay hidden:
@@ -52,7 +61,9 @@ H is a UI and presentation change only.
   - a candidate's hidden self-worth and offer range;
   - the odds and results of an event choice before it is made;
   - what a play will yield before Commit. The plan's AFTER COSTS line
-    subtracts the listed costs and nothing else.
+    subtracts the listed costs and nothing else;
+  - where a resource is heading. A tier icon is read from the amount on
+    screen, and a trace draws only months already played (3.2).
 - **ADR-0011, the Attention rule** (amendment 2026-07-28):
   - The month's Attention is 20 hours on the standard difficulty
     (`data/balance/defaults.json` `attention_per_month`: 24 easy, 20
@@ -74,6 +85,34 @@ H is a UI and presentation change only.
     estimate, made in queue order; the game does not record a spill per
     row.
 
+### 1.3 Hierarchy
+
+The desk is ranked. What the player must watch comes first; the rest
+recedes, but no text goes under the contrast floor (2.8) to do it.
+
+1. **P(Doom).** The largest panel, top right, and the only panel framed in
+   its own colour (the band's stroke on its border and top edge, with a
+   soft glow). The percentage at 40 px.
+2. **Attention left and money.** Attention is the top block of the plan
+   panel, under the header "ATTENTION -- HOURS LEFT": 22 px values and
+   16 x 26 px hour cells in the pool colours. Money is the first, larger
+   cell of the resource strip: 48 px icon plate, 28 px value, label in
+   muted.
+3. **The plan.** The queue lines in the plan panel (16 px, muted), the plan
+   sheet when open. Compute, research, papers and reputation sit at this
+   level: 40 px plates, 22 px values, labels in dim.
+4. **Everything else.** The menu rack (16 px labels in muted, icons at 82%
+   opacity), the held-for-events panel, and Commit, which stays muted until
+   something is queued.
+
+The dateline is a title, outside the ranking: it marks the month, then sits
+still.
+
+How each level is made: size first (40, 28, 22, 16 px), then text colour
+(bone, muted, dim), then position (top right and top left first, the rack
+and Commit at the bottom right), then weight. Only level 1 gets colour of
+its own.
+
 ## 2. Tokens
 
 ### 2.1 Canvas
@@ -82,8 +121,8 @@ H is a UI and presentation change only.
   aspect `expand`). All positions here are on that canvas.
 - With `expand`, a wider window adds space. Anchor the left column (the
   dateline, the plan sheet, the terminal) to the left edge. Anchor the
-  right column (the meters, the rack, the held panel, Commit) to the right
-  edge. The room art fills the space between.
+  right column (the P(Doom) meter, the rack, the held panel, Commit) to
+  the right edge. The room art fills the space between.
 - The mock-up scales a fixed 1920x1080 stage, so 1280x720 is the same layout
   at two-thirds size. It was checked at both sizes.
 
@@ -117,7 +156,7 @@ Attention pools and accents:
 | op / op-fill | `#93b3a9` / `#6c8f86` | operating hours: text / cells |
 | amber | `#d9a03a` | the one thing that wants the player: hint ring, focus, Enter |
 | amber-line | `rgba(217,160,58,.62)` | amber hairlines and keycaps |
-| warn | `#d58a52` | blocked reasons, BELOW ZERO |
+| warn | `#d58a52` | blocked reasons, negative balances |
 | blood | `#9b3328` | PAUSED FOR YOU, the 0 mark on reputation |
 
 Paper and ink:
@@ -130,8 +169,9 @@ Paper and ink:
 | red ink | `#3d0e08` | paper warnings |
 | green ink | `#0b2621` | paper confirmations ("hired") |
 
-Amber is used for one thing per screen at most. Purple appears only in the
-doom layer at band 3 and above (`docs/art/PALETTE_AND_DOOM_INTENSITY.md`).
+Amber is used for one thing per screen at most. Purple appears in the room
+only from doom band 5, CATASTROPHIC (2.4), and otherwise only as the doom
+colour itself (`docs/art/PALETTE_AND_DOOM_INTENSITY.md`).
 
 ### 2.3 Doom colours and bands
 
@@ -147,33 +187,51 @@ H uses the game's own doom colours and bands from
 - **Arc and ticks:** `get_doom_stroke_color()`, which lifts dark tiers to a
   luminance floor of 0.22.
 - **Text** (the % and the band name): the stroke colour lifted further,
-  toward a pale tint of itself, until it reaches 5:1 on the panel. The game
-  has no such step today (see section 7.2).
+  toward a pale tint of itself, until it reaches 5:1 on the panel. The lit
+  row of the band ladder is lifted to 7.5:1, because its 16 px caps fell
+  under 4.5:1 at 1280x720 in SEVERE. The game has no such step today (see
+  section 7.2).
 
-### 2.4 How the room darkens
+### 2.4 How the room darkens: colour by doom band
 
-The room is Pip's `office_wide_dawn` art under a doom layer. The layer has
-one grade and one glow source, per the palette doc's discipline. Art bands
-follow `PALETTE_AND_DOOM_INTENSITY.md` (0 Cosy to 4 Terminal):
+The room is Pip's `office_wide_dawn` art under a doom layer. The layer is
+keyed to the game's doom band (2.3), **never to the month**: a calm April
+stays as light as a calm July. The layer sits over the room only; the
+panels never change with the band. Doom is a layer, not a repaint.
 
-| Art band | Doom bands | Brightness | Saturation | Contrast | Grade | Glow on far monitor | Window sky |
-|---|---|---|---|---|---|---|---|
-| 0 | NOMINAL, early ELEVATED | .62 | .55 | 1.06 | warm brown, 16% | faint amber | none |
-| 1 | late ELEVATED, HIGH | .55 | .45 | 1.08 | grey, 24% | low orange | overcast grey |
-| 2 | SEVERE, EXTREME | .46 | .35 | 1.10 | blue-grey, 34% | red-orange | storm blue |
-| 3 | CATASTROPHIC | .40 | .30 | 1.14 | blood, 45% | violet `#7A3B8F`-like | violet to red |
-| 4 | TERMINAL | darker still | | | | | fire-lit |
+Per band, one step each:
 
-- Band 3 adds a late layer: a soot vignette from the edges, a violet
-  multiply in the shadows, a violet aura and smoke on the cat's photo.
-- Band 4 is not drawn. The steps above leave room for it: a deeper
-  vignette, more smoke, and the meter at its last colour.
-- The mock-up fakes the layer with CSS filters over one picture. In the
-  game it should be per-band art layers (window sky, monitor glow, floor
-  smoke), as the palette doc already plans.
-- Which doom bands map to which art band is a proposal. ELEVATED spans art
-  bands 0 and 1 because ELEVATED is wide (15 to 37). Today's game does not
-  key the office art to doom.
+| Band | Doom | Brightness | Saturation | Contrast | Grade | Glow on far monitor | Window sky | Vignette / grain / smut | Added |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | NOMINAL, under 15 | .80 | .70 | 1.03 | warm amber, 10% | amber | warm, bright dawn | 18% / 7% / 0 | -- |
+| 1 | ELEVATED, 15-37 | .70 | .58 | 1.05 | amber-brown, 16% | amber | grey | 28% / 10% / 4% | -- |
+| 2 | HIGH, 37-52 | .61 | .46 | 1.08 | grey-blue, 26% | orange | blue-grey | 38% / 14% / 8% | -- |
+| 3 | SEVERE, 52-67 | .50 | .38 | 1.10 | night blue, 34% | red-orange | night blue | 46% / 17% / 12% | -- |
+| 4 | EXTREME, 67-80 | .44 | .32 | 1.12 | wine red, 40% | red | red | 54% / 20% / 16% | -- |
+| 5 | CATASTROPHIC, 80-92 | .38 | .28 | 1.14 | blood red, 45% | violet | violet to red | 62% / 23% / 20% | late layer |
+| 6 | TERMINAL, 92 and up | .31 | .26 | 1.18 | blood red, deeper | violet | violet to red | 72% / 26% / 24% | late layer and fire light |
+
+- **The brighter start.** Band 0 is at .80 brightness; H's first pass
+  started at .62. Screen 1 (ELEVATED, 20%) sits at band 1, .70. It is
+  still a dim, grimy office: the paper stays the only light thing on
+  screen, and the room gets no light source of its own.
+- **What changes per band:**
+  - the room darkens (brightness), drains (saturation) and hardens
+    (contrast);
+  - one grade and one glow source, per the palette doc: amber, then grey
+    and night blue, then wine and blood, then violet;
+  - the window sky follows the grade;
+  - texture thickens: smut (multiply) and grain (overlay) over the room,
+    and a soot vignette that closes in from the edges;
+  - from band 5 the late layer: a violet multiply in the shadows, a violet
+    aura and smoke on the cat's photo; band 6 adds fire light from below.
+- **The six screens:** screen 1 is band 1; screens 2 to 4 are band 2 (HIGH,
+  40.2%); screen 5 is band 3 (SEVERE, 56.7%); screen 6 is band 5
+  (CATASTROPHIC, 81.4%).
+- The mock-up fakes the layer with CSS filters and gradients over one
+  picture. In the game it should be per-band art layers (window sky,
+  monitor glow, floor smoke), as the palette doc already plans. Today's
+  game does not key the office art to doom.
 
 ### 2.5 Type
 
@@ -190,8 +248,8 @@ tokens:
 |---|---|---|
 | 16 | labels, keycaps, notes, plan rows | small (15) |
 | 18 | names, paper body, buttons | body (19) |
-| 22 | band name, section heads, the event title | body (19), or a new step |
-| 28 | values: held hours, money, the dateline | header (27) |
+| 22 | band name, section heads, the event title, level 3 values (held hours, Attention, resources) | body (19), or a new step |
+| 28 | money, the dateline | header (27) |
 | 40 | the P(Doom) percentage | title (35) |
 
 Two points for Pip, since both change `FONT_STEPS`:
@@ -215,11 +273,12 @@ game.
 
 ### 2.6 Spacing and lines
 
-- Outer gutter: 56 px on the left, 40 px from the top for the meters (24 px
-  for the dateline), 40 px from the right and bottom edges.
-- Gaps: 16 px between the two meters and between the sheet and the rack;
-  40 px between the rack and the held panel. Inside panels: 16 px side
-  padding, 12 px between rows.
+- Outer gutter: 56 px on the left, 40 px from the top for the P(Doom)
+  meter (24 px for the dateline, 16 px for the resource strip), 40 px
+  from the right and bottom edges.
+- Gaps: 16 px between the resource strip and the meter, and between the
+  sheet and the rack; 40 px between the rack and the held panel. Inside
+  panels: 16 px side padding, 12 px between rows.
 - Rack plates: 46 px tall, 10 px apart.
 - Lines:
   - panel hairline 1 px (frame);
@@ -242,6 +301,8 @@ game.
   edges (inner shadows), one fold crease, darker worn corners. The event
   card's fold sits at 36.5% of its height so it misses the text.
 - **Whole screen:** film grain at 20% (overlay blend).
+- **The room:** its own smut and grain, which thicken with the doom band
+  (2.4). They sit under the panels, so they never touch text.
 - Grime must never sit under small text at a strength that breaks the
   contrast floor. The mock-up's textures are procedural noise; the game
   can use small tiling textures instead.
@@ -258,18 +319,24 @@ a sheet is skipped.
 
 | State | Text boxes | Lowest at 1920 | Lowest at 1280x720 |
 |---|---|---|---|
-| 1 | 52 | 5.38 | 4.63 |
-| 2 | 134 | 5.38 | 4.63 |
-| 3 | 188 | 4.86 | 4.54 |
-| 4 | 74 | 5.35 | 4.67 |
-| 5 | 100 | 4.91 | 4.63 |
-| 6 | 49 | 4.88 | 4.63 |
+| 1 | 66 | 5.44 | 4.53 |
+| 2 | 139 | 5.44 | 4.53 |
+| 3 | 201 | 5.25 | 4.53 |
+| 4 | 87 | 5.42 | 4.59 |
+| 5 | 113 | 4.91 | 4.53 |
+| 6 | 64 | 4.88 | 4.53 |
 
-Two rules came out of the measuring:
+The trace take (3.2) measures the same as its state, and screen 1 at every
+band (0 to 6) measures 5.43 or more at 1920 and 4.53 at 1280x720. The
+1280x720 floor is the held panel's small grey note.
+
+Three rules came out of the measuring:
 - Disabled controls are shown with a dashed edge and hatching, not by
   fading the text. Their labels keep dim colour (5:1 or better).
 - Paper labels at 16 px are bold, and paper keycaps are inverted
   (light on ink).
+- Row numbers and small tags on dark panels use muted, not dim: at 16 px
+  mono, dim fell under 4.5:1 at 1280x720.
 
 ## 3. Components
 
@@ -277,30 +344,81 @@ Positions are x,y on the 1920x1080 canvas.
 
 ### 3.1 P(Doom) meter
 
-- Panel at 1400,40, 280x330.
-- A 270-degree arc (radius 96, stroke 16) in the doom stroke colour, with a
-  tick at each band edge.
-- In the middle: the % at 40 px and the band name at 22 px (18 px when the
-  name is long, like CATASTROPHIC). Both in the doom text colour.
-- Under the arc:
-  - a RISING chip, when the game reports a rising trend (a label, never a
-    number);
-  - a 7-step band ladder with the current band marked;
-  - the line "band N of 7". At band index 5 and up it becomes the game's
-    own warning, "Very close to game over" (`main_ui.gd:1010`).
-- States: normal; rising; warning (band 5+). The panel itself never
-  changes colour.
+Level 1 of the hierarchy (1.3).
 
-### 3.2 Reputation tachometer
+- Panel at 1400,40, 480x330. Its border is the doom stroke colour at 55%,
+  with a 3 px top edge in the full colour and a faint glow. It is the only
+  panel framed in colour; the colour follows the band, the panel's fill
+  never changes.
+- Left, a 270-degree arc (radius 104, stroke 18) in the doom stroke
+  colour, with a fine tick outside the arc at each band edge.
+- In the arc: the % at 40 px and the band name at 22 px (18 px when the
+  name is long, like CATASTROPHIC), both in the doom text colour (2.3).
+  Under them, a RISING chip when the game reports a rising trend (a label,
+  never a number).
+- Right, the seven-band ladder, TERMINAL at the top: a colour chip and the
+  name per band, the current band lit (a larger chip, bold, its text at
+  7.5:1).
+- Under the ladder: "band N of 7". From band index 5 the game's own
+  warning, "Very close to game over" (`main_ui.gd:1010`), shows under the
+  arc.
+- States: normal; rising; warning (band 5+).
 
-- Panel at 1696,40, 184x330.
-- A semicircle (radius 64, stroke 14) in bone `#a99d88`, scale 0 to 100,
-  the value in mono under it.
-- A blood-red mark at 0 with the note "0 ends the run". That is the game's
-  rule: reputation at 0 or below ends the run (`game_state.gd:791`;
-  `death_attribution.gd:46` files it as a reputation death).
-- No colour change by level. The game's own low-reputation warnings (30 and
-  under, 20 and under; `main_ui.gd:1015`) stay in the game's log.
+### 3.2 Resources
+
+One strip across the top, between the dateline and the P(Doom) meter
+(right edge at 1384, top 16, 60 px tall). Five cells, left to right:
+money, compute, research, papers, reputation. Money is the lead cell
+(level 2, 1.3); the rest are level 3. The plain number always stays beside
+the picture. A negative value turns warn colour.
+
+Reputation is drawn here once, with the note "**0** ends the run" (the 0
+in blood red). That is the game's rule: reputation at 0 or below ends the
+run (`game_state.gd:791`; `death_attribution.gd:46` files it as a
+reputation death). The old tachometer is gone; the mock-up keeps it behind
+`?rep=dial` for comparison only.
+
+The strip is kept compact: if it crowds the room art, it shrinks first.
+
+**Take a: tier icons (the default).** Each cell has a dark plate (40 px;
+48 px for money) with a tier icon. The tier is read from the amount on
+screen and nothing else: no forecast, no hidden value (ADR-0001).
+
+| Resource | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Where the lines come from |
+|---|---|---|---|---|---|---|
+| Money | 0 or less | up to $20,000 | up to $99,999 | up to $249,999 | $250,000 and up | $20,000 is the game's low-funds warning (`main_ui.gd:1021`) |
+| Compute | 0 or less | 1-49 | 50-99 | 100-199 | 200 and up | round steps; the start is 100 |
+| Research | 0 or less | 1-9 | 10-19 | 20-49 | 50 and up | 10 and 20 are the costs of Safety Research and Publish Safety Paper |
+| Papers | 0 | 1 | 2-4 | 5-9 | 10 and up | round steps |
+| Reputation | 0 or less | 1-20 | 21-30 | 31-60 | 61 and up | 20 and 30 are the game's reputation warnings (`main_ui.gd:1015`); 0 ends the run |
+
+- Tier 0 is the zero-or-below picture (an empty box, a dead chip, a
+  shattered medal), with the only red in the icon.
+- In the run: money $245,000 is tier 3 and $12,400 tier 1; research -12
+  and -6 are tier 0; reputation 50 and 34 are tier 3, 21 is tier 2.
+- The thresholds are a proposal. Where the game has no line of its own
+  (compute, papers, the upper money and research tiers) they are round
+  steps, for Pip to change.
+- The icons are new art (6.4).
+
+**Take b: trace windows (`?res=trace`).** Each plate becomes a small
+monitor (64x48 for money, 52x40 for the rest) with the resource's line.
+
+- **History only.** The line is the amount at the start of each month the
+  player has already played, plus the current amount as the last point.
+  Nothing ahead of today: no forecast, no projected point.
+- **Auto-scale.** The y-axis has no fixed anchor: it fits the line's own
+  lowest and highest values, so the window shows shape, not size. The
+  number beside it gives the size. When the line crosses 0, a dashed blood
+  zero line shows where.
+- **No doom trace** (ADR-0015). P(Doom) stays a level on its meter.
+- A tab under the strip reads "TRACE since Jul 2017". In month 1 it reads
+  "no history yet", and each window shows one point on a flat dashed line.
+- The mock-up's data is `fork/design/hifi/run-state.md`, "Resource
+  history". Its Jan-Mar 2018 points are a marked projection, there only so
+  screen 6 has a line.
+- The game does not record month-start amounts today. Take b needs them
+  recorded, as presentation data only: it must not change a run (7.1).
 
 ### 3.3 Dateline
 
@@ -362,6 +480,8 @@ For the game asset, see section 6.3.
 
 - Panel at 1268,612, 276x428. Seven plates, 46 px tall, 10 px apart. Each
   plate has Pip's icon, a condensed caps name and a keycap.
+- Level 4 of the hierarchy: 16 px labels in muted, icons at 82% opacity.
+  A lit or hinted plate still stands out, by its amber.
 - PLAN set: ACTIONS A, PLAN P, STAFF E, UPGRADES U, LEDGER L, IN-TRAY R,
   GUIDE F1.
 - WATCH set: FEED F, STAFF E, LEDGER L, GUIDE F1 live; ACTIONS, PLAN and
@@ -381,9 +501,10 @@ For the game asset, see section 6.3.
 
 - Panel at 56,612, 560x428. On the desk it is the month at a glance:
   - "NOVEMBER PLAN";
-  - the Attention bars, planning N of 12 and operating N of 8, one cell per
-    hour, filled = hours left;
-  - the queue in short;
+  - Attention first (level 2): the header "ATTENTION -- HOURS LEFT", then
+    planning N of 12 and operating N of 8, one 16x26 px cell per hour,
+    filled = hours left, values at 22 px;
+  - the queue in short (level 3): 16 px lines in muted;
   - when empty, "Plan is empty / open Actions [A]".
 - In WATCH the same panel plays the month back: the month and "workday N of
   22", a bar with one segment per workday and today marked, then the feed
@@ -394,6 +515,8 @@ For the game asset, see section 6.3.
 - **Commit** sits at 1584,980, 296x60, and never moves. It is a dark plate
   with an amber hairline and caps "COMMIT THE MONTH".
   - It shows the Enter keycap only when nothing above it owns Enter.
+  - Idle (nothing queued): muted text and a plain hairline, no amber. It
+    lights when there is something to commit.
   - Waiting (under the month review): dimmed.
   - WATCH: "MONTH IN PLAY", dashed and inert.
 - **Held for events** is a small panel directly above Commit (1584, top 856,
@@ -409,8 +532,9 @@ For the game asset, see section 6.3.
 - A dark sheet at 56,88, 1196x952 (E's card file, retextured). The rack and
   Commit stay in view.
 - Header: ACTIONS and "A Esc BACK TO DESK".
-- A balance strip: money, compute, research (in warn colour with BELOW ZERO
-  when under 0), papers, and hours left as pips.
+- An hours row: hours left in each pool, as pips. The balances are no
+  longer repeated here; the resource strip (3.2) stays in view above the
+  sheet.
 - The top-level actions the game offers this month, in E's two columns and
   order: core.json minus `HIDDEN_FROM_ACTION_BAR_IDS`
   (`action_bar_renderer.gd:83`) and minus locked actions. 17 cards in
@@ -532,16 +656,17 @@ shows no keycap.
 
 The run in the mock-ups: July 2017 start, November 2017 middle (rows from
 `fork/design/hifi/run-state.md`, revisions 2 and 3), December review,
-April 2018 late game.
+April 2018 late game. Screens 2 to 4 are doom band 2 (HIGH, 40.2%). The
+resource strip (3.2) is on every screen.
 
 | # | Screen | On screen | One click away | Keys shown |
 |---|---|---|---|---|
-| 1 | Desk at rest, first month (Tue 4 Jul 2017, 20.0% ELEVATED, art band 0) | dateline types; meters; plan panel "Plan is empty"; rack with ACTIONS hinted; held 20 hr; Commit; the advisor's paper note pointing to ACTIONS | Actions card file, Plan, Staff, Ledger, Guide | rack letters; Commit Enter |
+| 1 | Desk at rest, first month (Tue 4 Jul 2017, 20.0% ELEVATED, doom band 1) | dateline types; resource strip; P(Doom) meter; plan panel "Plan is empty"; rack with ACTIONS hinted; held 20 hr; Commit; the advisor's paper note pointing to ACTIONS | Actions card file, Plan, Staff, Ledger, Guide | rack letters; Commit Enter |
 | 2 | Actions open (Wed 1 Nov 2017, 3 plays queued) | card file with 17 cards, blocked reasons, stamps; detail strip for Safety Audit | add a play (Enter); open a door card; back to desk (A or Esc) | A, Esc; Enter on the detail strip only |
 | 3 | The month's plan (same day, 11 plays) | Attention grid (7 of 12 planning left, 0 of 8 operating), 11 rows, the spilled hour, totals, AFTER COSTS ($37,400, 26 rep, 7 hr held), research quality, reserve | reorder or remove a row; Undo; Clear; back to desk | P, Esc, Z, C; no Enter on Commit |
 | 4 | WATCH, an event waits (Tue 14 Nov 2017) | feed and month bar; WATCH rack; clock, PAUSED FOR YOU, speed, held 7 hr; Commit "MONTH IN PLAY"; the event on paper | choose an option | the event's keys and Enter only; no other keycaps |
-| 5 | Month review (Fri 1 Dec 2017, 56.7% SEVERE, art band 2) | dateline types DECEMBER; dimmed desk; the review sheet | begin planning | rack letters; Enter on the review only |
-| 6 | Late game (Mon 2 Apr 2018, 81.4% CATASTROPHIC, art band 3) | the desk of screen 1 with the late layer; the meter's warning line; nothing queued | as screen 1 | as screen 1 |
+| 5 | Month review (Fri 1 Dec 2017, 56.7% SEVERE, doom band 3) | dateline types DECEMBER; dimmed desk; the review sheet | begin planning | rack letters; Enter on the review only |
+| 6 | Late game (Mon 2 Apr 2018, 81.4% CATASTROPHIC, doom band 5) | the desk of screen 1 with the late layer; the meter's warning line; nothing queued | as screen 1 | as screen 1 |
 
 ### 4.1 Key rules
 
@@ -587,9 +712,8 @@ redesign; this table reuses them.
 |---|---|---|
 | Room and doom layer | `Backdrop`, `BackdropScrim` | per-band art layers on top; keyed to the doom band |
 | Dateline | none (today: `TopBar/TurnLabel`, `TurnCountLabel`) | new label plus the sound; "Turn N" (workdays) goes |
-| Balances (money, compute, research, papers) | `TopBar/*Label` | only the card file's balance strip shows all four; the plan panel at rest shows Attention and queued plays; the Plan sheet's AFTER COSTS shows money, reputation and held hours; the desk at rest shows no balances; values unchanged |
+| Resource strip (money, compute, research, papers, reputation) | `TopBar/*Label`, `TopBar/ReputationLabel` | one strip, always on screen, with tier icons or traces (3.2); values unchanged |
 | P(Doom) meter | `ContentArea/InstrumentColumn/CoreZone/RightZones` (`DoomMeter` scene, `NumericDoomLabel`, `DoomExplanation`) | restyled; band ladder and warning line added from the game's own data |
-| Reputation tachometer | `TopBar/ReputationLabel` | new instrument; same value |
 | Office cat print | `OfficeCat` in `CatZone` (`office_cat.gd`) | shown as a photo print on the desk |
 | Plan panel and feed | `PlanScreen` (`plan_screen.gd`) and `WatchScreen` (`watch_screen.gd`), `QueuePanel` | one terminal panel with a PLAN face and a WATCH face |
 | Attention grid | `TopBar/APLabel`, `plan_screen.update_reserve_gauge` | a cell grid per pool, with the spilled hour shown |
@@ -615,8 +739,8 @@ redesign; this table reuses them.
 - 24 of Pip's icons:
   - rack: `ui_guide_actions`, `ui_config_date`, `ui_staff_management`,
     `button_upgrade_normal`, `ui_budget_finance`, `ui_guide_book`;
-  - meters and balances: `doom`, `reputation`, `money`, `compute`,
-    `research`, `paper`;
+  - the meter head and some action cards: `doom`, `reputation`,
+    `money`, `compute`, `research`, `paper`;
   - action cards and system: `ui_guide_resources`, `action_funding_loan`,
     `button_hire_normal`, `action_publicity_network`,
     `employee_status_training`, `action_research_ml_fundamentals`,
@@ -629,6 +753,9 @@ redesign; this table reuses them.
   not count as a person. No human figures are added.
 
 Copies are in `fork/design/hifi3/H/assets/`.
+
+The round resource icons (`money`, `compute`, `research`, `paper`,
+`reputation`) are replaced in the strip by the tier icons (6.4).
 
 ### 6.2 Art that would need darker versions to match
 
@@ -648,8 +775,9 @@ would need darker versions to match H:
   manner: `new_inbox_tray` (In-tray), `new_feed_tape` (Feed),
   `new_advertise_notice` (Advertise a Role), `new_travel_suitcase`
   (Travel), `new_publicity_megaphone` (Publicity);
-- per-band layers for the office: window sky, monitor glow, floor smoke
-  (band 3+), as the palette doc plans.
+- per-band layers for the office, one set per doom band (2.4): window sky,
+  monitor glow, grime, and floor smoke and fire light for bands 5 and 6,
+  as the palette doc plans.
 
 ### 6.3 The sound asset
 
@@ -678,6 +806,22 @@ would need darker versions to match H:
 - It plays only when the dateline types (a month's first screen), never
   on in-month day changes.
 
+### 6.4 New art: the resource tier icons
+
+25 icons, five tiers for each of the five resources, in
+`fork/design/hifi3/H/assets/tiers/` (`money-0.svg` to `rep-4.svg`, 64 px
+view box). They are drafts in Pip's manner for his artist (dark plate, warm
+painted gradients, one amber accent, red only at tier 0), made by script,
+not final art.
+
+| Resource | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|---|---|---|---|---|---|
+| Money | empty cash box | one coin | three coins | a stack | a pile |
+| Compute | dead chip | lit chip | one server | three server units | two racks |
+| Research | blank notebook | one note sheet | open notebook | three books | a file box |
+| Papers | empty clipboard | one paper | three, fanned | a bound journal | a shelf |
+| Reputation | shattered medal | cracked medal | tarnished medal | brass with a star | brass with a laurel |
+
 ## 7. Open rule questions, and bugs found on the way
 
 ### 7.1 Where the mock-up follows the ADR and today's UI differs
@@ -700,10 +844,16 @@ would need darker versions to match H:
     the ADR).
   - H shows Reserve live while any hour is unspent.
   - This affects what a player can do, so it is Pip's call too.
-- **The always-on resource bar goes.** H drops today's top bar of
-  balances: they show in the card file (A), and money and reputation in
-  the Plan sheet. Whether the player should see them on the desk at all
-  times is Pip's call.
+- **The resource strip stays on screen.** H keeps all five balances on the
+  desk, as today's top bar does, now ranked (money first) and drawn as
+  tier icons or traces (3.2). Which take, and the tier lines, are Pip's
+  call.
+- **Take b needs history.** The game keeps no month-start amounts today.
+  Recording them is presentation data, but it is new state, so Pip should
+  agree it, and it must not change a run.
+- **The Plan sheet and the strip both show money and reputation** in
+  screens 2 and 3: the strip today's amount, the sheet the amount after
+  the listed costs. Whether the sheet should show only the change is open.
 - **The AFTER COSTS preview** is new. It adds no hidden information (it
   subtracts listed costs), but Pip may not want a preview at all.
 - **Fonts:** small at 15 vs the 16 px floor, and the missing 22 step
@@ -738,3 +888,69 @@ would need darker versions to match H:
 - **Event pictures are packed but unused**
   (`godot/assets/images/events/README.md`).
 - **No bundled fonts** and no sound effects ship today (2.5, 6.3).
+
+## 8. H-HF texture
+
+H-HF (`H-HF/`, states 1, 4 and 5) is H with a texture pass drawn from
+HighFleet and amber control panels. Only the texture changes. Every element
+box matches H's at 1920x1080, and the room and its doom layer, the paper,
+the tier icons and the ids are H's. Full notes: `H-HF/notes.md`.
+
+**Materials**
+
+- **Painted steel:** olive-black panels with a pressed rim, a lit top lip
+  and a shadowed bottom lip. The top coat is worn in a slow mottle, with
+  chips and fine scratches along the outer 18-22px of each panel.
+- **Fasteners:** domed rivets at the panel corners and slotted screws on
+  the P(Doom) bezel.
+- **Stencilled labels:** every condensed caps label uses Big Shoulders
+  Stencil Text 700, at H's sizes. Labels that were dim in H are muted here,
+  so they still pass 4.5:1.
+- **Counter windows:** dark recessed windows for the numbers. Money, the
+  P(Doom) percentage and the WATCH clock also get drum seams between
+  characters.
+- **The dial:** P(Doom) keeps H's arc, band ticks and colours, set in a
+  steel bezel with a sunk face, a fine scale every 2.5 with no numerals,
+  and a needle at the level. The band ladder becomes a column of lamps.
+- **Warning plates:** dull amber and black hazard stripes, used only on
+  "PAUSED FOR YOU" and on reputation's "0 ends the run".
+- **Push plates:** the rack is raised plates with key caps sunk into the
+  steel. Commit has a bevel, and a guard ring while it is muted.
+- **The desk:** a steel sill with a riveted seam along its top.
+
+**Texture tokens** (a second `:root`, in the "H-HF TEXTURE" block)
+
+| Token | Value |
+|---|---|
+| `--hf-paint` | `rgba(19,20,15,.95)` (panels) |
+| `--hf-plate` / `--hf-plate-2` | `#1a1b14` / `#13140f` (raised plates) |
+| `--hf-recess` | `#090a07` (windows, sockets, dial face) |
+| `--hf-lip-hi` / `--hf-lip-lo` | `rgba(226,216,186,.10)` / `rgba(0,0,0,.6)` |
+| `--hf-bevel`, `--hf-sunk` | the raised and sunk inset shadows |
+| `--hf-rivet`, `--hf-screw` | radial gradients (the screw adds a slot) |
+| `--hf-hazard` | `repeating-linear-gradient(-45deg,#7a5e27 0 6px,#0f0d0a 6px 12px)` |
+| `--hf-mottle`, `--hf-chips`, `--hf-scratch` | SVG fractal noise, drawn in the page |
+| `--stencil` | `"Big Shoulders Stencil Text"`, falling back to Barlow Condensed |
+
+**Identical to H**
+
+- Layout, hierarchy, type scale, text colours apart from the two label
+  sets above, and the data.
+- The colour by band (`DOOM_LAYER`, the room's grade, vignette, grain and
+  smut).
+- The tier icons (take a), the `data-el` ids, and the paper surfaces. The
+  one paper change: the event's option numbers are lifted to `#e4dac4`
+  to pass at 720.
+- The dateline. The `SOUND_START..SOUND_END` block is byte-identical
+  (same sha256) and the sound button lock is H's.
+
+**Left out from HighFleet**
+
+- Its density: no added gauge, switch, label or plate.
+- Light dial faces and light nameplates.
+- Amber nixie digits.
+- Bright yellow stripes.
+- Scale numerals.
+- Decorative text.
+- CRT scanlines.
+- Rust.

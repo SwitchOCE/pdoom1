@@ -28,11 +28,11 @@ def stage_copy(design, inject):
     open(os.path.join(work, "concept.html"), "w", encoding="utf-8").write(t[:i] + inject + t[i:])
     return "file://" + os.path.join(work, "concept.html")
 
-def chrome(args):
+def chrome(args, size="1920,1080"):
     prof = os.path.join(SCRATCH, "prof")
     try:
         return subprocess.run([CH, "--no-sandbox", "--headless", "--hide-scrollbars", "--user-data-dir=" + prof,
-                               "--virtual-time-budget=6000", "--window-size=1920,1080"] + args,
+                               "--virtual-time-budget=6000", "--window-size=" + size] + args,
                               capture_output=True, text=True, timeout=90).stdout
     finally:
         shutil.rmtree(prof, ignore_errors=True)
@@ -49,25 +49,26 @@ def probe(design, query, sel=None):
     m = re.search(r'<pre id="probe">(.*?)</pre>', out, re.S)
     for row in json.loads(html.unescape(m.group(1))): print(*row)
 
-def cut(design, query, show, out, hide="", crop=None, opaque=False, quality=92):
+def cut(design, query, show, out, hide="", crop=None, opaque=False, quality=92, extra="", thresh=3, lossless=False):
     css = "<style>"
     if not opaque:
         css += ("html,body,#stage{background:transparent!important}#stage *{visibility:hidden!important}"
                 + ",".join("#stage " + s + ",#stage " + s + " *" for s in show.split("|")) + "{visibility:visible!important}")
     if hide:
         css += ",".join("#stage " + s + ",#stage " + s + " *" for s in hide.split("|")) + "{visibility:hidden!important}"
-    css += ".mock-snd,#check{display:none!important}</style>"
+    css += ".mock-snd,#check{display:none!important}</style>" + extra
     url = stage_copy(design, css) + "?" + query
     png = os.path.join(SCRATCH, "cut.png")
     if os.path.exists(png): os.remove(png)
     chrome((["--default-background-color=00000000"] if not opaque else []) + ["--screenshot=" + png, url])
     im = Image.open(png).convert("RGBA")
     if crop: box = (crop[0], crop[1], crop[0] + crop[2], crop[1] + crop[3])
-    else: box = im.getchannel("A").point(lambda a: 255 if a > 3 else 0).getbbox()
+    else: box = im.getchannel("A").point(lambda a: 255 if a > thresh else 0).getbbox()
     if not box: print("EMPTY", design, query, show); return None
     piece = im.crop(box)
     if opaque: piece = piece.convert("RGB")
-    piece.save(out + ".webp", "WEBP", quality=quality, method=6)
+    if lossless: piece.save(out + ".webp", "WEBP", lossless=True, quality=100, method=6)
+    else: piece.save(out + ".webp", "WEBP", quality=quality, method=6)
     x, y, x2, y2 = box
     return {"x": x, "y": y, "w": x2 - x, "h": y2 - y}
 

@@ -42,7 +42,6 @@ h1{font-family:var(--display);font-size:clamp(32px,5vw,48px);font-weight:700;lin
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#090807}
 #stage .bgimg{position:absolute;left:0;top:0;width:1920px;height:1080px;display:block}
 #stage .dim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 34% 50%,rgba(6,5,5,.66),rgba(6,5,5,.5) 70%)}
-#stage .band{position:absolute;inset:0;pointer-events:none}
 .piece{position:absolute;padding:0;margin:0;border:0;background:none;cursor:grab;touch-action:none;display:block;line-height:0}
 .piece img{display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .piece.sel{outline:3px dashed rgba(111,182,210,.85);outline-offset:2px}
@@ -102,10 +101,11 @@ footer p{margin:0 0 6px}
       <h2>Room</h2>
       <div class="field"><label for="bg">Office art</label><select id="bg"></select></div>
       <div class="field">
-        <label for="band">Doom band (colour layer over everything)</label>
+        <label for="band">Doom band (the room's colour)</label>
         <div class="band-row"><input type="range" id="band" min="0" max="6" step="1"><span class="bandname" id="bandname"></span></div>
       </div>
-      <label class="check"><input type="checkbox" id="dim"> Dim the room behind open menus</label>
+      <label class="check"><input type="checkbox" id="dim"> Dim the room behind open sheets</label>
+      <p class="hint">The band changes the room, as in H: the panels keep their colours. Band 2 (HIGH) is November 2017's.</p>
     </div>
 
     <div class="panel">
@@ -127,7 +127,8 @@ footer p{margin:0 0 6px}
 </main>
 
 <footer>
-  <p>Every part is a cut-out render of the design's own mock-up page, not a redrawing. Desk parts show November 2017 (the month's plan); the action menu shows the same month with three plays queued; the event card and the feed show 14 November; the month review shows 1 December.</p>
+  <p>Every part is a cut-out render of the design's own mock-up page, not a redrawing. Desk parts show 1 November 2017 with the month's plan queued; the action menu shows the same day with three plays queued; the event card, the feed and the office cat show 14 November; the month review shows 1 December; the advisor note is from the first month, July 2017. H's Attention panel is its desk terminal drawn with the same 1 November plan (in H a sheet covers it while planning).</p>
+  <p>H-HF draws only the first month, 14 November and 1 December, so its desk parts show 14 November (its Commit part is the paused month clock), its menu rack comes from 1 December, and it has no action menu, plan sheet or reputation dial. Its Attention panel is its desk terminal with the 1 November plan, as for H.</p>
   <p>The arrangement is saved in this browser. Codes are base64 text of the arrangement.</p>
 </footer>
 
@@ -135,33 +136,27 @@ footer p{margin:0 0 6px}
 <script>
 "use strict";
 var DATA = window.MIX_DATA || {pieces:{}, bg:{}};
-// slot order is also the drawing order, back to front
+// the parts, in the order the controls list them
 var SLOTS = [
-  ["att","Attention"], ["rack","Menu rack"], ["feed","Feed"], ["res","Resources"], ["plan","Plan panel"],
-  ["menu","Action menu"], ["review","Month review"], ["event","Event card"], ["commit","Commit and held"],
-  ["doom","P(Doom) meter"], ["rep","Reputation"], ["date","Dateline"]
+  ["date","Dateline"], ["doom","P(Doom) meter"], ["res","Resources"], ["rep","Reputation"], ["att","Attention"],
+  ["plan","Plan panel"], ["commit","Commit and held"], ["rack","Menu rack"], ["menu","Action menu"],
+  ["event","Event card"], ["feed","Feed"], ["review","Month review"], ["adv","Advisor note"], ["cat","Office cat"]
 ];
+/* drawing order, back to front, as H stacks its screen: the room, the cat and the desk terminal,
+   the dim (when a sheet is open), the instruments, H's grain, then the dateline and the paper */
+var DRAW = ["cat","att","feed","|dim","rack","res","commit","doom","rep","|grain","date","plan","menu","review","event","adv"];
 var OPT = {
-  "H":"H", "Hb":"H, trace window", "HF":"H-HF, heavier texture",
+  "H":"H", "Hb":"H, trace windows", "Hd":"H, old dial (for comparison)", "HF":"H-HF, painted steel",
   "C":"C (earlier texture)", "E":"E (earlier texture)", "G":"G (earlier texture)"
 };
-var OPT_ORDER = ["H","Hb","HF","C","E","G"];
+var OPT_ORDER = ["H","Hb","Hd","HF","C","E","G"];
 var BAND_NAMES = ["NOMINAL","ELEVATED","HIGH","SEVERE","EXTREME","CATASTROPHIC","TERMINAL"];
-var NATIVE_BAND = 2;   // the office art and the parts come from November 2017: P(Doom) 40.2%, HIGH
-/* The band colour layer over everything. Placeholder until the revised H's own band layer
-   is cut in: below the native band a warm lift, above it a colder, redder, darker grade. */
-var BAND_LAYER = {
-  0:"background:rgba(255,214,150,.10);mix-blend-mode:soft-light",
-  1:"background:rgba(255,214,150,.05);mix-blend-mode:soft-light",
-  2:"",
-  3:"background:rgba(60,56,80,.20);mix-blend-mode:multiply",
-  4:"background:rgba(110,40,40,.28);mix-blend-mode:multiply",
-  5:"background:radial-gradient(ellipse 1150px 720px at 50% 46%,rgba(110,40,90,.30) 35%,rgba(30,6,30,.62) 100%);mix-blend-mode:multiply",
-  6:"background:radial-gradient(ellipse 1050px 650px at 50% 46%,rgba(90,20,70,.45) 30%,rgba(16,2,16,.8) 100%);mix-blend-mode:multiply"
-};
+// November 2017 (P(Doom) 40.2%) is band 2, HIGH. The band picks H's own doom layer over the room
+// (each background is the office rendered through H's room layer at that band); the panels keep their colours, as in H.
+var NATIVE_BAND = (DATA.native && DATA.native.band != null) ? DATA.native.band : 2;
 // H's own state-3 screen: which parts it shows (the rest are off)
-var H_ON = {doom:1, rep:1, date:1, rack:1, plan:1, commit:1, res:1};
-var KEY = "pdoom1-mixer-v1";
+var H_ON = {date:1, doom:1, res:1, plan:1, commit:1, rack:1};
+var KEY = "pdoom1-mixer-v2";
 
 var stage = document.getElementById("stage"), vp = document.getElementById("vp");
 var state = null, selected = null, els = {};
@@ -169,7 +164,7 @@ var state = null, selected = null, els = {};
 function options(slot){ var p = DATA.pieces[slot] || {}; return OPT_ORDER.filter(function(k){ return p[k]; }); }
 function piece(slot, key){ return (DATA.pieces[slot] || {})[key]; }
 function defaults(){
-  var s = {v:1, bg: DATA.bg.H ? "H" : Object.keys(DATA.bg)[0], band:NATIVE_BAND, dim:1, s:{}};
+  var s = {v:2, bg: DATA.bg.dawn ? "dawn" : Object.keys(DATA.bg)[0], band:NATIVE_BAND, dim:1, s:{}};
   SLOTS.forEach(function(x){
     var o = options(x[0]), k = o.indexOf("H") >= 0 ? "H" : (o[0] || "none"), p = piece(x[0], k);
     s.s[x[0]] = [k, p ? p.x : 0, p ? p.y : 0, (k === "H" && H_ON[x[0]]) ? 1 : 0];
@@ -202,10 +197,11 @@ function fit(){ stage.style.transform = "scale(" + (vp.clientWidth / 1920) + ")"
 function draw(){
   stage.innerHTML = ""; els = {};
   var bg = DATA.bg[state.bg];
-  if (bg){ var im = document.createElement("img"); im.className = "bgimg"; im.alt = ""; im.src = bg.src; stage.appendChild(im); }
-  if (state.dim){ var d = document.createElement("div"); d.className = "dim"; stage.appendChild(d); }
-  SLOTS.forEach(function(x){
-    var slot = x[0], v = state.s[slot], p = piece(slot, v[0]);
+  if (bg){ var im = document.createElement("img"); im.className = "bgimg"; im.alt = ""; im.src = bg.bands[state.band] || bg.bands[NATIVE_BAND]; stage.appendChild(im); }
+  DRAW.forEach(function(slot){
+    if (slot === "|dim"){ if (state.dim){ var d = document.createElement("div"); d.className = "dim"; stage.appendChild(d); } return; }
+    if (slot === "|grain"){ if (DATA.layers && DATA.layers.grainRule){ var g = document.createElement("div"); g.setAttribute("style", DATA.layers.grainRule); stage.appendChild(g); } return; }
+    var x = SLOTS.filter(function(y){ return y[0] === slot; })[0], v = state.s[slot], p = piece(slot, v[0]);
     if (!p || !v[3]) return;
     var b = document.createElement("button");
     b.type = "button"; b.className = "piece" + (selected === slot ? " sel" : ""); b.dataset.slot = slot;
@@ -215,7 +211,6 @@ function draw(){
     b.appendChild(im); stage.appendChild(b); els[slot] = b;
     wire(b, slot);
   });
-  var layer = document.createElement("div"); layer.className = "band"; layer.setAttribute("style", BAND_LAYER[state.band] || ""); stage.appendChild(layer);
   document.getElementById("bandname").textContent = state.band + " " + BAND_NAMES[state.band];
   info();
 }
