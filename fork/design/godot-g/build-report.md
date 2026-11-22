@@ -5,6 +5,108 @@ prompt approved at `b3f9fd14` (spec pin `5e540c1c`).
 
 ---
 
+## Final -- 2026-11-23: every G phase is in `lean`; build D is ready to play
+
+### Is the goal met?
+
+Yes, for a test build. `lean` has every phase of the G build prompt (1a-1c,
+2a-2b, 3a-3b, 4, 5, 6, 7). G is on by default, and classic is one switch
+away (Settings > G desk options). Every run plays out exactly as it does
+today. The same-seed hash `d732161d...` holds for classic on final `lean`
+and for classic and G on every merged branch.
+
+**Has the UI and tutorial problem moved?** The UI has, and the tutorial has
+not.
+- **UI:**
+  - The P(Doom) card reads first, then hours and money.
+  - WATCH says which workday it is and how many hours are held.
+  - Events, the review and the advisor are paper on the desk.
+  - The room darkens with doom, and resources show tier icons.
+  - A new month's date types itself in.
+  - Changes arrive as short motions that never block input.
+- **Tutorial:** no new teaching. It is still the advisor note and the
+  glowing ACTIONS plate.
+
+Nobody has played it on a real GPU yet. Every screenshot is a CPU render.
+
+### What merged into `lean` since C
+
+- `e097bf09` **ui: G dateline (4)**: the date types itself in on a worn
+  ribbon, with typewriter strikes. Per your word ("just include a mute
+  option"), G options has a **Typewriter sound** switch.
+- `4ebd9911` **ui: G motion (7)**: short motions for changes; the
+  **Reduced motion** switch turns them off.
+- `0648a54d` **fix: G desk options opens centred**: before this, the panel
+  opened partly off screen, and the switch back to classic could not be
+  reached.
+- `3bfe6779` **ui: G traces (6)**: G options **Resources: Icons / Traces**
+  shows each resource as a small line of its month-start amounts. Icons is
+  the default.
+- Fork commits: provenance records (45 in total, including the seven
+  typewriter WAVs) and the backlog line (`959cf74e`).
+
+The gate for each, on the branch rebased onto `lean`:
+- fast gate with 0 failures (4: 1728 tests, 7: 1741, fix: 1742, 6: 1759);
+- emoji, scene-nav, both hidden guards and their self-test;
+- a tripwire listing nothing, so no `Ladder-Impact` lines;
+- three equal same-seed hashes.
+
+Scope reviews found 0 cut and 0 ask items, apart from step 4's ask for
+your ear, which you answered.
+
+### The Windows build
+
+On the Optiplex, `/data/pdoom1-g/builds/D/` holds `PDoom.exe` (97 MB) and
+`PDoom.pck` (67 MB). It was exported from `lean` at `959cf74e` with Godot
+4.5.1, "Windows Desktop", and `build_stamp.txt` was restored afterwards.
+
+Screenshots from that commit are in `/data/pdoom1-g/builds/D-shots/`
+(g-01 month 1 through g-15 late band 6). The capture's same-seed hash
+matched.
+
+### PC check still open (about 5 minutes)
+
+**Room cost** (spec 5.14). In Git Bash, in your lean checkout after
+pulling: `bash fork/design/godot-g/tools/room_cost_check.sh`.
+- Read the last line: `delta X ms per frame; budget 2.0 ms: WITHIN|OVER`.
+- Check that the `adapter` line names your GPU.
+- OVER means Simple should become the default room setting.
+
+### Questions for you (after playing D)
+
+1. **Smoke** at bands 5-6 reads as bold violet clouds (`g-15_late_band5.png`).
+   Keep it, make it fainter, or drop it?
+2. Does a month in G read simpler than classic?
+3. Research 0 and papers 0 show the red tier-0 icons at the start of every
+   run. Is that fine or too alarming?
+4. At 1600x900 a few small labels lose contrast. Scaling the compact layout
+   to about 0.85 would fix it. Should I?
+5. The paper's torn edges: right, or too much?
+
+Known and left alone: the debug PageUp doom nudge does not update the G
+room (debug only). Bug filed on Pip's repo: #1385.
+
+### Disk
+
+`/data` has 49 GB free and `/` has 65 GB free. `/data/pdoom1-g` is about
+800 MB:
+- build D and its shots, 180 MB;
+- Godot's export templates (`build-profile`, needed for any future build),
+  186 MB;
+- each step's report and kept shots, about 350 MB (they can go once you
+  have seen D);
+- restack logs and scripts, 60 MB.
+
+Removed today:
+- the design pin copy and the parity worktree (310 MB);
+- the executables from builds B and C (310 MB);
+- the worker logs, gate sandboxes, same-seed runs, the temp folder and the
+  intermediate shots (about 400 MB).
+
+The only worktrees left are `pdoom1` and `pdoom1-lean`.
+
+---
+
 ## Checkpoint C -- 2026-11-23: phase 3 done; paper, room, smoke and tier icons merged; the dateline waits for your ear
 
 ### Is the goal met yet?
