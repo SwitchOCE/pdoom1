@@ -25,6 +25,9 @@ const TIERS := {
 	"reputation": [0, 20, 30, 60],
 }
 
+# Tier 0 of research and papers is drawn neutral, without the red warning glow the other
+# tier-0 icons carry: every run starts with 0 of both, so red there would warn on turn 1
+# (Alex, build E: "we shouldn't have warnings if you're starting at zero").
 const ICON_DIR := "res://assets/icons/g_tiers/"
 ## The shipped file names (spec 11.2): reputation's are rep-0..4.
 const FILE_PREFIX := {

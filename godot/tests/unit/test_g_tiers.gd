@@ -125,6 +125,30 @@ func test_the_25_icons_ship_with_the_spec_import_settings() -> void:
 		"reputation's files are rep-N (spec 11.2)")
 
 
+# --- no red warning where a run starts (build E) ---------------------------------------------
+
+func _red_glow_pixels(path: String) -> int:
+	"""Pixels that read as a red warning glow: visible, bright red, red far above green and blue."""
+	var img := (load(path) as Texture2D).get_image()
+	if img.is_compressed():
+		img.decompress()
+	var n := 0
+	for y in range(img.get_height()):
+		for x in range(img.get_width()):
+			var c := img.get_pixel(x, y)
+			if c.a > 0.125 and c.r > 0.353 and c.r > 2.2 * maxf(c.g, c.b):
+				n += 1
+	return n
+
+
+func test_research_and_papers_at_zero_carry_no_red_warning_glow() -> void:
+	for key in ["research", "papers"]:
+		var n := _red_glow_pixels(GTiers.icon_path(key, 0))
+		assert_lt(n, 300, "%s-0 reads neutral: every run starts at 0 (got %d red pixels)" % [key, n])
+	# The measure does see a glow: compute-0 keeps its red warning.
+	assert_gt(_red_glow_pixels(GTiers.icon_path("compute", 0)), 800, "compute-0 still glows red")
+
+
 # --- one cell -------------------------------------------------------------------------------
 
 func _cell(key: String) -> GResourceCell:
