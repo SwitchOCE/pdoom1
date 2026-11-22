@@ -48,6 +48,13 @@ var _reason_label: Label = null
 ## the tree_exited hook below make the teardown self-healing whoever performs it.
 var _showing_dialog: Control = null
 
+## The event now on screen, READ-ONLY for other views (the G desk's WATCH sub-states and the
+## Attention card's reply line, fork/design/godot-g/spec.md 5.5, V2). Set when the dialog for
+## an event is built; cleared on BOTH close paths -- the answer path in report_choice_result
+## and the external teardown in _on_shown_dialog_gone -- just before each dialog_closed.emit(),
+## so a listener never reads a closed event. Nothing in the presenter reads it.
+var current_event: Dictionary = {}
+
 func present(event: Dictionary) -> void:
 	"""Handle event trigger - queue event for sequential presentation"""
 	print("[EventDialog] === EVENT TRIGGERED: %s ===" % event.get("name", "Unknown"))
@@ -170,6 +177,7 @@ func _show_next_event() -> void:
 
 	# Get next event from queue
 	var event = event_queue.pop_front()
+	current_event = event
 	print("[EventDialog] === SHOWING EVENT: %s ===" % event.get("name", "Unknown"))
 	print("[EventDialog] Remaining events in queue: %d" % event_queue.size())
 
@@ -511,6 +519,7 @@ func report_choice_result(success: bool, message: String) -> void:
 	_pending_dialog = null
 	_pending_blocker = null
 	_reason_label = null
+	current_event = {}
 
 	# Tell the host to clear its key-routing state.
 	dialog_closed.emit()
@@ -540,6 +549,7 @@ func _on_shown_dialog_gone(dialog: Control) -> void:
 	_pending_choice_id = ""
 	_reason_label = null
 	is_showing_event = false
+	current_event = {}
 	dialog_closed.emit()
 	if not event_queue.is_empty():
 		call_deferred("_show_next_event")

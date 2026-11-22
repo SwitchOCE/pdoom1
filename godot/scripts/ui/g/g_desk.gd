@@ -11,6 +11,9 @@ extends Control
 ## Phase 1b: the three sheets (Actions with its detail card and door return, the Plan drawer,
 ## Upgrades), presented through ModalStack (spec 2.4); G's keys through GKeys (spec 8); a plain
 ## WATCH feed (spec 5.10, finished in 1c).
+## Phase 1c, WATCH (spec 5.2, 5.5, 5.6, 5.10): the playback bar and speed segments in the
+## banner, the four WATCH sub-states W1-W4 (watch_state), the Attention card's WATCH and closed
+## faces, Commit's WATCH captions, and the finished feed (folding, the full log, the filters).
 ## Phase 2a, the look (spec 4): the desk's root carries theme/g_theme.tres (g_desk.tscn), so
 ## every G control takes its faces, styleboxes and colour tokens from it through a theme type
 ## variation (GPanel, GPlate, GKeycap, GCaps, GMono, ...). The theme sets no font size: every
@@ -123,6 +126,23 @@ var _door_pending := ""
 var _door_dialog: Control = null
 var _door_id := ""
 
+# Phase 1c: WATCH (spec 5.2, 5.5). Built nodes, public for tests and the capture harness.
+var playback_bar: HBoxContainer
+var playback_cells: HBoxContainer
+var playback_label: Label
+var speed_box: HBoxContainer
+var speed_pause: Label
+var speed_buttons: Dictionary = {}     # "1x" | "2x" | "4x" -> Button
+## The opening hold (spec 5.5, R2-4): {mi, hold, spent}, read from the live state only after
+## the commit handler has returned (deferred from turn_phase_changed("turn_end")).
+var opening_hold: Dictionary = {}
+## G's own copy of the last pre-boundary snapshot of the month in play: {mi, held, label}.
+## Updated from every state of that month while it plays; a state of the next month never
+## overwrites it, so the closed face can still say what the month used.
+var month_snapshot: Dictionary = {}
+var _watch_state := ""
+var _state_seq := 0                    # counts the states seen (the opening hold's freshness)
+
 const SHEET_SCENES := {
 	"g_actions": "res://scenes/ui/g_actions_panel.tscn",
 	"g_plan": "res://scenes/ui/g_plan_panel.tscn",
@@ -177,6 +197,12 @@ func detach() -> void:
 			gm.turn_phase_changed.disconnect(_on_phase)
 	if host == null or not is_instance_valid(host):
 		return
+	var ed = _event_dialog()
+	if ed != null:
+		if ed.dialog_opened.is_connected(_on_event_dialog_opened):
+			ed.dialog_opened.disconnect(_on_event_dialog_opened)
+		if ed.dialog_closed.is_connected(_on_event_dialog_closed):
+			ed.dialog_closed.disconnect(_on_event_dialog_closed)
 	if host.screen_mode and host.screen_mode.mode_changed.is_connected(_on_mode_changed):
 		host.screen_mode.mode_changed.disconnect(_on_mode_changed)
 	for pair in [["queue_view_changed", _on_queue_view_changed],
@@ -210,6 +236,10 @@ func _connect() -> void:
 	if host.has_signal("feed_changed"):
 		host.feed_changed.connect(_on_feed_changed)
 	host.visibility_changed.connect(_on_host_visibility_changed)
+	var ed = _event_dialog()
+	if ed != null:
+		ed.dialog_opened.connect(_on_event_dialog_opened)
+		ed.dialog_closed.connect(_on_event_dialog_closed)
 	KeybindManager.keybind_changed.connect(_on_binds_changed)
 	KeybindManager.profile_loaded.connect(_on_profile_loaded)
 	if is_inside_tree() and not get_viewport().size_changed.is_connected(_on_view_resized):
@@ -371,6 +401,7 @@ func _build_banner() -> void:
 	mode_label.name = "ModeLabel"
 	mode_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(mode_label)
+	_build_playback(hb)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(spacer)
@@ -391,6 +422,54 @@ func _build_banner() -> void:
 	view_keycap = make_keycap(_key_name("toggle_view", "V"))
 	view_keycap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(view_keycap)
+
+
+func _build_playback(hb: HBoxContainer) -> void:
+	"""Spec 5.2 (WATCH only): one segment per workday of the month, today's marked, then
+	"workday N of M"; then the speed segments: || (a display, lit while an event has paused
+	playback; today's pause is a stub), 1x, 2x, 4x (today's values, ScreenModeController)."""
+	playback_bar = HBoxContainer.new()
+	playback_bar.name = "PlaybackBar"
+	playback_bar.add_theme_constant_override("separation", 12)
+	playback_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	playback_bar.visible = false
+	hb.add_child(playback_bar)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(12, 0)
+	playback_bar.add_child(gap)
+	playback_cells = HBoxContainer.new()
+	playback_cells.name = "Workdays"
+	playback_cells.add_theme_constant_override("separation", 3)
+	playback_cells.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	playback_cells.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	playback_bar.add_child(playback_cells)
+	playback_label = make_label("", "small", C.muted, "GMono")
+	playback_label.name = "WorkdayLabel"
+	playback_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	playback_label.custom_minimum_size = Vector2(176, 0)
+	playback_bar.add_child(playback_label)
+	speed_box = HBoxContainer.new()
+	speed_box.name = "SpeedSegments"
+	speed_box.add_theme_constant_override("separation", 0)
+	speed_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	playback_bar.add_child(speed_box)
+	speed_pause = make_label("||", "small", C.dim, "GMonoSemi")
+	speed_pause.name = "SpeedPause"
+	speed_pause.custom_minimum_size = Vector2(36, 32)
+	speed_pause.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	speed_pause.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	speed_pause.mouse_filter = Control.MOUSE_FILTER_PASS
+	speed_pause.tooltip_text = "Playback pauses by itself while an event waits for your reply."
+	compact_step_up(speed_pause)   # two thin strokes: at 720p colour alone cannot carry them
+	speed_box.add_child(speed_pause)
+	for key in ["1x", "2x", "4x"]:
+		var b := _make_segment(key)
+		b.name = "Speed_%s" % key
+		b.custom_minimum_size = Vector2(48, 32)
+		b.tooltip_text = "Playback speed"
+		b.pressed.connect(_on_speed_pressed.bind(key))
+		speed_box.add_child(b)
+		speed_buttons[key] = b
 
 
 func _build_rail() -> void:
@@ -536,6 +615,8 @@ func _on_state(state: Dictionary) -> void:
 	if _detached:
 		return
 	_last_state = state
+	_state_seq += 1
+	_note_month_snapshot(state)
 	if host != null and host.has_method("_format_turn_datetime"):
 		dateline.text = host._format_turn_datetime(state)
 	for key in RESOURCE_KEYS:
@@ -554,7 +635,8 @@ func _on_state(state: Dictionary) -> void:
 	_refresh_commit()
 	_refresh_advisor()
 	_refresh_sheets()
-	feed_panel.set_month(dateline.text)
+	_refresh_playback()
+	feed_panel.set_month(month_label_of(state))
 
 
 func _refresh_delta_chips() -> void:
@@ -595,9 +677,13 @@ static func _shown_amount(raw: float) -> float:
 	return r if raw >= 0.0 else -r
 
 
-func _on_phase(_phase: String) -> void:
+func _on_phase(phase: String) -> void:
 	if _detached:
 		return
+	if phase.to_lower() == "turn_end":
+		# end_month() emits turn_end BEFORE it sets the month's implicit reserve, so the hold
+		# is read only after the commit handler has returned (spec 5.5, R2-4).
+		_capture_opening_hold.call_deferred()
 	_refresh_phase()
 
 
@@ -663,6 +749,267 @@ func _refresh_mode() -> void:
 	view_watch_button.disabled = event_waiting
 	view_keycap.visible = not event_waiting and not _modal_open()
 	_refresh_feed_visibility()
+	_refresh_playback()
+
+
+# --- WATCH (spec 5.2, 5.5) ----------------------------------------------------------------
+
+func _event_dialog():
+	if host == null or not is_instance_valid(host):
+		return null
+	var ed = host.get("event_dialog")
+	return ed if ed != null and is_instance_valid(ed) else null
+
+
+func current_event() -> Dictionary:
+	"""EventDialog.current_event (read-only, V2): the event on screen, {} when none."""
+	var ed = _event_dialog()
+	if ed == null:
+		return {}
+	var ev = ed.get("current_event")
+	return ev if ev is Dictionary else {}
+
+
+func _watching() -> bool:
+	return host != null and host.screen_mode != null \
+		and host.screen_mode.current_mode == ScreenModeController.Mode.WATCH
+
+
+func watch_state() -> String:
+	"""Which WATCH sub-state the desk is in (spec 5.2, A6), from the phase, the view, the top
+	modal kind and EventDialog.current_event -- never from the calendar changing alone:
+	  "plan" -- the plan phase in the PLAN view;
+	  "W1"   -- the plan phase peeked at in the WATCH view (V), not committed yet;
+	  "W2"   -- the month plays (turn_end / turn_start) with no event on top;
+	  "W3"   -- an event waits for a reply while the month plays;
+	  "W4"   -- the month review is up (the month has played out)."""
+	if host == null:
+		return "plan"
+	var ev := current_event()
+	if not ev.is_empty() and _top_kind() == "event":
+		if MonthReviewPanel.is_month_review(ev):
+			return "W4"
+		if not _in_plan_phase():
+			return "W3"
+	if _in_plan_phase():
+		return "W1" if _watching() else "plan"
+	return "W2"
+
+
+static func month_index_of(state: Dictionary, turn_offset: int = 0) -> int:
+	if not state.has("turn"):
+		return -1
+	return Clock.month_index(maxi(0, int(state.get("turn", 0)) + turn_offset),
+		int(state.get("start_year", 2017)), int(state.get("start_month", 7)),
+		int(state.get("start_day", 1)))
+
+
+static func month_label_of(state: Dictionary) -> String:
+	if not state.has("turn"):
+		return ""
+	return Clock.month_label(int(state.get("turn", 0)), int(state.get("start_year", 2017)),
+		int(state.get("start_month", 7)), int(state.get("start_day", 1)))
+
+
+static func workday_of_month(turn: int, sy: int, sm: int, sd: int) -> Vector2i:
+	"""(N, M): `turn` is workday N of the M workdays (turns) in its calendar month. Pure calls
+	on Clock (one turn = one workday); the game computes nothing for this."""
+	var mi := Clock.month_index(turn, sy, sm, sd)
+	var first := turn
+	while first > 0 and Clock.month_index(first - 1, sy, sm, sd) == mi:
+		first -= 1
+	var last := turn
+	while Clock.month_index(last + 1, sy, sm, sd) == mi:
+		last += 1
+	return Vector2i(turn - first + 1, last - first + 1)
+
+
+func _capture_opening_hold() -> void:
+	"""Spec 5.5 (R2-4): read the month's opening hold once the commit handler has returned
+	(called deferred from turn_phase_changed("turn_end")). Read-only on the live state."""
+	if _detached:
+		return
+	var gm = _gm()
+	if gm == null or gm.state == null:
+		return
+	var st = gm.state
+	var mi := Clock.month_index(int(st.turn), int(st.start_year), int(st.start_month), int(st.start_day))
+	var spent: int = int(st.month_plan.attention_spent) if st.month_plan != null else 0
+	opening_hold = {"mi": mi, "hold": int(st.get_reserve_attention()), "spent": spent,
+		"seq": _state_seq}
+	month_snapshot = {"mi": mi, "held": int(st.get_reserve_attention()),
+		"label": Clock.month_name(int(st.turn), int(st.start_year), int(st.start_month), int(st.start_day))}
+	_refresh_watch()
+
+
+func _note_month_snapshot(state: Dictionary) -> void:
+	"""Keep G's pre-boundary snapshot: while the committed month plays, every state of THAT
+	month (same calendar month as the opening hold) updates the held count. A state of the
+	next month leaves it alone (spec 5.5: the boundary resets the month plan before the new
+	month's state reaches the UI)."""
+	if opening_hold.is_empty() or _in_plan_phase():
+		return
+	var mi := month_index_of(state)
+	if mi != int(opening_hold.get("mi", -2)):
+		return
+	month_snapshot = {"mi": mi, "held": GAttentionCard.held_left(state),
+		"label": String(month_snapshot.get("label", ""))}
+
+
+func held_now() -> int:
+	"""The hours still held: the latest state's remaining reserve; but the last state before
+	the capture predates the month's reserve (end_month emits it before set_reserve), so until
+	a newer state arrives the opening hold itself is the newest reading."""
+	var op := opening_for_month()
+	if not op.is_empty() and int(op.get("seq", -1)) == _state_seq:
+		return int(op.get("hold", 0))
+	return GAttentionCard.held_left(_last_state)
+
+
+func opening_for_month() -> Dictionary:
+	"""The opening hold, when it belongs to the month the state is in; else {}."""
+	if opening_hold.is_empty() or int(opening_hold.get("mi", -2)) != month_index_of(_last_state):
+		return {}
+	return opening_hold
+
+
+func closed_snapshot() -> Dictionary:
+	"""{hold, held} for the closed face: the opening hold and the held count from the last
+	pre-boundary state of the same month, once the boundary has passed. {} when G has no such
+	snapshot (a load, or a layout flip during the review)."""
+	if opening_hold.is_empty() or month_snapshot.is_empty():
+		return {}
+	var mi := int(opening_hold.get("mi", -2))
+	if int(month_snapshot.get("mi", -3)) != mi or month_index_of(_last_state) == mi:
+		return {}
+	return {"hold": int(opening_hold.get("hold", 0)), "held": int(month_snapshot.get("held", 0)),
+		"label": String(month_snapshot.get("label", ""))}
+
+
+func closed_month_name() -> String:
+	"""The month the review closes: the snapshot's, else the month of the previous workday
+	(the review shows once the boundary has opened the next month)."""
+	var snap := closed_snapshot()
+	if not snap.is_empty() and String(snap.label) != "":
+		return String(snap.label)
+	if not _last_state.has("turn"):
+		return ""
+	var t := maxi(0, int(_last_state.get("turn", 0)) - 1)
+	return Clock.month_name(t, int(_last_state.get("start_year", 2017)),
+		int(_last_state.get("start_month", 7)), int(_last_state.get("start_day", 1)))
+
+
+func _refresh_watch() -> void:
+	"""Re-draw everything that depends on the WATCH sub-state."""
+	if _detached or host == null:
+		return
+	_watch_state = watch_state()
+	_refresh_attention()
+	_refresh_held()
+	_refresh_commit()
+	_refresh_playback()
+
+
+func _on_event_dialog_opened(_dialog: Control, _buttons: Array) -> void:
+	# The feed names the player's choice from the event on screen (no raw ids in G).
+	if is_instance_valid(feed_panel):
+		feed_panel.note_event(current_event())
+	# State and phase signals can arrive before an event is on ModalStack; refresh after
+	# modal_stack.present has run (spec 5.5, R2-4).
+	if not _detached:
+		_refresh_watch.call_deferred()
+
+
+func _on_event_dialog_closed() -> void:
+	if not _detached:
+		_refresh_watch.call_deferred()
+
+
+func _refresh_playback() -> void:
+	"""The banner's playback bar and speed segments (WATCH view only)."""
+	if playback_bar == null or host == null:
+		return
+	playback_bar.visible = _watching()
+	if not playback_bar.visible:
+		return
+	var ws := watch_state()
+	var nm := Vector2i(0, 0)
+	if _last_state.has("turn"):
+		nm = workday_of_month(int(_last_state.get("turn", 0)), int(_last_state.get("start_year", 2017)),
+			int(_last_state.get("start_month", 7)), int(_last_state.get("start_day", 1)))
+	var n := nm.x
+	var m := nm.y
+	var label := ""
+	match ws:
+		"W1", "plan":
+			n = 0
+			label = "not committed yet"
+		"W4":
+			# The review shows once the boundary has opened the next month: the bar is the
+			# closed month's (the previous workday's), full.
+			m = workday_of_month(maxi(0, int(_last_state.get("turn", 0)) - 1),
+				int(_last_state.get("start_year", 2017)), int(_last_state.get("start_month", 7)),
+				int(_last_state.get("start_day", 1))).y
+			n = m
+			label = "%s played out" % closed_month_name()
+		_:
+			label = "workday %d of %d" % [n, m]
+	_fill_workdays(n, m, ws == "W4")
+	playback_label.text = label
+	set_ink(speed_pause, C.amber if ws == "W3" else C.dim)
+	var gm = _gm()
+	var secs: float = float(gm.day_tick_seconds) if gm != null else 0.2
+	for key in speed_buttons:
+		var on := is_equal_approx(float(ScreenModeController._SPEEDS[key]), secs)
+		_style_segment(speed_buttons[key], on)
+
+
+func _fill_workdays(n: int, m: int, full: bool) -> void:
+	"""One segment per workday: played ones in bone, today's in amber, the rest faint."""
+	while playback_cells.get_child_count() > m:
+		var c := playback_cells.get_child(playback_cells.get_child_count() - 1)
+		playback_cells.remove_child(c)
+		c.free()
+	while playback_cells.get_child_count() < m:
+		var cell := ColorRect.new()
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.custom_minimum_size = Vector2(8, 16)
+		playback_cells.add_child(cell)
+	for i in range(m):
+		var cell := playback_cells.get_child(i) as ColorRect
+		if full or i < n - 1:
+			cell.color = Color(C.bone, 0.7)
+		elif i == n - 1:
+			cell.color = C.amber
+		else:
+			cell.color = Color(C.bone, 0.14)
+
+
+func playback_text() -> String:
+	return playback_label.text if playback_bar != null and playback_bar.visible else ""
+
+
+func workday_cells() -> Array:
+	"""[played, today, ahead] counts of the bar (tests)."""
+	var out := [0, 0, 0]
+	for c in playback_cells.get_children():
+		var col := (c as ColorRect).color
+		if col == C.amber:
+			out[1] += 1
+		elif col.a > 0.5:
+			out[0] += 1
+		else:
+			out[2] += 1
+	return out
+
+
+func _on_speed_pressed(key: String) -> void:
+	"""Today's speed dial: emit screen_mode.speed_changed with today's value (main_ui maps it
+	to game_manager.day_tick_seconds, as for classic's 1x/2x/4x buttons)."""
+	if host == null or host.screen_mode == null:
+		return
+	host.screen_mode.speed_changed.emit(float(ScreenModeController._SPEEDS[key]))
+	_refresh_playback()
 
 
 func _refresh_attention() -> void:
@@ -670,9 +1017,20 @@ func _refresh_attention() -> void:
 		return
 	var queued: Array = host.plan_controller.queued_actions if host.plan_controller else []
 	var costs: Dictionary = host.plan_controller.calculate_queued_costs() if host.plan_controller else {}
-	var watching: bool = host.screen_mode != null \
-		and host.screen_mode.current_mode == ScreenModeController.Mode.WATCH
-	attention_card.update_plan_face(_last_state, queued, costs, watching)
+	# The face follows the WATCH sub-state (spec 5.2 table): PLAN face in the plan and W1,
+	# WATCH face while the month plays (W2, W3), closed face under the review (W4).
+	match watch_state():
+		"W2", "W3":
+			attention_card.set_face("watch")
+			var reply := GAttentionCard.reply_summary(current_event()) if watch_state() == "W3" else ""
+			attention_card.update_watch_face(_last_state, opening_for_month(), reply, held_now())
+			return
+		"W4":
+			attention_card.set_face("closed")
+			attention_card.update_closed_face(closed_month_name(), closed_snapshot())
+			return
+	attention_card.set_face("plan")
+	attention_card.update_plan_face(_last_state, queued, costs)
 	# CHOOSE ACTIONS [A] with an empty queue, OPEN PLAN [Q] otherwise, CLOSE PLAN [Q] while
 	# the drawer is open (spec 5.5). PLAN phase only.
 	var cb: Button = attention_card.choose_button
@@ -686,19 +1044,14 @@ func _refresh_attention() -> void:
 
 
 func _refresh_held() -> void:
+	"""Spec 5.6: the held plate is PLAN only (the plan and the W1 peek). Once the month plays
+	the Attention card's WATCH face carries the hold and the plate is hidden."""
 	var mp: Dictionary = _last_state.get("month_plan", {})
 	var total := int(mp.get("attention_total", 0))
 	var spent := int(mp.get("attention_spent", 0))
-	var watching: bool = host != null and host.screen_mode != null \
-		and host.screen_mode.current_mode == ScreenModeController.Mode.WATCH
-	if watching:
-		# The held hours that remain while the month plays, as classic's WATCH strip shows
-		# them ("reserve N"): the plate stays up so event replies show what they spend.
-		held_value.text = "%d hr" % GAttentionCard.held_remaining(_last_state)
-	else:
-		# Every hour not spent on plays (spec 5.6): total - spent - reserved + reserved.
-		held_value.text = "up to %d hr" % maxi(0, total - spent)
-	held_plate.visible = true
+	# Every hour not spent on plays (spec 5.6): total - spent - reserved + reserved.
+	held_value.text = "up to %d hr" % maxi(0, total - spent)
+	held_plate.visible = _in_plan_phase()
 
 
 func _in_plan_phase() -> bool:
@@ -732,7 +1085,13 @@ func _refresh_commit() -> void:
 			commit_keycap_label.text = _key_name("commit_plan", "Enter")
 			_style_commit("GCommitHold")
 		_:
-			commit_caption.text = "MONTH IN PLAY" if not _in_plan_phase() else "COMMIT THE MONTH"
+			# Spec 5.6 / 5.2: inert while the month plays; MONTH COMPLETE under the review.
+			if watch_state() == "W4":
+				commit_caption.text = "MONTH COMPLETE"
+			elif not _in_plan_phase():
+				commit_caption.text = "MONTH IN PLAY"
+			else:
+				commit_caption.text = "COMMIT THE MONTH"
 			_set_commit_caption("label", C.dim, "GCaps")
 			_style_commit("GCommitHold")
 	commit_keycap.visible = path != "" and not _modal_open()
@@ -758,6 +1117,9 @@ func _process(_delta: float) -> void:
 	# ModalStack has no signal; the keycap rule (only the top layer shows a key) is a cheap
 	# per-frame read of the slot ModalStack already keeps in sync.
 	_refresh_modal_keycaps(false)
+	# The WATCH sub-state reads the same slot plus EventDialog.current_event: redraw on change.
+	if not _detached and host != null and watch_state() != _watch_state:
+		_refresh_watch()
 
 
 func _refresh_modal_keycaps(force: bool) -> void:

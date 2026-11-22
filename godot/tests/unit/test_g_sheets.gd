@@ -816,41 +816,9 @@ func test_hours_left_follow_the_queue_and_agree_with_the_held_plate() -> void:
 	assert_eq(_lit(desk), h0, "and the bar follows")
 
 
-func test_watch_shows_the_held_hours_not_the_plan_rows() -> void:
-	# After Commit the queue is gone and today's game never booked its hours into the typed
-	# pools, so WATCH hides the PLAN-face rows (until 1c) and shows the held hours that remain
-	# -- the number classic's WATCH strip shows ("reserve N") -- on the card and the plate.
-	var main_ui: Node = await _boot()
-	var desk = main_ui.get_g_desk()
-	var card = desk.attention_card
-	var st: Dictionary = main_ui._last_state.duplicate(true)
-	st["month_plan"]["attention_total"] = 20
-	st["month_plan"]["attention_spent"] = 3
-	st["month_plan"]["attention_reserved"] = 17
-	card.update_plan_face(st, [], {}, false)
-	assert_true(card._left_row.visible, "PLAN: the hours bar and the total hours left")
-	assert_eq(card._left.text, "0 hr", "20 - 3 spent - 17 reserved")
-	assert_eq(card._reserved.text, "Reserved: 17 hr", "PLAN: the plan-time reserve (classic's 'N reserved')")
-	card.update_plan_face(st, [], {}, true)
-	assert_false(card._left_row.visible, "WATCH: no hours bar or figure (held hours instead, until 1c)")
-	assert_true(card._reserved.visible, "WATCH: the held hours show")
-	main_ui.screen_mode.update_from_state(st)
-	assert_eq(main_ui.screen_mode._reserve_label.text, "reserve 17", "classic's WATCH strip says 17")
-	assert_eq(card._reserved.text, "Reserved: 17 hr", "and so does the card")
-	st["month_plan"]["attention_reserved"] = 0
-	card.update_plan_face(st, [], {}, true)
-	main_ui.screen_mode.update_from_state(st)
-	assert_eq(main_ui.screen_mode._reserve_label.text, "reserve 17", "nothing reserved: classic shows total - spent")
-	assert_eq(card._reserved.text, "Reserved: 17 hr", "the card follows the same rule")
-	# The held plate stays up in WATCH with the same number.
-	st["month_plan"]["attention_reserved"] = 12
-	desk._last_state = st
-	main_ui.screen_mode.toggle_mode()
-	desk._refresh_held()
-	assert_true(desk.held_plate.visible, "WATCH: the held plate stays")
-	assert_eq(desk.held_value.text, "12 hr", "with the held hours that remain")
-	main_ui.screen_mode.toggle_mode()
-	main_ui.screen_mode.update_from_state(main_ui._last_state)
+# test_watch_shows_the_held_hours_not_the_plan_rows moved to test_g_watch.gd with 1c's WATCH
+# face: WATCH now shows the remaining reserve (state["attention_reserved"]) on the card's WATCH
+# face, and the held plate is PLAN only (spec 5.5, 5.6).
 
 
 func test_doom_card_carries_todays_lose_line() -> void:

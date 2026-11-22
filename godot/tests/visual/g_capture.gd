@@ -25,6 +25,9 @@ extends Node
 ##   phases 1a-1b have: month 1, Staff, Ledger, Guide, the Actions sheet just opened in month 1
 ##   (G only), the Actions sheet with three plays and the detail card, a door's submenu, the Plan drawer with eight or more plays, Upgrades,
 ##   WATCH after commit (with G's plain feed), an event, the review.
+##   Phase 1c adds the WATCH sub-states: 12_w1_peek (the V peek before Commit), 05_watch and
+##   13_w2_mid (playback right after Commit and mid-month, the feed folded), 14_feed_full (G:
+##   the feed's full log, opened by a click on its header), 06_event (W3) and 07_review (W4).
 ##   JSON format: {"boxes":[{x,y,w,h,text,node}]} in the PNG's pixel space, as
 ##   fork/design/godot-g/tools/contrast_godot.py reads it.
 ##
@@ -208,6 +211,12 @@ func _run() -> void:
 	_say("queued hash %s" % state_hash())
 	if mode == "shots":
 		await _shots_queued()
+		# W1: the V peek before Commit (view only; V is today's toggle_view in both layouts).
+		await _key(KEY_V)
+		await _frames(6)
+		await _shot("12_w1_peek")
+		await _key(KEY_V)
+		await _frames(4)
 
 	# Commit through the Space path (mouse mode: the Commit plate, which runs the same handler).
 	await _close_g_sheets()
@@ -232,6 +241,7 @@ func _run() -> void:
 	var reviewed := false
 	var handled: Dictionary = {}
 	var event_shot := false
+	var mid_shot := false
 	t0 = Time.get_ticks_msec()
 	while not reviewed:
 		await _frames(1)
@@ -239,6 +249,38 @@ func _run() -> void:
 			_check(false, "the month reached its review in %ds" % int(MONTH_TIMEOUT_S))
 			_finish()
 			return
+		if mode == "shots" and not mid_shot and _top_kind() == "" \
+				and int(GameManager.state.turn) - start_turn >= 8:
+			# W2 mid-month (shots only: a capture takes a few frames, which playback's timer
+			# does not wait for, so it can only move the moment of the shot, never the run).
+			# An event can arrive while the frame is captured: then the shot is retaken later.
+			mid_shot = true
+			await _shot("13_w2_mid")
+			if _top_kind() != "":
+				_say("note: an event arrived during the W2 shot; retaking it later")
+				mid_shot = false
+				continue
+			var d := _desk()
+			if d != null:
+				var fp = d.get("feed_panel")
+				await _click(fp.get("_title"))
+				await _frames(4)
+				if not bool(fp.get("expanded")) and _top_kind() != "":
+					_say("note: an event took the click on the feed header; retaking later")
+					mid_shot = false
+					continue
+				_check(bool(fp.get("expanded")), "a click on the feed's header opens the full log")
+				await _shot("14_feed_full")
+				if _top_kind() != "":
+					_say("note: an event arrived during the full-log shot; retaking it later")
+					fp.call("set_expanded", false)
+					mid_shot = false
+					continue
+				await _click(fp.get("_toggle_full"))
+				await _frames(2)
+				if bool(fp.get("expanded")):
+					fp.call("set_expanded", false)   # an event took the click: fold it directly
+				_check(not bool(fp.get("expanded")), "the feed is folded again")
 		if _top_kind() != "event":
 			continue
 		var dlg = _main_ui.active_dialog
