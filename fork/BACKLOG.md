@@ -7,6 +7,11 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 
 ## Items
 
+- [in-lean] ui -- the main screen shows too much at once and the cold-open hand-off is one hint line: G desk (rail, sheets, advisor note), plain look, playable by mouse; squash 19de9ba3 -- -- ui/g-desk (deleted)
+- [doing] ui -- G desk look (2a theme), WATCH faces (1c), paper, room, dateline, tier icons, motion -- -- ui/g-*
+- [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction') -- --
+- [todo] bug? -- Undo removes the first queued copy of the last action, not the last entry (changing it is mechanics: ask Alex) -- --
+
 (Empty. Candidates from Pip's open issues, titles only, untriaged -- check each
 against AGENTS.md section 1 before taking it:
 #1023 game does not initialise on launch;
@@ -27,3 +32,4 @@ Alex's calls on this fork, one line each, newest last:
 - 2026-11-21 -- Fork scope is gameplay-blocking bugs, UI and tutorial only; no mechanics -- Alex's brief.
 - 2026-11-21 -- Player-facing text in data JSON may be in scope (no ids, keys or numbers), but is not the focus of the first pass -- Alex.
 - 2026-11-21 -- Hide Pip's governance with a sparse checkout instead of deleting it -- keeps upstreaming a plain cherry-pick.
+- 2026-11-22 -- G desk is on by default in fork builds; classic one switch away in Settings -- Alex: "G on by default (Recommended)".
