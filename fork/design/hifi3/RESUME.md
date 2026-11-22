@@ -26,3 +26,15 @@ Threads (all in the T3 project, delegated-task ids):
 - council opus a6ebb49e-1bef-4908-8faa-bac63ee44a1d
 - council sol c890abfe-9d7d-4d19-9803-546e65f3f694
 - council neon a50972c9-3484-4b42-bf2f-d7c0a673b953
+
+## Addendum round (brief.md "## Addendum (2026-11-22)")
+
+- designer A: revised H (designer-brief-H2.md), PASS 1 then spec PASS 2.
+- designer G: H-HF (designer-brief-HF.md), starts when H2 is done.
+- designer E: the mixer (designer-brief-mixer.md): frame + C/E/G now,
+  H pieces when H2 is done, H-HF pieces when H-HF is done.
+- orchestrator: page update (H, H-HF, C/E/G "earlier texture", band
+  strip, resource takes side by side, mixer link), then the council round
+  (round2-ask.md), one fix round, re-check opus+sol then neon, report.
+- HighFleet refs: research/reference-games/shots/highfleet-1..8.jpg
+  (uncommitted, excluded).
