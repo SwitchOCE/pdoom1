@@ -13,3 +13,9 @@ Non-blocking folds: ok -- The reputation spacing, H-HF padding, event badge ink,
 Scores (/10): hierarchy 9 . colour 9 . resources 8.5 . H-HF 8.5 . mixer 9 . spec 8.5 . page 9
 
 New blocking items: none beyond the remaining S3 discrepancy.
+
+## S3 follow-up
+
+VERDICT: GOOD TO GO
+
+S3 passes at `f006dd49`. H-HF now displays research `-0.4` as `-0` in warning colour with tier 0, matching H and the game. The reputation tier boundary cases still pass. Fresh 1920x1080 captures of H-HF states 1, 4 and 5 match the supplied PNGs pixel for pixel. Chromium was closed.

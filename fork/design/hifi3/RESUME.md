@@ -38,3 +38,6 @@ Threads (all in the T3 project, delegated-task ids):
   (round2-ask.md), one fix round, re-check opus+sol then neon, report.
 - HighFleet refs: research/reference-games/shots/highfleet-1..8.jpg
   (uncommitted, excluded).
+
+Done 2026-11-22: council round 2, fix round and re-check all GOOD TO GO;
+report.md has the hand-off. Nothing left to resume.
