@@ -206,3 +206,12 @@ reputation cell's text is unchanged in colour and ground.
 
 A small game quirk worth knowing: `format_scalar` prints "-0" for values
 between -0.5 and 0. The mock-up shows 0 instead.
+
+## 8. Re-check follow-up (orchestrator)
+
+Sol's re-check found that H-HF printed research -0.4 as a plain "0" while
+H and the game print "-0" in the warn colour. `shownAmount` and
+`shownText` are now H's functions, copied exactly: the sign and the warn
+colour come from the raw value, the tier from the shown amount (still
+tier 0). States 1, 4 and 5 render pixel-identical to before (their
+amounts are whole numbers), so the WebPs and the mixer pieces stand.
