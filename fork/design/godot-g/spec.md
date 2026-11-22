@@ -44,6 +44,7 @@ Sections:
 15. Open questions
 16. Not in this build
 17. Council round 1 changes
+18. Council round 2 changes
 
 ---
 
@@ -156,9 +157,18 @@ autoload, bug fixes only):
   (`main_ui.gd:309-317`). So:
   - the call at `main_ui.gd:444` stays and applies `GameConfig.ui_layout`
     (classic or proposed) exactly as today;
-  - if `GPrefs.desk` is true, one more call, `_apply_ui_layout("g")`, runs
-    after `_inflight_hiring_box` is in the tree (right after
-    `main_ui.gd:316-317`), so every node G moves already exists.
+  - if `GPrefs.desk` is true, one more call runs after `_inflight_hiring_box`
+    is in the tree (right after `main_ui.gd:316-317`), so every node G moves
+    already exists. It must be **deferred**:
+    `_apply_ui_layout.call_deferred("g")` (R2-1). That point is still inside
+    `MainUI._ready()` (`main_ui.gd:153-362`), and `_apply_g()` adds `GDesk` to
+    `TabManager`, MainUI's parent; Godot 4.5.1 refuses that while the parent
+    is setting up its children ("Parent node is busy setting up children,
+    add_child() failed"). The deferred call runs at the end of the frame;
+    `_boot_game()` itself waits one whole frame first (`main_ui.gd:360-362`),
+    so `GDesk` exists before the first game state arrives and the new-game
+    dateline trigger still sees it. F9 and Settings flips happen at run time
+    and need no deferral.
   With G on, `GameConfig.ui_layout` keeps whatever it held; G does not
   overwrite it.
 - **F9 (debug builds):** cycles classic -> proposed -> g -> classic. Classic and
@@ -361,7 +371,8 @@ New (all pure UI paths):
 | `assets/fonts/<family>/*.ttf` + `OFL.txt` + `SOURCE.txt` | four families (4.2); `SOURCE.txt` holds each file's pinned URL and SHA-256 (from `spikes/assets.tsv`) |
 | `assets/audio/sfx/typewriter/*.wav` | strikes and carriage return (7) |
 | `assets/icons/g_tiers/*.png` | 25 tier icons (11) |
-| `assets/icons/g_new/*.png` | six new action icons (11), mapped to action ids in `GActionsPanel` (5.7.1) |
+| `assets/icons/g_new/*.png` | six new action icons (11), mapped to action ids by `GIcons` (5.7.1) |
+| `scripts/ui/g/g_icons.gd` | `GIcons.for_action(id) -> Texture2D`, static: the G icon map and fallbacks, else `IconLoader.get_action_icon(id)` (5.7.1, R2-7) |
 | `assets/textures/g/*.png` | grime, hatch, paper, masks (11) |
 | `tests/unit/test_g_*.gd` | per phase (12) |
 | `tests/visual/g_capture.gd` (+ `.tscn`) | screenshot and text-box dump harness (12.1) |
@@ -373,9 +384,9 @@ Changed (existing files):
 | `scripts/ui/main_ui.gd` | accept "g" in `_apply_ui_layout` (`:750`); the second layout call after `_inflight_hiring_box` (2.1); `_last_state`; F9 cycle; call `GKeys` in `_input` before the dialog block; the Tab exception for `g_*` sheets in the dialog block (2.4); signals `queue_view_changed` (end of `update_queued_actions_display`), `feed_changed` (9), `rejection_reported(message)` (5.6.1) and `first_lever_cleared` (5.13); `_open_submenu(submenu_id: String) -> void` keeps its signature and asks `g_desk.submenu_anchor_for(submenu_id)` when the layout is g (5.7.4); a G-only row builder in `_populate_upgrades` (5.9.1); clear `GResourceHistory` in `_boot_game`'s new-game and load branches | presentation and routing only |
 | `scripts/ui/layout_controller.gd` | `"g"` arrangement | container work, as today |
 | `scripts/ui/action_bar_renderer.gd` | when layout is g, also emit the ordered, filtered row list to GDesk | same list, same order, same gates |
-| `scripts/ui/submenu_controller.gd` | read-only `option_count(id)` over `_options_for` (`submenu_controller.gd:305-325`) | read-only |
+| `scripts/ui/submenu_controller.gd` | read-only `option_count(id)` over `_options_for` (`submenu_controller.gd:305-325`); when the layout is g, the option grid takes its icon from `GIcons.for_action(opt_id)` instead of `IconLoader.get_action_icon(opt_id)` (`:229`) (R2-7) | read-only; icon texture only |
 | `scripts/ui/ledger_screen.gd` | read-only `summary_word()` (the "clean" / "$N owed" text it already builds, `ledger_screen.gd:97-115`) | read-only |
-| `scripts/ui/event_dialog.gd` | apply G paper styles when the layout is g; a read-only `current_event: Dictionary`, set in `_show_next_event` (`:172`) and cleared where `_pending_event` is cleared (`:539`) (V2) | styling and a read-only handle; same buttons, keys and queue |
+| `scripts/ui/event_dialog.gd` | apply G paper styles when the layout is g; a read-only `current_event: Dictionary`, set in `_show_next_event` (`:172`) and cleared on **both** close paths, just before each `dialog_closed.emit()`: the normal answer path in `report_choice_result` (`:483-516`, which never clears `_pending_event`) and the external teardown in `_on_shown_dialog_gone` (`:528-543`) (V2, R2-4) | styling and a read-only handle; same buttons, keys and queue |
 | `scripts/ui/month_review_panel.gd` | a G-only geometry and style path, `use_g := false` by default; classic `apply_geometry` (`:139`) untouched (5.12, A7) | classic path and its tests unchanged |
 | `scripts/ui/event_result_presenter.gd` | `present_error` (`:77-85`) also emits `host.rejection_reported` | display only |
 | `scripts/ui/research_quality_selector.gd` | a G style flag that skips the per-button `font_color` override (`:60`) and uses a G type variation (5.8, A4) | same buttons, same signal |
@@ -866,17 +877,42 @@ plus the other signals named.
   1468`; `scripts/core/month_plan.gd:221-223`). Not the allocation
   `month_plan.attention_reserved`, which keeps counting hours already used
   (A6).
-- "Spent at Commit": `month_plan.attention_spent` captured at the first WATCH
-  state.
-- While an event waits (W3): prices stay **per option**, from the existing
-  presenter `EventDialog.window_attention_for_option(event, option)`
-  (`scripts/ui/event_dialog.gd:86`), read through the new read-only
-  `EventDialog.current_event` (V2). The card never shows one generic price
-  for a window whose options differ:
-  - every option costs the same N > 0: "This reply costs N hr";
-  - every option is free: "Replies to this cost no hours";
-  - options differ: "Each reply shows its own hours".
-  The option rows on the paper carry each price, as today.
+- "Spent at Commit": `month_plan.attention_spent` captured with the opening
+  hold below.
+- **When the opening hold is read (R2-4).** `end_month()` emits
+  `turn_phase_changed("turn_end")` and `game_state_updated` (`game_manager.gd:696,
+  710`) **before** it sets the month's implicit reserve
+  (`game_manager.gd:735`), so the first WATCH state can show a hold of 0.
+  G therefore captures the opening hold only after the commit handler has
+  returned: on `turn_phase_changed("turn_end")`, GDesk calls
+  `_capture_opening_hold.call_deferred()`, which reads
+  `game_manager.state.get_reserve_attention()` (read-only) at the end of the
+  frame. This covers the plate click, Space and Enter alike, because
+  `end_month()` runs to its end inside the handler and playback only starts
+  on a later timer.
+- **Refresh on event open and close (R2-4).** State and phase signals can
+  both arrive before an event is registered on ModalStack
+  (`main_ui._on_event_dialog_opened`, `main_ui.gd:2152-2163`). So GDesk also
+  connects to `EventDialog.dialog_opened` and `dialog_closed` and refreshes
+  the sub-state (5.2) and the card with `call_deferred`, after
+  `modal_stack.present` (`:2161`) and `modal_stack.sync()` (`:2168`) have
+  run.
+- While an event waits (W3): prices stay **per option**; the paper's option
+  rows are authoritative, as today. The card may add one summary line, read
+  through the new read-only `EventDialog.current_event` (V2), using each
+  option's **total** displayed price, `EventDialog.costs_with_window_attention(event,
+  option)` (`scripts/ui/event_dialog.gd:111-133`: the option's own costs with
+  the window's Attention folded in), never `window_attention_for_option`
+  alone, which returns 0 both for options that declare their own Attention
+  cost and for self-priced prompts (R2-5). The summary shows only when every
+  option's total is known and equal:
+  - known: the event has a window (`event.window`, read by the static
+    `WindowResolver.window_config`, `scripts/core/window_resolver.gd:25-26`)
+    and that window has no `option_verbs` (hiring prompts whose option text
+    names its own price stamp 0, `window_resolver.gd:295-305`);
+  - all equal N > 0: "This reply costs N hr";
+  - all equal 0: "Replies to this cost no hours";
+  - otherwise (differing, self-priced, or not a window): **no summary line**.
 - STAFF AT WORK: role icon + count per role from `state.safety_researchers`,
   `capability_researchers`, `compute_engineers`, `managers`.
 
@@ -885,9 +921,9 @@ plus the other signals named.
   `scripts/core/month_controller.gd:410-420`) before the new month's state
   reaches the UI, so the closing month's numbers are gone by then. G keeps
   **its own copy of the last pre-boundary snapshot**: the held count from the
-  last state it saw with the old (year, month), and the held count at the
-  first W2 state (A6).
-- "<Month>, closed": "Used on events N hr" = held at W2 start minus held in the
+  last state it saw with the old (year, month), and the opening hold captured
+  after the commit handler returned (above; A6, R2-4).
+- "<Month>, closed": "Used on events N hr" = the opening hold minus held in the
   last pre-boundary snapshot; "Unspent, evaporated N hr" = held in that
   snapshot. The review's own words already say unspent hours evaporate
   (`game_manager.gd:836`).
@@ -965,8 +1001,15 @@ plus the other signals named.
   for keys 1-9 (2.2).
 - Row (height 44, `Button` with custom content): icon on a 40 px dark tile;
   name (`body`); a second line (`small`, `muted`).
-  Icons: today's `IconLoader` icon for the action, except a G-only map in
-  `GActionsPanel` (A11; classic and `data/icon_mapping.json` untouched):
+  Icons: from `GIcons.for_action(id)` (`scripts/ui/g/g_icons.gd`), today's
+  `IconLoader` icon except for a G-only map (A11; classic and
+  `data/icon_mapping.json` untouched). Several mapped ids are submenu
+  choices, not top-level actions (Post Online, Go to Meetups, Read the
+  Literature are Scouting choices, `data/actions/scouting.json`), so the same
+  resolver is used on **every G surface that draws an action icon**: the
+  Actions sheet rows, the submenu option grid when the layout is g
+  (`submenu_controller.gd:229`), and the Plan drawer rows (5.8) (R2-7). The
+  map:
   `advertise` -> `g_new/advertise.png`, `travel` -> `g_new/travel.png`,
   `publicity` -> `g_new/publicity.png`, `scout_shitpost` ->
   `g_new/post_online.png`, `scout_meetups` -> `g_new/meetups.png`,
@@ -975,7 +1018,9 @@ plus the other signals named.
   `autoload/icon_loader.gd:33-59`): `scout_read` ->
   `actions_research/action_research_ml_fundamentals_64.png`, `tour_offices` ->
   `actions_facilities/action_facility_expand_office_64.png`. Until a Sol icon
-  is picked, its id keeps today's icon. Second line:
+  is picked, its id keeps today's icon. Phases 1b and 2b check the rendered
+  texture for each mapped and fallback id on all three surfaces (a
+  screenshot of each, not only the resolver's return). Second line:
   - **door** (`action.is_submenu`): "N choices" (`submenu_controller.option_count(id)`;
     for the bespoke hiring, financing and travel builders that have no option
     list, the line reads "choices" without a count) and a `>` tab;
@@ -1052,7 +1097,8 @@ plus the other signals named.
 - Header: "THE MONTH AHEAD", "runs top to bottom", `x`, `Esc` keycap.
 - Column heads: #, PLAY, HOURS, COST, (remove).
 - One row per entry of `plan_controller.queued_actions`, in order: number;
-  icon; name and where it lives (its category, from the action data);
+  icon (`GIcons.for_action`, 5.7.1); name and where it lives (its category,
+  from the action data);
   hours and pool; cost (`_format_costs_inline` of that action's costs, "--"
   when none); an `x` button.
   - `x` calls `main_ui._remove_queued_action(id, name)` (`main_ui.gd:976-987`).
@@ -1778,7 +1824,7 @@ All are emitted from existing view functions.
 | Item | Kind | Size and format | Import | Batch |
 |---|---|---|---|---|
 | 25 resource tier icons (`money-0..4`, `compute-`, `research-`, `papers-`, `rep-`) | **Sol picture**, cut by `cut_icons.py` (11.1) | made at ~1254x1254; shipped 128x128 PNG RGBA (shown at 32 and 40 px, so about 3x) | `compress/mode` Lossless, `mipmaps/generate` on, `process/fix_alpha_border` on, `process/premult_alpha` off; the `TextureRect` sets `texture_filter = LINEAR_WITH_MIPMAPS` (in Godot 4 the filter is a CanvasItem property, not an import setting) | money: from the trial, no re-run; then 4 batches of 5 (compute, research, papers, reputation), each run 2-3 times |
-| Six new action icons: advertise a role (pinned notice), travel and conferences (suitcase), publicity (megaphone), post online (speech bubble), go to meetups (two glasses), order office supplies (carton with pencils) | **Sol picture** | generated on a **transparent** background like the tier icons (the dark tile is G's StyleBox, not part of the picture); shipped 128x128 PNG RGBA | as the tier icons | 1 batch of 6, phase 2b; mapped in `GActionsPanel` (5.7.1) |
+| Six new action icons: advertise a role (pinned notice), travel and conferences (suitcase), publicity (megaphone), post online (speech bubble), go to meetups (two glasses), order office supplies (carton with pencils) | **Sol picture** | generated on a **transparent** background like the tier icons (the dark tile is G's StyleBox, not part of the picture); shipped 128x128 PNG RGBA | as the tier icons | 1 batch of 6, phase 2b; mapped by `GIcons` on the Actions sheet, submenu grid and Plan drawer (5.7.1) |
 | Floor smoke (bands 5-6) | **Sol picture**, own recipe (11.2a) | 2048x512 PNG RGBA | Lossless, no mipmaps | 1 batch, 2 variants, phase 3b |
 | Paper sheet | **Sol picture**, own recipe (11.2a) | 1024x1024 PNG RGB | Lossless; used as 9-slice, margins 64 | 1 batch, 3 variants, phase 2b (script stand-in until picked) |
 | Window mask for `office_wide_day` | **texture (script + hand check)** | 1536x1024 PNG L8 (white = window pane) | Lossless, no mipmaps, filter linear | -- |
@@ -1875,9 +1921,27 @@ Red appears only in tier 0 (the trial prompt's "The design" paragraph).
 - **Provenance audit** in every phase that adds media (2b, 3a, 3b, 4, 5):
   list every new media file under `godot/assets/` on the branch and check
   each has exactly one record (in whichever file holds them); report the list
-  in the phase report. With Q15 approved, also run Pip's guard with the
-  copy-and-link method in 12.1 item 3 (it resolves the repo two levels up,
-  `check_provenance.py:83`, so its copy goes in `<dir>/tools/assets/`).
+  in the phase report.
+- **Pip's guard** matters only once Q15 is approved, or on an `up/<slug>`
+  branch (R2-6). It cannot use the copy-and-link method of 12.1 item 3: it
+  compares against git blobs by running `git cat-file` in its repo root
+  (`check_provenance.py:158-162`), and it needs its pin file
+  (`:86`, `:454-456`), which is hidden in this checkout. Working method: run
+  a copy whose repo root is the **real worktree** and whose pin is the
+  tracked pin from history. From the worktree root `$WT`:
+  ```
+  P=/data/pdoom1-g/guards/$(basename "$WT")/prov; mkdir -p "$P"
+  git -C "$WT" show HEAD:tools/assets/provenance_unknown_pin.json > "$P/pin.json"
+  git -C "$WT" show HEAD:tools/assets/check_provenance.py \
+    | sed -e "s|^REPO = .*|REPO = Path(r\"$WT\")|" \
+          -e "s|^PIN = .*|PIN = Path(r\"$P/pin.json\")|" > "$P/check_provenance.py"
+  python "$P/check_provenance.py" --self-test
+  python "$P/check_provenance.py"
+  ```
+  Both must exit 0. Checked on this checkout on 2026-11-22: `self-test OK`,
+  then `OK: 511 provenanced, 2 pinned unknown, pack and manifest agree.`
+  On an `up/<slug>` worktree (Pip's full tree) the guard runs as is:
+  `python tools/assets/check_provenance.py`.
 - The manifest's notes say Pip's funding commitment counts on the asset set
   being homogeneous (all generated); see Q9.
 
@@ -1919,11 +1983,30 @@ On the change branch, before squashing (AGENTS.md sections 4 and 7):
    runs one fixed fixture twice, once with the layout classic and once with
    g, and compares a hash of `GameManager.state.to_dict()` (it includes the
    RNG state, so an extra draw shows) at the end. The fixture:
-   - `game_manager.start_new_game("g-parity-1")`;
-   - queue `scout_read`, `scout_read`, `scout_meetups` through the UI path
-     each layout uses (classic bar buttons; G sheet rows), asserting after
-     each that the queue grew (the fixture fails loudly if a play is
-     refused);
+   - **Seed (R2-2).** Each layout runs in its **own fresh Godot process with
+     its own fresh isolated profile** (`HOME`, `XDG_DATA_HOME` and
+     `XDG_CONFIG_HOME` under `/data/pdoom1-g/parity/<layout>-<run>/`). Before
+     `main.tscn` loads, the profile's `user://config.cfg` holds
+     `[game] last_seed="g-parity-1"` (read into `GameConfig.game_seed` at
+     `autoload/game_config.gd:315`), and for the g run `user://g_ui.cfg`
+     holds `[g] desk=true`. The normal boot then starts the run on that seed
+     (`_boot_game` calls `start_new_game("", true)`, which takes
+     `GameConfig.get_display_seed()`, `game_manager.gd:61-79`,
+     `game_config.gd:637-640`). Do **not** call `start_new_game` again from
+     the fixture: with a game already live it refuses unless `force=true`
+     (`game_manager.gd:72-73`). Before queueing anything, assert
+     `GameManager.state.game_seed_str == "g-parity-1"`
+     (`scripts/core/game_state.gd:209`).
+   - **Queue (R2-3).** Phase 1a (no G sheets yet): both layouts queue three
+     plays through the retained action slots,
+     `main_ui._trigger_action_by_index(i)` (`main_ui.gd:725-743`), using the
+     first three slots whose action is a play, not a submenu door, the same
+     indices in both runs. From phase 1b on: both layouts open the Scouting
+     door (classic: its action-bar button; G: its Actions sheet row) and pick
+     `scout_read`, `scout_read`, `scout_meetups` from the submenu (they are
+     Scouting choices, `data/actions/scouting.json`, not top-level rows).
+     After each, assert that the queue grew (the fixture fails loudly if a
+     play is refused).
    - commit through the Space path;
    - when the first event arrives, answer it with the first option whose
      button is enabled (assert there is one);
@@ -1958,7 +2041,8 @@ provenance file are never committed on these branches (2.5, A8).
   classic and from proposed into g and back, in PLAN and WATCH, restoring
   every node (extend `test_ui_layout.gd` with a g fixture);
   `test_ui_no_dead_ends` passes; the Commit plate parity tests for both
-  branches (5.6); the Settings board-fit test; same-seed check.
+  branches (5.6); the Settings board-fit test; same-seed check through the
+  action slots (12.1 item 5).
 - 1b `ui/g-sheets`: Actions sheet with detail card and door return, Plan
   drawer, Upgrades sheet, `GKeys` routing and the new binds,
   `queue_view_changed`, the Upgrades and research-quality G rows (A4).
@@ -1971,14 +2055,19 @@ provenance file are never committed on these branches (2.5, A8).
   refusal toast for an early UI refusal and a backend rejection (A5); blocked
   rows match refusals for an empty queue, a reserved pool and an
   unaffordable action (A5); 1-9 parity (same action id queued as from the
-  classic bar); same-seed check.
+  classic bar); the G icons rendered on the Actions sheet, a submenu grid and
+  the Plan drawer (R2-7); same-seed check through the Scouting door from
+  here on (12.1 item 5).
 - 1c `ui/g-watch`: WATCH banner (playback bar, speeds), WATCH and closed faces
   of the Attention card, feed panel with `feed_changed`, Commit's WATCH states,
   rail disabled states, the four WATCH sub-states (5.2), `current_event`.
   Tests: workday N of M against `Clock`; held hours = remaining reserve;
-  the closed face with and without a pre-boundary snapshot; per-option reply
-  line for free, equal and mixed prices (V2); each WATCH sub-state; same-seed
-  check.
+  the closed face with and without a pre-boundary snapshot; the opening hold
+  read after the commit handler returns, not 0 (R2-4); a boundary event
+  followed by the review (W3 then W4, `current_event` cleared after each
+  close, both close paths) (R2-4); the card's summary line for equal,
+  free, differing, self-priced (`option_verbs`) and non-window events (R2-5);
+  each WATCH sub-state; same-seed check.
 
 **Phase 2: the look.**
 - 2a `ui/g-theme`: fonts (import, OFL files), `g_theme.tres`, the `label`
@@ -2205,3 +2294,17 @@ Council: Opus, Sol, Neon, 2026-11-22 (`fork/design/godot-g/council/r1-*.md`).
 | V5 | E closes G-owned modals then opens Staff; F1 toggles the guide; neither acts over an event or the review | 5.9.2, 5.9.4, 8.1, 8.2 |
 | V6 | `hide_panel()` hides, drops the barrier and releases focus at once; no close fade | 2.4, 6.2 |
 | V7 | existing binds win over G keys; conflicting keycap hidden; test with Commit on A | 8.1, 8.2, 12.2 (1b) |
+
+## 18. Council round 2 changes
+
+Re-check by Opus and Sol, 2026-11-22 (`fork/design/godot-g/council/r2-*.md`).
+
+| Item | What | Where it landed |
+|---|---|---|
+| R2-1 | boot straight into G: the second layout call is `_apply_ui_layout.call_deferred("g")`, because `add_child` on MainUI's parent fails inside `MainUI._ready()` in 4.5.1 | 2.1 |
+| R2-2 | same-seed fixture: seed set in each fresh isolated profile before `main.tscn` loads; no second `start_new_game`; seed asserted; one fresh process per layout | 12.1 item 5; build-prompt.md 3 |
+| R2-3 | phase 1a queues through the retained action slots; from 1b both layouts use the Scouting door | 12.1 item 5, 12.2 (1a, 1b) |
+| R2-4 | opening hold read after the commit handler returns; refresh on event open and close after ModalStack; `current_event` cleared on both close paths; boundary-event-then-review test | 2.5, 5.5, 12.2 (1c) |
+| R2-5 | card summary from `costs_with_window_attention` totals, only when every total is known and equal; otherwise none; paper rows authoritative | 5.5, 12.2 (1c) |
+| R2-6 | provenance guard run with the real worktree as root and the tracked pin from history; only once Q15 is approved or on `up/<slug>`; verified output | 11.5; build-prompt.md 3, 6 |
+| R2-7 | `GIcons` resolver on the Actions sheet, the submenu grid (`submenu_controller.gd:229`) and the Plan drawer, with the fallbacks; rendered textures checked on all three | 2.5, 5.7.1, 5.8, 11.2, 12.2 (1b) |

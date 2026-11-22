@@ -109,9 +109,13 @@ Per sub-phase:
      the wrong tree and "passes" on zero files: never accept that;
    - the scope tripwire `python tools/check_ladder_bump.py --base lean --head HEAD`;
      every listed file must be one spec.md 2.5 names as presentation-only;
-   - the same-seed fixture (spec.md 12.1 item 5: seed `g-parity-1`, three
-     accepted plays, an enabled event choice, the review and the next month
-     reached in both runs) matches between classic and g;
+   - the same-seed fixture (spec.md 12.1 item 5) matches between classic and
+     g: one fresh isolated Godot process per layout, with seed `g-parity-1`
+     written into that profile's config before `main.tscn` loads and asserted
+     on the state before queueing (never a second `start_new_game`); three
+     accepted plays (through the action slots in 1a, through the Scouting
+     door from 1b); an enabled event choice; the review and the next month
+     reached in both runs;
    - before (classic) and after (G) screenshots from the real game at
      1920x1080 and 1280x720 for the states the sub-phase touches, and the
      contrast check on the G shots. Say in the report that this box renders
@@ -216,13 +220,17 @@ files; fonts carry `OFL.txt` and `SOURCE.txt` beside them instead (spec.md
 prompt:
 - **If Alex approves editing `godot/data/asset_provenance.json`** as a
   metadata exception to AGENTS.md section 1 (spec.md Q15): records go there on
-  the `ui/g-*` branch, and the guard runs with the copy-and-link method.
+  the `ui/g-*` branch, and Pip's guard runs with the method in spec.md 11.5
+  (the real worktree as its repo root and the tracked pin from history; not
+  the copy-and-link method, which fails on the missing pin). Both its
+  `--self-test` and its plain run must exit 0.
 - **Otherwise (the default):** records go in
   `fork/design/godot-g/provenance.json` (same shape), committed as a fork
   commit on `lean`, never on a `ui/g-*` branch. It is staging only: before
   any change goes to Pip (AGENTS.md section 8), the records move into
   `godot/data/asset_provenance.json` on the `up/<slug>` branch, and Pip's
-  guard must pass there.
+  guard must pass there (`python tools/assets/check_provenance.py` in that
+  full tree).
 Every phase that adds media runs the provenance audit (spec.md 11.5) and
 lists the files in its report.
 
