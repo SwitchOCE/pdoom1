@@ -195,10 +195,12 @@ resource.) Then, on how to show resources:
 > we're good to go"
 
 (Reading: the game sets no maximum for money, compute, research or
-papers, so a fill meter has nothing to fill against. Alex's two
-alternatives replace the meter for those resources. Attention keeps its
-hour bars and reputation keeps H's tachometer, since both have real
-limits; either may also take a tier icon if it reads well.)
+papers, and reputation is only floored at 0 (game_state.gd:616; H's 0-100
+dial scale comes from the dev overlay, not the game). So Alex's two
+alternatives replace the meter for money, compute, research, papers AND
+reputation; H's reputation dial survives only as a mixer option. Attention
+keeps its hour bars: they are capped at the month's hours and each cell is
+one countable hour.)
 
 So:
 
@@ -220,21 +222,27 @@ So:
      so pressure rises visibly from band to band ("a layer, not a repaint";
      controls stay put and readable). Show it across the six states, and
      add a strip of the same screen at each of the 7 bands to the page.
-   - **Resources, two takes** for money, compute, research and papers
-     (reputation: reuse H's tachometer, never draw it twice):
+   - **Resources, two takes** for money, compute, research, papers and
+     reputation (reputation is drawn once, as these, not also as the dial;
+     keep reputation's "0 ends the run" warning):
      a. **Tier icons**: each resource's icon changes with the amount, e.g.
         money from one coin to a few coins to a stack to a pile; compute,
-        research and papers likewise in Pip's icon style, dark-plated. 3 to
-        5 tiers each. The tier thresholds are a proposal, stated in the
-        spec, and must not reveal anything the game hides (ADR-0001); use
-        the plain amount shown today, not a forecast. The number stays
-        beside the icon.
+        research, papers and reputation likewise in Pip's icon style,
+        dark-plated. 3 to 5 tiers each, at fixed amounts (not relative to
+        spending), plus a zero-or-below tier (the run-state has research
+        at -6 and -12; reputation at 0 ends the run). The thresholds are a
+        proposal, stated in the spec, and must not reveal anything the game
+        hides (ADR-0001): use the plain amount shown today, not a forecast.
+        The number stays beside the icon.
      b. **Trace window**: a small "heartbeat monitor" panel per resource
         (or one shared panel): a line tracing the amount over the past
         months, with an unanchored, auto-scaling y-axis so the line always
-        fills the window. Only history the player has already seen; no
-        forecast, no doom trace (ADR-0015).
-     Build H with take (a) as the default renders; render states 1, 3 and
+        fills the window. Only history the player has already seen, taken
+        from fork/design/hifi/run-state.md (add earlier months there only
+        where the game's own screenshots or data give them, and mark any
+        projection); no forecast, no doom trace (ADR-0015). In month 1 the
+        window says "no history yet".
+     Build H with take (a) as the default renders; render states 3, 5 and
      6 also with take (b). Keep both compact: if they crowd the art or
      push anything aside, they shrink first.
 2. **H-HF, the HighFleet-inspired take**: the same revised H (same layout,
@@ -263,9 +271,20 @@ So:
      rendered from each design's concept.html in isolation), so it is
      honest to the designs, not redrawn. Same page rules: self-contained,
      relative paths, under 16 MB, Google Fonts only, keyboard usable.
-   - The current arrangement can be saved in the page (localStorage, with
-     try/catch) and shown as a short text code Alex can copy and paste
-     back to us.
+   - Data: the desk pieces show state 3's month (November 2017, from
+     run-state.md); the event card comes from state 4 and the month review
+     from state 5.
+   - C, E and G pieces have the earlier texture (no hierarchy or band
+     changes): label them "earlier texture" in the slot list. The doom
+     slider's layer applies over everything.
+   - Keyboard: Tab selects an element, arrow keys nudge it 1 px,
+     Shift+arrow 10 px; every control has a visible focus.
+   - The arrangement is saved in the page (localStorage, with try/catch)
+     and shown as a short code: base64 of JSON listing each slot's design,
+     x, y and on/off, plus the background and band. A paste box loads a
+     code back in, so Alex can send one to us and we can open it.
+   - Done when: every slot loads; reset reproduces H's own render of state
+     3 (compare the pixels); a code round-trips through copy and paste.
 4. Update spec.md for the revised H (hierarchy order, resources take a and
    b with thresholds, colour by band) and add H-HF as a short texture
    section.
