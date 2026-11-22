@@ -5,6 +5,112 @@ prompt approved at `b3f9fd14` (spec pin `5e540c1c`).
 
 ---
 
+## Checkpoint C -- 2026-11-23: phase 3 done; paper, room, smoke and tier icons merged; the dateline waits for your ear
+
+### Is the goal met yet?
+
+Nearly, for a first look. `lean` now has every G look phase except motion
+(7, building) and the optional trace windows (6). The dateline and its
+typewriter sound (4) are built, gated and reviewed; they wait only for you to
+listen (the spec makes that a merge condition). Every run still plays out
+exactly as today: same-seed hash `d732161d...` for classic on `lean` and for
+classic and G on every merged branch.
+
+**Has the UI and tutorial problem moved?** The UI part, yes:
+- events, the month review and the advisor note are paper on the desk, in
+  the plan's colour (your "far too yellow" fixed);
+- the room darkens with the doom band, and at the two worst bands smoke
+  drifts across the floor; the panels never change, so it adds no reading;
+- each resource in the top strip shows a tier icon, so "a lot or a little"
+  reads at a glance; reputation says "0 ends the run".
+- Tutorial: unchanged. No new teaching yet.
+
+All screenshots are CPU renders; nobody has seen it on a real GPU.
+
+### What merged into `lean` since B
+
+- `1d0383ad` **ui: G paper (2b)** -- paper for the event, review and advisor
+  note; submenu and ledger skin; six new action icons; the paper recoloured
+  to the plan's tokens.
+- `4c193364` **ui: G room (3a)** -- the office graded by doom band (H's
+  7-band table), CRT glows, 1.2 s band change, grain frozen in pause, Room
+  effects Full / Simple / Off in G options.
+- `b7a849d3` **ui: G tier icons (5)** -- 25 tier icons, LOW / BELOW ZERO
+  tags at the game's own Commit thresholds, "0 ends the run".
+- `a8aeafc4` **ui: G smoke (3b)** -- floor smoke at bands 5-6.
+- Fork commits: provenance records for every new picture (38 in
+  `fork/design/godot-g/provenance.json`), the tools that made them, and the
+  room cost check (`fork/design/godot-g/tools/room_cost_check.sh`).
+
+Gate for each (on the branch rebased onto `lean`): fast gate 0 failures (2b
+1661 tests, 3a 1679, 5 1695, 3b 1703), emoji, scene-nav, both hidden guards
+and self-test, tripwire listing nothing (so no `Ladder-Impact` lines),
+post-squash tripwire exit 0, three equal same-seed hashes. Scope reviews: 0
+cut and 0 ask on each. Review fixes made before merging: the room no longer
+fades down from band 0 when G loads at high doom; the cost check measures
+band 6 so it counts the smoke; an unused helper removed.
+
+Bug filed on Pip's repo: #1385 (a music-player test fails on a slow machine;
+test isolation, not the game).
+
+### Step 4, the dateline (in the build, not yet in `lean`)
+
+The date types itself on a worn ribbon with a typewriter strike per letter,
+at a new game and at each new month; a load, resume or F9 flip shows it set.
+Gate on `lean`: 1717 tests, 0 failures; same-seed hashes equal. Review: 0
+cut, 1 ask (your ear). Two fixes of mine after review: in G the top strip
+stays lit under event and review dims (the new month's date typed at 1.26:1
+contrast before), and the MENU plate dims while a dialog waits (lit but
+dead read as broken).
+
+### The Windows build
+
+`/data/pdoom1-g/builds/C/` on the Optiplex: `PDoom.exe` (97 MB) and
+`PDoom.pck` (67 MB), exported from `ui/g-dateline` at `7776c3a0` = `lean`
+(`90f457db`) plus step 4, so you can hear the dateline. Godot 4.5.1,
+"Windows Desktop"; `build_stamp.txt` restored. G is on by default; classic
+is in Settings > G desk options.
+
+Screenshots (CPU renders) in `/data/pdoom1-g/builds/C-shots/`:
+`room-bands-0-6.png`, `smoke-bands-4-5-6.png`, `smoke-band-6-floor.png`,
+`tier-icons-strip.png`, `tier-icons-beside-pips.png`,
+`g-dl_01_midtype.png`, `g-dl_03_month_change.png`.
+
+### PC checks for you (about 10 minutes)
+
+1. **Room cost** (spec 5.14; decides the default room setting). In Git
+   Bash, in your lean checkout after pulling `lean`:
+   `bash fork/design/godot-g/tools/room_cost_check.sh`. Read the last line,
+   `G_CAPTURE ROOMCOST delta X ms per frame; budget 2.0 ms: WITHIN|OVER`,
+   and check the `adapter` line names your GPU. OVER means Simple becomes
+   the default.
+2. **The typewriter** (merge condition for step 4). In build C start a new
+   game (it types the date) and play month 1 to the review (it types
+   August 1). Do the strikes land on the letters, is no tail cut short, and
+   is it pleasant enough to hear every month?
+
+### Questions for you
+
+1. The cost check's delta (WITHIN / OVER).
+2. The typewriter: keep / quieter / other.
+3. **The smoke** (my look call so far): at bands 5-6 it reads as bold,
+   puffy violet clouds rather than thin haze (`smoke-bands-4-5-6.png`).
+   Keep, make it fainter, or drop it?
+4. Carried from B: does a month in G read simpler than classic? And the
+   tier icons beside Pip's (`tier-icons-beside-pips.png`): note that
+   research 0 and papers 0 show the red tier-0 icons at the start of every
+   run.
+
+### Disk
+
+`/data` 50 GB free, `/` 64 GB free. `/data/pdoom1-g` is about 1.2 GB:
+builds B and C 320 MB, the export profile 186 MB, each step's kept shots and
+reports 30-140 MB (kept until you have seen them), restack logs 150 MB.
+Removed since B: the 2b, 3a, 5 and 3b worktrees (about 500 MB), build A
+(160 MB), superseded same-seed runs and gate sandboxes.
+
+---
+
 ## Checkpoint B -- 2026-11-22: 2a (the look) and 1c (WATCH) merged; a full month in G's look
 
 ### Is the goal met yet?
