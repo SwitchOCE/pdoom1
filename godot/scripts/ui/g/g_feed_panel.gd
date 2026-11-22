@@ -264,7 +264,7 @@ func _shown_lines() -> Array:
 		if host.has_method("_feed_passes_filter") and not host._feed_passes_filter(channel):
 			continue
 		var raw := display_text(String(entry.get("text", "")))
-		raw = _named_choice(raw)
+		raw = feed_item_text(_named_choice(raw))
 		if raw == "":
 			_hidden_count += 1
 			continue
@@ -303,6 +303,19 @@ func _named_choice(raw: String) -> String:
 	var out := raw.substr(0, at) + "You chose: " + nm + ("" if end < 0 else rest.substr(end))
 	_choice_lines[raw] = out
 	return out
+
+
+static func feed_item_text(raw: String) -> String:
+	"""today's month-playback feed line "FEED | <source id> -- <name>" (game_manager) as just the
+	name in G: the source id is internal (a category or a hash), and G's feed shows no raw ids
+	(Alex, 2026-11-22). Classic's feed is unchanged. Pure."""
+	var at := raw.find("FEED | ")
+	if at < 0:
+		return raw
+	var sep := raw.find(" -- ", at)
+	if sep < 0:
+		return raw
+	return raw.substr(0, at) + raw.substr(sep + 4)
 
 
 static func is_phase_line(msg: String) -> bool:

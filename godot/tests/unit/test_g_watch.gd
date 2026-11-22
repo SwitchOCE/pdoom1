@@ -483,6 +483,34 @@ func test_phase_trace_is_left_out_of_g_and_kept_in_classic() -> void:
 	assert_string_contains(classic.message_log.text, "Turn Phase: turn_start", "classic's feed keeps it")
 
 
+func test_feed_item_shows_its_name_without_the_source_id_in_g_only() -> void:
+	var line := "[color=gray]FEED | unknown -- Talent Opportunity[/color]"
+	assert_eq(GFeedPanel.feed_item_text(line), "[color=gray]Talent Opportunity[/color]")
+	assert_eq(GFeedPanel.feed_item_text("[color=gray]FEED | 9f2c1e -- A -- B[/color]"),
+		"[color=gray]A -- B[/color]", "only the first separator goes")
+	assert_eq(GFeedPanel.feed_item_text("[color=cyan]A FEED of news[/color]"),
+		"[color=cyan]A FEED of news[/color]", "other lines are untouched")
+	var main_ui: Node = await _boot(true)
+	var desk = main_ui.get_g_desk()
+	main_ui.screen_mode.toggle_mode()
+	main_ui.log_message(line)
+	await _frames(3)
+	var text: String = desk.feed_panel.plain_text()
+	assert_string_contains(text, "Talent Opportunity")
+	assert_false(text.contains("FEED |"), "no raw source line in G")
+	assert_false(text.contains("unknown"), "no source id in G")
+	desk.feed_panel.set_expanded(true)
+	assert_false(desk.feed_panel.plain_text().contains("FEED |"), "the full log too")
+	desk.feed_panel.set_expanded(false)
+	main_ui.screen_mode.toggle_mode()
+	_root.queue_free()
+	await _frames(2)
+	var classic: Node = await _boot(false)
+	classic.log_message(line)
+	await _frames(2)
+	assert_string_contains(classic.message_log.text, "FEED | unknown -- Talent Opportunity", "classic unchanged")
+
+
 func test_feed_names_the_choice_instead_of_its_id_in_g_only() -> void:
 	var main_ui: Node = await _boot(true)
 	var desk = main_ui.get_g_desk()
