@@ -120,6 +120,256 @@
       "confidence": "high",
       "author": "unattributed",
       "author_evidence": ""
+    },
+    "icons/g_tiers/money-0.png": {
+      "sha256": "80c017ff9ea03472d51a1feed50106a7129a0f53f91155c2224f5721f2e8e364",
+      "bytes": 15144,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G money trial (spec 11.1 trial, prompt fork/design/godot-g/art-trial-prompt.txt) run 2 (source money-0.png, sha256 0a4a2bf2e89604d01a842c9594cf33bf43622e80ac3ce3cd6d40d3487c1cb97f); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/money-1.png": {
+      "sha256": "4b92a50069996e4707e78a3606634f6263c37d4b28b3c0dd4a4fab4f3a85900d",
+      "bytes": 7908,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G money trial (spec 11.1 trial, prompt fork/design/godot-g/art-trial-prompt.txt) run 1 (source money-1.png, sha256 f4a23c50551f8fb0312e0b75fdca29abeba479942e8c621067870089f1729391); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.5, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/money-2.png": {
+      "sha256": "2680e4114fc7ae993af1a59cdde7ee0be395f1faef35ee8bf84192cbf0beb0a0",
+      "bytes": 11433,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G money trial (spec 11.1 trial, prompt fork/design/godot-g/art-trial-prompt.txt) run 1 (source money-2.png, sha256 58c555adab0afb399b97ed5f8eca6132e1339ecfdce4b12c946de7cc7ce078aa); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.64, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/money-3.png": {
+      "sha256": "0ea6adf2b38d79f3013659f334b87e77b978ee3c8f7e209eb148b8945dbe1b56",
+      "bytes": 21350,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G money trial (spec 11.1 trial, prompt fork/design/godot-g/art-trial-prompt.txt) run 1 (source money-3.png, sha256 0af4c248ade8e154635c39952d447ac4ca4f9b7def61584cdbbe60afae60e145); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.78, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/money-4.png": {
+      "sha256": "d8a1cbcd7929e187c5db6936f90cd68a532b0879a32e4cfdd3703dda18b1799f",
+      "bytes": 28425,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G money trial (spec 11.1 trial, prompt fork/design/godot-g/art-trial-prompt.txt) run 1 (source money-4.png, sha256 902422ac30c2afddd1889a4e41d7d7a66902642fc10f28df77225190966e064f); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/compute-0.png": {
+      "sha256": "9f575b00ef98bc287b7b772e1404d7f4155ce057b56e86f0896378a33aeeed56",
+      "bytes": 16650,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source compute-0.png, sha256 bf992e410322fcf4ac184d93b785c1e3b72fa4447e24c7ac4b26ca88c124330a); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/compute-1.png": {
+      "sha256": "93a95358f09926338c78393911fa169ad5ecf3454565a9bb2836dcf420f0f5dc",
+      "bytes": 7829,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 compute tier batch run1 (/data/pdoom1-art/prompts/task-tiers-compute-run1.txt) (source compute-1.png, sha256 80d315d91af221eefbbc0b015d6563bd28b2ca25f7ae79bfad564ef4114a2ebf); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.5, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/compute-2.png": {
+      "sha256": "5b8bd296144ed52022e69d349bd53a7bb89b2997a2a3521e5e040c3af2be333b",
+      "bytes": 5890,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 compute tier batch run1 (/data/pdoom1-art/prompts/task-tiers-compute-run1.txt) (source compute-2.png, sha256 1a82ceb8c1944b785cbf9f524afda1b9ee2ca34feb27189588ca7812c5e1d03c); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.64, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/compute-3.png": {
+      "sha256": "9d52bb6330a7f8db7fec567a96a6ce7cee815f77ecb706e11c5523518c55a615",
+      "bytes": 17057,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 compute tier batch run1 (/data/pdoom1-art/prompts/task-tiers-compute-run1.txt) (source compute-3.png, sha256 97ec9d3e83a94858aa2baa4f8f453e711002c42418a59de9bff5e8d0f43d5b0e); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.78, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/compute-4.png": {
+      "sha256": "05125fcfa8d7bda1daae052104f8771d8ddc7fb6c18c80ab7217a01195f7cb30",
+      "bytes": 28140,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 compute tier batch run1 (/data/pdoom1-art/prompts/task-tiers-compute-run1.txt) (source compute-4.png, sha256 d66f26a25079da7d65403f11576a0b2c2ccbfc262d06807adbba83b28a703862); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/research-0.png": {
+      "sha256": "1965abc26cd3d568ac0247783cef0ca9747c75fa4a7f26f4a0cffebc2d7599bd",
+      "bytes": 16094,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source research-0.png, sha256 4c9ae803263a6a250e812f84bd425ab359e4655474e2afd4838712aef164f1ab); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/research-1.png": {
+      "sha256": "de6e6bd98287c5d2188682a1bc73de12b02e0a846e425c36e7a7dbda5dfe6b56",
+      "bytes": 6624,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 research tier batch run1 (/data/pdoom1-art/prompts/task-tiers-research-run1.txt) (source research-1.png, sha256 6530cf9175de611585f5f4f20959cd0edd21d9c8c8151e63cac7a7ac5657689b); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.5, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/research-2.png": {
+      "sha256": "035aee9dd089070d5b9a1e73514cc57588ae2f7c366be87d470a8eeb69cb2582",
+      "bytes": 9717,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 research tier batch run1 (/data/pdoom1-art/prompts/task-tiers-research-run1.txt) (source research-2.png, sha256 af5b9d4418017061dec5735f4c8a122f454e7ae56dc96a1ae8846081517d9931); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.64, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/research-3.png": {
+      "sha256": "86a9ab9543dd05d16c45c49b5f6bb5a39377ade7bc2cda734897eca44a3ffe8c",
+      "bytes": 18812,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 research tier batch run1 (/data/pdoom1-art/prompts/task-tiers-research-run1.txt) (source research-3.png, sha256 cc296625da4afe9b538db99c893e6ed8f9f35cbb339d8447b623a143bed32334); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.78, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/research-4.png": {
+      "sha256": "14b041e7557fbbe7ccad81fa396da9306a448aeb873e79b2014d7a1bd206db1a",
+      "bytes": 24083,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 research tier batch run1 (/data/pdoom1-art/prompts/task-tiers-research-run1.txt) (source research-4.png, sha256 19957d6fb9ae792bce2485e2e538b9892a74c1f1f7d9ef81afb92a3d4589e0ba); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/papers-0.png": {
+      "sha256": "998198e5adbc9f6788b2c595513c809eb32e352f6bc1f00842d107447c181191",
+      "bytes": 14840,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source papers-0.png, sha256 5a50ea428d908e3d3c9d5fe671313e97d3349cae2c67f2cc10044a4827521ef3); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/papers-1.png": {
+      "sha256": "bb76741f7d15b277b210341211d7dbbcbbd2504dadffcd61ef3dd0e4a9073392",
+      "bytes": 7891,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 papers tier batch run1 (/data/pdoom1-art/prompts/task-tiers-papers-run1.txt) (source papers-1.png, sha256 9aff1f2a5d7f3aa9705bd55e9ad785fa301443e7486c52c38d971988fb437728); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.5, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/papers-2.png": {
+      "sha256": "83b162acee6ea278142c9d23c6b1e006f89b4f25ef8e31bc4cb642e46e8e7c24",
+      "bytes": 10414,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 papers tier batch run1 (/data/pdoom1-art/prompts/task-tiers-papers-run1.txt) (source papers-2.png, sha256 3c027a77c2b82aed3e24899690fffd47db6eba7a313ad627cf6883fab7f3d838); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.64, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/papers-3.png": {
+      "sha256": "bc5dfeba5175ce61a0738db827af537cf645ad68aebec3855ec0692d3cba8322",
+      "bytes": 18450,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 papers tier batch run1 (/data/pdoom1-art/prompts/task-tiers-papers-run1.txt) (source papers-3.png, sha256 3f26d9c418323cf6bafe6a90892825218366282e5f16a88a9165f01f4f13f7b6); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.78, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/papers-4.png": {
+      "sha256": "91df785dce6f6414823f887f8d06caad2c76000bdc58d85a71bfe830b3b43b2e",
+      "bytes": 24809,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 papers tier batch run1 (/data/pdoom1-art/prompts/task-tiers-papers-run1.txt) (source papers-4.png, sha256 091621a21ba161a654c1620da53e4419165add6ec7cc1c4d0323faef02e55d0a); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/rep-0.png": {
+      "sha256": "ed92f40160d59cedd29fc494b10f48d245bd323cbd20e18e14d3fe0199d8fcba",
+      "bytes": 17533,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source rep-0.png, sha256 be7bb16e9f8035b41848c4d2a76a3595903046404f9d546ae7d13553b0c3aa0a); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.74, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/rep-1.png": {
+      "sha256": "492d90fee8d7c6b90bdb92b9b7809c2b0eb1a6fe233bca492394772952c10b11",
+      "bytes": 8228,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source rep-1.png, sha256 90d7e55b25223ebd1551fda0c9e7eeccf4ee3f849158a2923cf3052bf963df8e); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.5, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/rep-2.png": {
+      "sha256": "da4688450d539157a25db6b8ab3aec7618216fa16b251c700966f555f2e60215",
+      "bytes": 8459,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 tier fix batch run2 (/data/pdoom1-art/prompts/task-tiers-fix-run2.txt) (source rep-2.png, sha256 62480ba828aafc1300009c3d47819cae9b9ddc8635f22404123c37a4761f0076); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.64, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/rep-3.png": {
+      "sha256": "5f3b1ecbc4a5ee57317d19200b97647be300fe36c77798e487793cbef6473b33",
+      "bytes": 20920,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 rep tier batch run1 (/data/pdoom1-art/prompts/task-tiers-rep-run1.txt) (source rep-3.png, sha256 c88ffee2e733f1bcfcda5023ff1701a10eb3e06a141c6b8e143f7c1b91ac3d20); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.78, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "icons/g_tiers/rep-4.png": {
+      "sha256": "30f923d4f12e695c4c6f41c4df9dec0e3c051db3de9a8e5e39093074d70f8583",
+      "bytes": 27472,
+      "origin": "generated_model",
+      "origin_detail": "Codex built-in image generation tool, G phase 5 rep tier batch run1 (/data/pdoom1-art/prompts/task-tiers-rep-run1.txt) (source rep-4.png, sha256 321d4d9362cc74a7173fa66e2e56da72b6eec02e4e233a6877d5c0dd32bc5db2); cut by cut_icons.py tiers (spec 11.1: trim, tier share 0.88, height cap 0.90, bottom-aligned on a 6% baseline, 128x128 RGBA Lanczos); fork tool, committed by the orchestrator",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
     }
   }
 }
