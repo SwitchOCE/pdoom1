@@ -34,3 +34,5 @@ Alex's calls on this fork, one line each, newest last:
 - 2026-11-21 -- Player-facing text in data JSON may be in scope (no ids, keys or numbers), but is not the focus of the first pass -- Alex.
 - 2026-11-21 -- Hide Pip's governance with a sparse checkout instead of deleting it -- keeps upstreaming a plain cherry-pick.
 - 2026-11-22 -- G desk is on by default in fork builds; classic one switch away in Settings -- Alex: "G on by default (Recommended)".
+- 2026-11-22 -- G's Attention card shows the TOTAL hours left (total - committed - queued - reserved, what the queue check uses); no per-pool "N left" until the game enforces the pools (#1379) -- Alex: "I'm happy with the recommendations" (checkpoint A Q1).
+- 2026-11-22 -- In G, hide today's "Doom X -> Y (change: +Z)" feed line (ADR-0015, G drops the doom chip); classic unchanged; the P(Doom) card keeps the level -- Alex: "I'm happy with the recommendations" (checkpoint A Q2; built in 1c).
