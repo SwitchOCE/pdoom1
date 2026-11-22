@@ -4,7 +4,8 @@ extends RefCounted
 ## desk. A styling helper, static, for today's panels -- the event dialog, the month review
 ## and the advisor note -- never a second copy of them:
 ##   * the paper itself: a StyleBoxTexture 9-slice of assets/textures/g/paper_sheet.png
-##     (1024x1024, margins 64; the middle stretches, as G's seam check chose), with a flat
+##     (1024x1024, margins 64; the middle stretches, as G's seam check chose; clean straight
+##     edges, no torn or burnt rim, Alex build E), with a flat
 ##     paper fill as the fallback when the file is missing;
 ##   * ink: near-black text, Courier Prime for the typed words, Barlow Condensed caps for the
 ##     small heads. Paper labels at `small` are bold, paper keycaps are inverted (ink tile,
@@ -37,7 +38,7 @@ const STAMP_TEXT := "NEEDS A REPLY"
 const DOOR_KEYCAP := "Space"
 
 ## Ink on paper. `ink` and `ink_soft` are G's tokens; the alert ink is the reason line's
-## (a dark red that keeps 4.5:1 on the darker bottom of the sheet).
+## (a dark red that keeps 4.5:1 on the sheet).
 const INK_ALERT := Color("#5c140c")
 
 ## The arrival (spec 6.2 "Event paper arrives", "Month review arrives"): modulate.a 0 -> 1 and
@@ -158,7 +159,7 @@ static func autosize(dialog: Control, content: Control, width: float, viewport_s
 
 static func padded(dialog: Control, left: int, top: int, right: int, bottom: int,
 		sep: int) -> Array:
-	"""A MarginContainer on the paper (the margins keep text off the burnt edges) with a
+	"""A MarginContainer on the paper (the margins keep text clear of the sheet's edges) with a
 	VBoxContainer in it: [margin, vbox]."""
 	var m := MarginContainer.new()
 	m.name = "PaperMargin"
@@ -229,8 +230,7 @@ static func build_event(dialog: Panel, event: Dictionary, viewport_size: Vector2
 	returns its main_vbox)."""
 	skin(dialog)
 	dialog.name = "GEventPaper"
-	# Bottom 66: the last line sits above the sheet's 64 px bottom band, which the picture
-	# darkens toward its scorched edge (ink there falls under 4.5, spec 4.3/4.5).
+	# Bottom 66: the last line sits above the sheet's 64 px bottom band.
 	var parts := padded(dialog, 44, 36, 44, 66, 10)
 	var m: MarginContainer = parts[0]
 	var vb: VBoxContainer = parts[1]

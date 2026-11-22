@@ -280,6 +280,41 @@ func test_classic_keeps_todays_event_and_review() -> void:
 
 # --- the advisor note (5.13) -------------------------------------------------------------
 
+func _mean_luma(img: Image, r: Rect2i) -> float:
+	var total := 0.0
+	var n := 0
+	for y in range(r.position.y, r.end.y, 2):
+		for x in range(r.position.x, r.end.x, 2):
+			total += img.get_pixel(x, y).get_luminance()
+			n += 1
+	return total / maxf(n, 1)
+
+
+func test_paper_has_clean_straight_edges() -> void:
+	# Alex, build E: no torn edges on the paper. A torn or burnt rim is a sharp dark band at
+	# the very edge; the sheet's soft shading is not. So the outer 8 px of each side (and the
+	# outer 24 px of each corner) must be about as light as the paper just inside it.
+	var img := (GPaper.texture() as Texture2D).get_image()
+	if img.is_compressed():
+		img.decompress()
+	var w := img.get_width()
+	var h := img.get_height()
+	var pairs := {
+		"top": [Rect2i(0, 0, w, 8), Rect2i(0, 8, w, 40)],
+		"bottom": [Rect2i(0, h - 8, w, 8), Rect2i(0, h - 48, w, 40)],
+		"left": [Rect2i(0, 0, 8, h), Rect2i(8, 0, 40, h)],
+		"right": [Rect2i(w - 8, 0, 8, h), Rect2i(w - 48, 0, 40, h)],
+		"top-left corner": [Rect2i(0, 0, 24, 24), Rect2i(24, 24, 48, 48)],
+		"top-right corner": [Rect2i(w - 24, 0, 24, 24), Rect2i(w - 72, 24, 48, 48)],
+		"bottom-left corner": [Rect2i(0, h - 24, 24, 24), Rect2i(24, h - 72, 48, 48)],
+		"bottom-right corner": [Rect2i(w - 24, h - 24, 24, 24), Rect2i(w - 72, h - 72, 48, 48)],
+	}
+	for side in pairs:
+		var rim := _mean_luma(img, pairs[side][0])
+		var inside := _mean_luma(img, pairs[side][1])
+		assert_gt(rim, inside * 0.9, "%s has no dark rim (%.3f against %.3f just inside)" % [side, rim, inside])
+
+
 func test_advisor_note_is_on_paper() -> void:
 	var main_ui: Node = await _boot()
 	var note: Control = main_ui.get_g_desk().advisor_note

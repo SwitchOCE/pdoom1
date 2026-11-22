@@ -33,13 +33,13 @@ func _init() -> void:
 	name = "AdvisorNote"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# G's paper (spec 4.3, 5.13; phase 2b): the paper 9-slice, sliced at NOTE_MARGIN because
-	# the note is shorter than two 64 px margins. The content margins keep the ink off the
-	# burnt edges.
+	# the note is shorter than two 64 px margins. The content margins keep the ink clear of
+	# the sheet's edges.
 	var sb := GPaper.paper_style(GPaper.NOTE_MARGIN)
 	sb.content_margin_left = 20
 	sb.content_margin_right = 14
 	sb.content_margin_top = 18
-	sb.content_margin_bottom = 46   # above the 40 px bottom band, darkened toward the burnt edge
+	sb.content_margin_bottom = 46   # above the 40 px bottom band
 	add_theme_stylebox_override("panel", sb)
 	var vb := VBoxContainer.new()
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
