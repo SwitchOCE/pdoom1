@@ -8,7 +8,9 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 ## Items
 
 - [in-lean] ui -- the main screen shows too much at once and the cold-open hand-off is one hint line: G desk (rail, sheets, advisor note), plain look, playable by mouse; squash 19de9ba3 -- -- ui/g-desk (deleted)
-- [doing] ui -- G desk look (2a theme), WATCH faces (1c), paper, room, dateline, tier icons, motion -- -- ui/g-*
+- [in-lean] ui -- G desk look (2a fb92bbcd), WATCH faces (1c 90e057a5), paper (2b 1d0383ad), room by doom band (3a 4c193364), floor smoke (3b a8aeafc4), typed dateline with mute (4 e097bf09), tier icons (5 b7a849d3), trace windows (6 3bfe6779), motion and reduced motion (7 4ebd9911) -- -- ui/g-* (deleted)
+- [in-lean] bug -- G desk options opened half off screen, hiding the switch back to classic; squash 0648a54d -- -- fix/g-options-offscreen (deleted)
+- [todo] bug -- test_music_player_controls.gd fails on a slow machine (the conductor-nudge timer leaks between tests; test isolation) -- Refs #1385 --
 - [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction'); the baseline game is also folded into the live run's verification hash; the thread can also outlive the game at exit -- Refs #1377 --
 - [todo] bug -- Undo removes the first queued copy of the last action, not the last entry (changing it is mechanics: ask Alex) -- Refs #1378 --
 - [todo] bug -- queued plays never book their typed hours, so a month with 12 planning hours accepts 20 planning plays and all resolve (mechanics: Pip's call) -- Refs #1379 --
