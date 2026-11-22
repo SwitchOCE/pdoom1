@@ -9,8 +9,9 @@ Format: `- [status] type -- the problem in the player's terms -- Refs #N -- bran
 
 - [in-lean] ui -- the main screen shows too much at once and the cold-open hand-off is one hint line: G desk (rail, sheets, advisor note), plain look, playable by mouse; squash 19de9ba3 -- -- ui/g-desk (deleted)
 - [doing] ui -- G desk look (2a theme), WATCH faces (1c), paper, room, dateline, tier icons, motion -- -- ui/g-*
-- [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction') -- --
-- [todo] bug? -- Undo removes the first queued copy of the last action, not the last entry (changing it is mechanics: ask Alex) -- --
+- [todo] bug -- a commit in the first seconds of a run can race BaselineSimulator's thread (engine error 'CowData was modified during destruction'); the baseline game is also folded into the live run's verification hash -- Refs #1377 --
+- [todo] bug -- Undo removes the first queued copy of the last action, not the last entry (changing it is mechanics: ask Alex) -- Refs #1378 --
+- [todo] bug -- queued plays never book their typed hours, so a month with 12 planning hours accepts 20 planning plays and all resolve (mechanics: Pip's call) -- Refs #1379 --
 
 (Empty. Candidates from Pip's open issues, titles only, untriaged -- check each
 against AGENTS.md section 1 before taking it:
