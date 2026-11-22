@@ -148,13 +148,15 @@ static func apply_geometry(dialog: Panel, viewport_size: Vector2) -> void:
 		roundf((viewport_size.y - h) / 2.0))
 
 
-static func build(dialog: Panel, event: Dictionary) -> VBoxContainer:
+static func build(dialog: Panel, event: Dictionary, use_g := false) -> VBoxContainer:
 	"""Draw the clipboard into `dialog` and return the container the caller must put the option
 	button (and the rejection-reason label) into. That slot is on the BOARD, below the sheet:
 	the paper is the report, the board is where the action lives, and keeping the button off
 	the paper preserves the teal 'forward door' chrome that B2/B3 gave it -- teal ink on manila
 	would have been unreadable."""
 	var review: Dictionary = event.get("review", {})
+	if use_g:
+		return _build_g(dialog, review)
 	var font := TerminalTheme.mono_font()
 
 	_skin_board(dialog)
@@ -565,3 +567,165 @@ static func _add_surface(node: Control, path: String, tint: Color, inset: int) -
 	ground.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ground.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	clip.add_child(ground)
+
+
+# --- G desk: the review on G's paper (fork/design/godot-g/spec.md 5.12, A7) -----------------
+# A separate entry, so the classic clipboard above, its constants and its tests are untouched.
+# No board and no clip: one sheet of G's paper, 700 wide at top 132, Courier Prime ink, sizes
+# from ThemeManager (never a literal). The words are the payload's, every one of them, in the
+# payload's order (MonthReviewPanel rewrites no wording; spec 10.5): heading and period, the
+# lede, the attention line, LAST MONTH'S MOVEMENT (bold rows), rivals only when the payload
+# has them, the closing line. Ink only: the classic sign inks (green, red) do not reach 4.5:1
+# on G's paper, and each delta already carries its sign.
+
+const G_WIDTH := 700.0
+const G_TOP := 132.0
+## The movement and rival lists scroll inside the sheet past this height.
+const G_LIST_MAX_H := 420.0
+
+
+static func apply_geometry_g(dialog: Panel, viewport_size: Vector2) -> void:
+	"""G's geometry: 700 wide, centred across, top 132. The height follows the content
+	(GPaper.autosize, set up by build(..., true))."""
+	var w := minf(G_WIDTH, viewport_size.x - 40.0)
+	dialog.custom_minimum_size = Vector2(w, 0)
+	dialog.size = Vector2(w, 400)
+	dialog.position = Vector2(roundf((viewport_size.x - w) / 2.0), G_TOP)
+	dialog.set_meta("g_viewport", viewport_size)
+
+
+static func _build_g(dialog: Panel, review: Dictionary) -> VBoxContainer:
+	GPaper.skin(dialog)
+	dialog.name = "GReviewPaper"
+	var parts := GPaper.padded(dialog, 46, 36, 46, 34, 12)
+	var m: MarginContainer = parts[0]
+	var sheet: VBoxContainer = parts[1]
+
+	var head := HBoxContainer.new()
+	head.name = "Masthead"
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sheet.add_child(head)
+	var heading := GPaper.ink_label(String(review.get("heading", "")).to_upper(), "small", "GCapsBold")
+	heading.name = "Heading"
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(heading)
+	var period := GPaper.ink_label(String(review.get("period", "")), "small", "GTypeBold")
+	period.name = "Period"
+	period.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	head.add_child(period)
+
+	var lede := String(review.get("lede", ""))
+	if lede != "":
+		var l := GPaper.ink_label(lede, "label", "GTypeBold")
+		l.name = "Lede"
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sheet.add_child(l)
+	var attention := String(review.get("attention", ""))
+	if attention != "":
+		var a := GPaper.ink_label(attention, "body")
+		a.name = "Attention"
+		a.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sheet.add_child(a)
+
+	var movement: Array = review.get("movement", [])
+	var rivals: Array = review.get("rivals", [])
+	if not movement.is_empty() or not rivals.is_empty():
+		var scroll := ScrollContainer.new()
+		scroll.name = "Lists"
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.follow_focus = false
+		sheet.add_child(scroll)
+		var lists := VBoxContainer.new()
+		lists.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lists.add_theme_constant_override("separation", 12)
+		scroll.add_child(lists)
+		if not movement.is_empty():
+			var col := _g_section(String(review.get("movement_title", "")), "Movement")
+			for entry in movement:
+				if entry is Dictionary:
+					col.add_child(_g_movement_row(entry))
+			lists.add_child(col)
+		if not rivals.is_empty():
+			var col := _g_section(String(review.get("rivals_title", "")), "Rivals")
+			for entry in rivals:
+				if entry is Dictionary:
+					col.add_child(_g_rival_row(entry))
+			lists.add_child(col)
+		var follow := func() -> void:
+			if is_instance_valid(scroll) and is_instance_valid(lists):
+				scroll.custom_minimum_size.y = minf(lists.get_combined_minimum_size().y, G_LIST_MAX_H)
+		lists.minimum_size_changed.connect(follow)
+		follow.call()
+
+	var closing := String(review.get("closing", ""))
+	if closing != "":
+		sheet.add_child(GPaper.ink_rule(0.35))
+		var c := GPaper.ink_label(closing, "body")
+		c.name = "Closing"
+		c.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sheet.add_child(c)
+
+	var footer := VBoxContainer.new()
+	footer.name = "Door"
+	footer.add_theme_constant_override("separation", 6)
+	sheet.add_child(footer)
+	var vp: Vector2 = dialog.get_meta("g_viewport", Vector2(1920, 1080))
+	GPaper.autosize(dialog, m, dialog.custom_minimum_size.x if dialog.custom_minimum_size.x > 0.0 \
+		else G_WIDTH, vp, G_TOP)
+	return footer
+
+
+static func _g_section(title: String, node_name: String) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.name = node_name
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 6)
+	if title != "":
+		col.add_child(GPaper.ink_label(title.to_upper(), "small", "GCapsBold"))
+		col.add_child(GPaper.ink_rule(0.8, 2))
+	return col
+
+
+static func _g_movement_row(entry: Dictionary) -> Control:
+	"""stat | from -> to | delta, bold ink (G measured regular Courier at 2.6:1), a hairline
+	under the row."""
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 5)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	v.add_child(row)
+	var stat := GPaper.ink_label(String(entry.get("stat", "")).to_upper(), "small", "GCapsBold")
+	stat.custom_minimum_size = Vector2(96, 0)
+	stat.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(stat)
+	var from_to := GPaper.ink_label("%s -> %s" % [String(entry.get("from", "")),
+		String(entry.get("to", ""))], "body", "GTypeBold")
+	from_to.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	from_to.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(from_to)
+	var delta := GPaper.ink_label(String(entry.get("delta", "")), "body", "GTypeBold")
+	delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(delta)
+	v.add_child(GPaper.ink_rule(0.25))
+	return v
+
+
+static func _g_rival_row(entry: Dictionary) -> Control:
+	"""One rival: name and focus on the top line, the drift words under it."""
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 0)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 10)
+	v.add_child(top)
+	var name_label := GPaper.ink_label(String(entry.get("name", "")), "body", "GTypeBold")
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(name_label)
+	var focus := String(entry.get("focus", ""))
+	if focus != "":
+		var f := GPaper.ink_label(focus, "small", "GType")
+		f.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		top.add_child(f)
+	var drift := GPaper.ink_label(String(entry.get("drift", "")), "body")
+	drift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(drift)
+	return v

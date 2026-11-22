@@ -1,6 +1,6 @@
 class_name GAdvisorNote
 extends PanelContainer
-## The advisor note (spec 5.13): the cold open's hand-off on the G desk. A paper note beside
+## The advisor note (spec 5.13): the cold open's hand-off on the G desk. A paper note (GPaper) beside
 ## the rail with a thin amber arrow to the ACTIONS plate. Not modal: Esc keeps opening the
 ## menu and Enter keeps committing; only its x closes it, and only for this session (the x
 ## does not change GameConfig). It also goes when main_ui clears the first-lever nudge
@@ -32,11 +32,14 @@ var close_button: Button
 func _init() -> void:
 	name = "AdvisorNote"
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var sb := GDesk.make_box(GDesk.C.paper, GDesk.C.paper_dark, 1, 2)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 12
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 12
+	# G's paper (spec 4.3, 5.13; phase 2b): the paper 9-slice, sliced at NOTE_MARGIN because
+	# the note is shorter than two 64 px margins. The content margins keep the ink off the
+	# burnt edges.
+	var sb := GPaper.paper_style(GPaper.NOTE_MARGIN)
+	sb.content_margin_left = 20
+	sb.content_margin_right = 14
+	sb.content_margin_top = 18
+	sb.content_margin_bottom = 46   # above the 40 px bottom band, darkened toward the burnt edge
 	add_theme_stylebox_override("panel", sb)
 	var vb := VBoxContainer.new()
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -45,9 +48,10 @@ func _init() -> void:
 	var head := HBoxContainer.new()
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(head)
-	# Faces only in 2a (spec 4.2: Courier Prime for all paper); the paper itself is 2b.
+	# Courier Prime for all paper (spec 4.2); small paper labels are bold (spec 4.5).
 	var title := GDesk.make_label("ADVISOR", "small", GDesk.C.ink, "GCapsBold")
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	GDesk.compact_step_up(title)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	close_button = Button.new()
@@ -56,8 +60,8 @@ func _init() -> void:
 	close_button.focus_mode = Control.FOCUS_NONE
 	close_button.tooltip_text = "Hide this note"
 	close_button.custom_minimum_size = Vector2(28, 24)
-	close_button.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
-	close_button.add_theme_color_override("font_color", GDesk.C.paper)
+	GDesk.set_step(close_button, "body")   # a thin glyph: G's close-x size (as GSheet's)
+	close_button.add_theme_color_override("font_color", GDesk.C.bone)
 	close_button.add_theme_color_override("font_hover_color", Color.WHITE)
 	var xb := GDesk.make_box(GDesk.C.ink, Color(0, 0, 0, 0), 1, 2)
 	close_button.add_theme_stylebox_override("normal", xb)
@@ -67,7 +71,7 @@ func _init() -> void:
 	head.add_child(close_button)
 	_body = GDesk.make_label("", "body", GDesk.C.ink, "GType")
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_body.custom_minimum_size = Vector2(390, 0)
+	_body.custom_minimum_size = Vector2(384, 0)
 	vb.add_child(_body)
 	_rule = ColorRect.new()
 	_rule.color = Color(GDesk.C.ink, 0.35)
@@ -76,7 +80,8 @@ func _init() -> void:
 	vb.add_child(_rule)
 	_where = GDesk.make_label("", "small", GDesk.C.ink, "GTypeBold")
 	_where.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_where.custom_minimum_size = Vector2(390, 0)
+	_where.custom_minimum_size = Vector2(384, 0)
+	GDesk.compact_step_up(_where)
 	vb.add_child(_where)
 
 

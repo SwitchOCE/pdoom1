@@ -233,6 +233,9 @@ func _build_grid_submenu(id: String) -> void:
 			btn.icon = icon_texture
 			btn.expand_icon = true
 			btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			if host._ui_layout == "g":
+				GIcons.tone_button(btn, opt_id)
+				btn.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS   # 128 px art shrunk (spec 11.2)
 
 		# #567: label from DialogKeys, the same table MainUI routes with. The old per-panel
 		# key_labels arrays were truncated (office/scouting shipped 3-4 entries for grids that

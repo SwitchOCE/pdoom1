@@ -188,6 +188,10 @@ func _show_next_event() -> void:
 	# the queue, the blocker lifetime, the button wiring, the keyboard metas -- is shared, so
 	# the review keeps every behaviour B1/B2/B3 and #877 pinned to this path.
 	var is_review := MonthReviewPanel.is_month_review(event)
+	# G desk (fork/design/godot-g/spec.md 5.11, 5.12): when the layout is g the same panel is
+	# drawn as paper by GPaper / MonthReviewPanel's G path. Queue, blocker, buttons, keys,
+	# metas and priority stay exactly as below.
+	var use_g := _g_layout()
 
 	# Blurred blocker behind event dialog panel (Fix Issue #458 + #485)
 	# Add to root (get_tree().root) to ensure it blocks ALL UI interactions
@@ -211,9 +215,14 @@ func _show_next_event() -> void:
 	# slot on the clipboard's board.
 	var main_vbox: VBoxContainer
 
-	if is_review:
+	if is_review and use_g:
+		MonthReviewPanel.apply_geometry_g(dialog, get_viewport().get_visible_rect().size)
+		main_vbox = MonthReviewPanel.build(dialog, event, true)
+	elif is_review:
 		MonthReviewPanel.apply_geometry(dialog, get_viewport().get_visible_rect().size)
 		main_vbox = MonthReviewPanel.build(dialog, event)
+	elif use_g:
+		main_vbox = GPaper.build_event(dialog, event, get_viewport().get_visible_rect().size)
 	else:
 		dialog.custom_minimum_size = Vector2(600, 450)
 		dialog.size = Vector2(600, 450)
@@ -296,6 +305,8 @@ func _show_next_event() -> void:
 	reason_label.visible = false
 	main_vbox.add_child(reason_label)
 	_reason_label = reason_label
+	if use_g:
+		GPaper.style_reason(reason_label)
 
 	# Add each option as a button
 	var options = event.get("options", [])
@@ -425,6 +436,11 @@ func _show_next_event() -> void:
 			btn.modulate = Color(0.6, 0.6, 0.6)
 
 		btn.tooltip_text = tooltip
+		if use_g:
+			if is_navigation:
+				GPaper.style_door(btn, choice_text)
+			else:
+				GPaper.style_option(btn, button_index, choice_text, format_cost_summary(shown_costs))
 
 		# Connect button
 		btn.pressed.connect(func(): _on_choice_pressed(event, choice_id, dialog, click_blocker))
@@ -432,6 +448,9 @@ func _show_next_event() -> void:
 		vbox.add_child(btn)
 		buttons.append(btn)
 		button_index += 1
+
+	if use_g and not is_review:
+		GPaper.add_event_footer(main_vbox, current_state, get_parent())
 
 	# Mark this as an event dialog to prevent ESC from closing it (issue #452)
 	dialog.set_meta("is_event_dialog", true)
@@ -466,6 +485,13 @@ func _show_next_event() -> void:
 	await get_tree().process_frame
 	print("[EventDialog] === EVENT DIALOG SETUP COMPLETE ===")
 	print("[EventDialog] Ready for keyboard input via MainUI._input()")
+
+func _g_layout() -> bool:
+	"""True while the host (MainUI) shows the G desk. A presenter with no such host (unit
+	tests, other screens) is classic."""
+	var host := get_parent()
+	return host != null and host.has_method("is_g_layout") and bool(host.call("is_g_layout"))
+
 
 func _on_choice_pressed(event: Dictionary, choice_id: String, dialog: Control, blocker: Control) -> void:
 	"""Handle an event choice press. Direction-b (playtest 2026-07-24): do NOT close the dialog

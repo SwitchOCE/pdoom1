@@ -192,6 +192,8 @@ func _make_row(i: int, q: Dictionary) -> Control:
 	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	ic.custom_minimum_size = Vector2(32, 32)
 	ic.texture = GIcons.for_action(id)
+	ic.self_modulate = GIcons.tone_for(id)
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS   # 128 px art shown at 32 (spec 11.2)
 	hb.add_child(ic)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 0)

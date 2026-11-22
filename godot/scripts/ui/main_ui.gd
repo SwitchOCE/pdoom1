@@ -713,6 +713,10 @@ func _open_submenu(submenu_id: String) -> void:
 		active_dialog.set_meta("submenu_id", submenu_id)
 	if g_desk != null:
 		_decorate_active_submenu(g_anchor)
+		# G look only (spec 5.7.4, phase 2b): same panel, rows, keys and handlers.
+		if active_dialog != null and is_instance_valid(active_dialog) \
+				and not active_dialog.has_meta("is_event_dialog"):
+			GPanel.skin_modal(active_dialog)
 		g_desk.on_submenu_opened(submenu_id, active_dialog)
 	else:
 		_decorate_active_submenu(_find_action_button(submenu_id))
@@ -2082,6 +2086,8 @@ func _show_ledger_screen():
 		g_state.start_year if g_state else GameState.DEFAULT_START_YEAR,
 		g_state.start_month if g_state else GameState.DEFAULT_START_MONTH,
 		g_state.start_day if g_state else GameState.DEFAULT_START_DAY)
+	if _ui_layout == "g":
+		GPanel.skin_modal(dialog)   # G panel look only (spec 5.9.3, phase 2b); not redrawn
 
 	active_dialog = dialog
 	active_dialog_buttons = []

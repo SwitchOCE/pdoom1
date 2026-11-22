@@ -316,6 +316,8 @@ func _make_row(action: Dictionary, slot: int) -> Button:
 	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	ic.custom_minimum_size = Vector2(32, 32)
 	ic.texture = GIcons.for_action(id)
+	ic.self_modulate = GIcons.tone_for(id)
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS   # 128 px art shown at 32 (spec 11.2)
 	tile.add_child(ic)
 	var vb := VBoxContainer.new()
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -374,7 +376,8 @@ func _paint_row(b: Button, action: Dictionary, info: Dictionary) -> void:
 		GDesk.C.muted if bool(info.blocked) else GDesk.C.bone)
 	var tile_icon := hb.find_child("Icon", true, false) as TextureRect
 	if tile_icon != null:
-		tile_icon.self_modulate = Color(1, 1, 1, 0.45 if bool(info.blocked) else 1.0)
+		# The new icons keep their tone (GIcons.tone_for); a blocked row's icon recedes.
+		tile_icon.self_modulate = Color(GIcons.tone_for(String(action.get("id", ""))), 0.45 if bool(info.blocked) else 1.0)
 
 
 func press_row(id: String) -> void:
