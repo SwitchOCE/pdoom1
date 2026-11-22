@@ -90,6 +90,36 @@
       "confidence": "high",
       "author": "unattributed",
       "author_evidence": ""
+    },
+    "textures/g/room_window_mask.png": {
+      "sha256": "d01ab1f3130249e98e7ffab2218981b09f500885f6153de5a1e0af572bd9d637",
+      "bytes": 12908,
+      "origin": "procedural_render",
+      "origin_detail": "script-rendered by make_room_textures.py (G 3a): luma ramp 0.56-0.66 of Pip's backgrounds/office_wide_day.webp inside a hand-picked box of the far windows (x 936-1222, y 360-482), 3x box blur; hand-checked against the art with an overlay; fork tool, not committed",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "textures/g/room_noise_lo.png": {
+      "sha256": "af535f3a542fdb36307fb5ece5007b16ffdcc32432cd29ddd57cf4b6a42f8b11",
+      "bytes": 22062,
+      "origin": "procedural_render",
+      "origin_detail": "script-rendered by make_room_textures.py (G 3a, numpy seed 20261122): tileable FFT-filtered noise, sigma 14 and 5 px, low-frequency smut; fork tool, not committed",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
+    },
+    "textures/g/room_noise_hi.png": {
+      "sha256": "efb66a038b6e4c6e9da8002504d2ee19bb9e4d359f22f5b4c5b00e3cb1982d0f",
+      "bytes": 58488,
+      "origin": "procedural_render",
+      "origin_detail": "script-rendered by make_room_textures.py (G 3a, numpy seed 20261122): tileable FFT-filtered noise, sigma 0.6 px, fine grain; fork tool, not committed",
+      "evidence": "E:hand-inspection",
+      "confidence": "high",
+      "author": "unattributed",
+      "author_evidence": ""
     }
   }
 }
