@@ -1,8 +1,9 @@
 # Build prompt: G with all upgrades, in Godot
 
-Status: draft for Alex to approve. **Do not start any work from this file
-until Alex has approved it in his own words in the thread that runs it.** If
-you are an agent reading this without that approval, stop and say so.
+Status: **approved by Alex on 2026-11-22**, with the changes in section 9
+(section 9 wins where it differs from sections 1-8). Asked "Shall I fold
+these into the build prompt and start the build on the Optiplex?", Alex
+chose: "Fold in and start". His PC session launches this run.
 
 ---
 
@@ -244,9 +245,66 @@ lists the files in its report.
   section (every folder written outside a checkout with its `du -sh` size,
   what can go, and `df -h` for `/` and `/data`).
 
-## 8. Do not start
+## 8. Start
 
-This prompt does nothing until Alex approves it. With the approval, Alex
-answers (or leaves on its default) the provenance question in section 6, and
-the pinned design commit is written into section 2. Then begin with phase 1a
-(spec.md 12.2).
+Alex has approved this prompt (see the status line). The provenance question
+in section 6 stays on its default (records in the fork file). Begin with the
+merged first step in section 9.
+
+## 9. Alex's decisions and the plan review's changes (2026-11-22)
+
+Alex's answers before the start:
+
+> G on by default: "G on by default (Recommended)"
+> First build: "Playable early, look next (Recommended)"
+> Changes: "Fold in and start (Recommended)"
+
+1. **G is on by default in the fork's builds.** Test builds open in G;
+   today's layout stays one switch away in Settings. (Spec Q1 is answered.
+   Whether G is on by default for Pip is his call when a change goes to
+   him; note it in the report.)
+2. **Order: playable early, look next.** The first step merges 1a and 1b
+   into one sub-phase that Alex can play end to end by mouse, and it
+   includes the advisor's first-run note (spec 5.13) in the plain look, so
+   G's first run is never without a hand-off. Then 2a (theme, fonts,
+   hierarchy), then 1c (WATCH faces, feed), then 2b, 3, 4, 5, 7, and 6
+   (trace windows) last, off by default; drop 6 first if time runs short.
+3. **Checkpoints for Alex:** A after the merged 1a+1b; B after 1c (a full
+   month in G's look; ask Alex whether it reads simpler); after 3 and 4 (the
+   one check each on his PC); at the end.
+4. **A build Alex can play at every checkpoint.** Try to export a Windows
+   build on this box: install the official Godot 4.5.1 export templates
+   under /data (only that version) and run the project's build command
+   (AGENTS.md section 4, adapted for Linux) from `lean` into
+   /data/pdoom1-g/builds/<checkpoint>/. If that cannot be made to work in
+   reasonable time, give Alex the `lean` commit and the build command
+   instead, and his PC session builds it. Report the path either way.
+   Restore `godot/build_stamp.txt` after a build.
+5. **Options menu only shows switches that already work.** The first step
+   ships only the G on/off switch; each other toggle (reduced motion, room
+   effects, resources take) arrives in the phase that makes it do something.
+6. **Same-seed check against today's game too.** Besides classic vs g on
+   the branch, run the classic fixture on `lean` (before the change) and
+   require its result to equal the branch's classic result, so a change
+   that alters both layouts is caught.
+7. **Screenshots:** one size (1920x1080) per sub-phase; both 1920x1080 and
+   1280x720 in 2a and 7.
+8. **The scope reviewer judges against Alex's original problem,** not only
+   "does it build G". Add these quotes to every scope-reviewer brief, with
+   section 1's:
+   > "the issues with the game as I currently see them, which are mainly
+   > twofold: tutorialization and user interface. Tutorialization is going
+   > to be locked behind the user interface work to a large degree."
+   > "putting up something to hate, like doing our best job of at least
+   > making a step forward"
+   > "make a complex game simpler, not overwhelm the player"
+9. **Reports** at each checkpoint also say plainly whether the UI and
+   tutorial problem has moved, not only whether G is playable.
+10. **Fork tools first.** `contrast_godot.py` and `cut_icons.py` do not
+    exist at the pin. Land them as a fork commit on `lean` before 2a (never
+    on a `ui/g-*` branch).
+11. **The pinned copy** holds an older build-prompt; run from this file.
+    Before removing the read-only copy, `chmod -R u+w` it.
+12. **Unattended runs:** Alex's PC may be off. Do not wait on it; put each
+    checkpoint's report at the top of `fork/design/godot-g/build-report.md`
+    on `design/ui-concepts` (push it), and reply in this thread.
