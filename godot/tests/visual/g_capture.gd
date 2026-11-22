@@ -28,6 +28,8 @@ extends Node
 ##   Phase 1c adds the WATCH sub-states: 12_w1_peek (the V peek before Commit), 05_watch and
 ##   13_w2_mid (playback right after Commit and mid-month, the feed folded), 14_feed_full (G:
 ##   the feed's full log, opened by a click on its header), 06_event (W3) and 07_review (W4).
+## tiers (g, phase 5): month 1 (t1_month1), three Purchase Compute through the action slots,
+##   the month played as in parity, and month 2 (t2_month2) with other tiers. Not a same-seed run.
 ##   JSON format: {"boxes":[{x,y,w,h,text,node}]} in the PNG's pixel space, as
 ##   fork/design/godot-g/tools/contrast_godot.py reads it.
 ## room (g only, phase 3a): the room forced to each doom band 0-6 with the production material
@@ -150,7 +152,7 @@ func _key(code: int) -> void:
 # --- the run ------------------------------------------------------------------------------
 
 func _run() -> void:
-	if (mode == "shots" or mode == "room") and out_dir == "":
+	if mode in ["shots", "room", "tiers"] and out_dir == "":
 		_check(false, "--out=DIR is required for %s" % mode)
 		_finish()
 		return
@@ -224,11 +226,22 @@ func _run() -> void:
 	if mode == "shots":
 		await _shots_plan_phase()
 
-	# Queue: through the Scouting door, three choices, the way a player does (spec 12.1 item 5).
-	for n in range(PICKS.size()):
-		if not await _pick_through_scouting(String(PICKS[n]), n + 1):
+	if mode == "tiers":
+		# Phase 5 shots (not the same-seed fixture): month 1, then three Purchase Compute
+		# through the retained action slots so month 2 shows other money and compute tiers.
+		# The amber dev-build badge sits over the strip's right end; hidden for these shots.
+		_hide_dev_badge()
+		await _frames(20)
+		await _shot("t1_month1")
+		if not await _queue_buy_compute(3):
 			_finish()
 			return
+	else:
+		# Queue: through the Scouting door, three choices, the way a player does (spec 12.1 item 5).
+		for n in range(PICKS.size()):
+			if not await _pick_through_scouting(String(PICKS[n]), n + 1):
+				_finish()
+				return
 	_say("queued hash %s" % state_hash())
 	if mode == "shots":
 		await _shots_queued()
@@ -358,6 +371,18 @@ func _run() -> void:
 	_say("events answered %d: %s" % [answered, str(_events_seen)])
 	_say("HASH layout=%s seed=%s turn=%d %s" % [layout, SEED, int(GameManager.state.turn), state_hash()])
 
+	if mode == "tiers":
+		# After the hash: close month 2's opening notices (an unlock card's Continue) and let
+		# the achievement toast and any tier crossfade (0.25 s) finish before the shot.
+		for _i in range(5):
+			var cont := _visible_button("Continue")
+			if cont == null:
+				break
+			cont.pressed.emit()
+			await _frames(5)
+		await get_tree().create_timer(6.0, false).timeout
+		_hide_dev_badge()
+		await _shot("t2_month2")
 	if mode == "shots" and layout == "classic":
 		# Today's guide is a scene of its own, reached from the menus, not over the run.
 		SceneTransition.go_to(GUIDE_SCENE)
@@ -465,6 +490,33 @@ func _slot_for(action_id: String) -> int:
 
 func _slot_button(i: int) -> Button:
 	return _slot_container().get_children()[i] as Button
+
+
+func _hide_dev_badge() -> void:
+	for b in get_tree().root.find_children("*", "DevBuildBadge", true, false):
+		(b as CanvasLayer).visible = false
+
+
+func _visible_button(text: String) -> Button:
+	for b in get_tree().root.find_children("*", "Button", true, false):
+		if (b as Button).text.strip_edges() == text and (b as Button).is_visible_in_tree():
+			return b as Button
+	return null
+
+
+func _queue_buy_compute(n: int) -> bool:
+	"""Tiers shots: press the Purchase Compute slot n times (the 1a fixture's path), asserting
+	the queue grows after each press."""
+	for k in range(n):
+		var i := _slot_for("buy_compute")
+		if not _check(i >= 0 and not _slot_button(i).disabled, "Purchase Compute slot is live (%d)" % (k + 1)):
+			return false
+		var before: int = _main_ui.plan_controller.queue_size()
+		_main_ui._trigger_action_by_index(i)
+		await _frames(3)
+		if not _check(_main_ui.plan_controller.queue_size() == before + 1, "Purchase Compute %d queued" % (k + 1)):
+			return false
+	return true
 
 
 # --- the plays, the way a player makes them ---------------------------------------------

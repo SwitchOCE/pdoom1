@@ -18,6 +18,8 @@ extends Control
 ## every G control takes its faces, styleboxes and colour tokens from it through a theme type
 ## variation (GPanel, GPlate, GKeycap, GCaps, GMono, ...). The theme sets no font size: every
 ## size is set here in code through ThemeManager.get_font_size(), by rank (spec 4.4).
+## Phase 5, tier icons (spec 5.1.2 take a): each resource cell is a GResourceCell (tier icon
+## from GTiers, crossfade on a tier change, tags, reputation's "0 ends the run").
 ##
 ## VIEW-ONLY: reads the state dicts main_ui already receives, writes no game state, draws no
 ## random number (spec 7.4), creates no timers (spec 6.1).
@@ -78,6 +80,9 @@ var resource_cells: Dictionary = {}    # key -> Control (cell)
 ## reputation only; the doom chip is a printed doom delta, ADR-0015, and is not shown).
 const DELTA_CHIP_KEYS := ["money", "compute", "reputation"]
 var resource_chips: Dictionary = {}    # key -> Label
+var resource_strip: HBoxContainer      # the five GResourceCells and their rules (spec 5.1.2)
+const RESOURCE_SEP := 24
+const RESOURCE_SEP_MIN := 8
 var menu_button: Button
 var banner: PanelContainer
 var mode_label: Label
@@ -346,7 +351,7 @@ func _build_top_strip() -> void:
 	hb.add_child(dateline)
 	var cells := HBoxContainer.new()
 	cells.name = "ResourceStrip"
-	cells.add_theme_constant_override("separation", 24)
+	cells.add_theme_constant_override("separation", RESOURCE_SEP)
 	cells.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(cells)
 	for key in RESOURCE_KEYS:
@@ -357,31 +362,17 @@ func _build_top_strip() -> void:
 		rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cells.add_child(rule)
-		var cell := HBoxContainer.new()
-		cell.name = "Cell_%s" % key
-		cell.add_theme_constant_override("separation", 8)
-		cell.mouse_filter = Control.MOUSE_FILTER_PASS
-		# Hierarchy (spec 4.4): money's value at `header` (rank 2), the rest at `label` (rank 3);
-		# caps labels `small` in `dim`; every number in mono.
-		var cap := make_label(RESOURCE_CAPS[key], "small", C.dim, "GCaps")
-		cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		cap.mouse_filter = Control.MOUSE_FILTER_PASS
-		cell.add_child(cap)
-		var val := make_label("--", "header" if key == "money" else "label", C.bone, "GMono")
-		val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		val.mouse_filter = Control.MOUSE_FILTER_PASS
-		cell.add_child(val)
-		if DELTA_CHIP_KEYS.has(key):
-			var chip := make_label("", "small", C.bone, "GMono")
-			chip.name = "Delta"
-			chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			chip.mouse_filter = Control.MOUSE_FILTER_PASS
-			chip.visible = false
-			cell.add_child(chip)
-			resource_chips[key] = chip
+		# Phase 5 (spec 5.1.2, take a): tier icon plate, caps, value, chip, tag, and for
+		# reputation the "0 ends the run" note.
+		var cell := GResourceCell.new(key, RESOURCE_CAPS[key], DELTA_CHIP_KEYS.has(key))
 		cells.add_child(cell)
-		resource_values[key] = val
+		resource_values[key] = cell.value
 		resource_cells[key] = cell
+		if cell.chip != null:
+			resource_chips[key] = cell.chip
+	resource_strip = cells
+	resource_strip.resized.connect(_fit_resource_strip)
+	resized.connect(_fit_resource_strip)
 	_copy_resource_tooltips()
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -625,12 +616,7 @@ func _on_state(state: Dictionary) -> void:
 	if host != null and host.has_method("_format_turn_datetime"):
 		dateline.text = host._format_turn_datetime(state)
 	for key in RESOURCE_KEYS:
-		var raw = state.get(key, 0)
-		var lbl: Label = resource_values[key]
-		lbl.text = GameConfig.format_money(raw) if key == "money" else GameConfig.format_scalar(raw)
-		# Warn colour reads the SHOWN amount (spec 5.1.2): "-0" never turns red.
-		var shown := _shown_amount(float(raw))
-		set_ink(lbl, C.warn if shown < 0.0 else C.bone)
+		(resource_cells[key] as GResourceCell).set_amount(float(state.get(key, 0)))
 	plate_staff.set_status(str(int(state.get("total_staff", 0))))
 	_refresh_ledger_plate()
 	_refresh_delta_chips()
@@ -676,11 +662,34 @@ func _refresh_ledger_plate() -> void:
 	plate_ledger.tooltip_text = full if due_soon and full != "" else "Open the Liability Ledger"
 
 
-static func _shown_amount(raw: float) -> float:
-	"""sign(raw) * round_half_away(abs(raw)) -- the amount format_money/format_scalar print."""
-	var a := absf(raw)
-	var r := floorf(a + 0.5)
-	return r if raw >= 0.0 else -r
+func _fit_resource_strip() -> void:
+	"""Spec 5.1.2: the cells keep their minimum width; if the strip is crowded, the separation
+	between them (24 px) shrinks first, down to RESOURCE_SEP_MIN."""
+	if resource_strip == null or top_strip == null:
+		return
+	var hb := resource_strip.get_parent() as HBoxContainer
+	if hb == null:
+		return
+	var others := 0.0
+	var n_hb := 0
+	for c in hb.get_children():
+		if c is Control and (c as Control).visible:
+			n_hb += 1
+			if c != resource_strip:
+				others += (c as Control).get_combined_minimum_size().x
+	# The desk's own width (a full-rect Control, not sized by its children) less the strip's
+	# 24 px margins: a crowded HBox grows past the screen, so its own size cannot be used.
+	var room := size.x - 48.0 - others - hb.get_theme_constant("separation") * maxi(n_hb - 1, 0)
+	var cells_min := 0.0
+	var gaps := 0
+	for c in resource_strip.get_children():
+		if c is Control and (c as Control).visible:
+			cells_min += (c as Control).get_combined_minimum_size().x
+			gaps += 1
+	gaps = maxi(gaps - 1, 1)
+	var sep := clampi(int(floor((room - cells_min) / gaps)), RESOURCE_SEP_MIN, RESOURCE_SEP)
+	if resource_strip.get_theme_constant("separation") != sep:
+		resource_strip.add_theme_constant_override("separation", sep)
 
 
 func _on_phase(phase: String) -> void:
