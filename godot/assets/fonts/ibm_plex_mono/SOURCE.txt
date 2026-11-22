@@ -1,0 +1,10 @@
+IBM Plex Mono -- SIL Open Font License 1.1 (OFL.txt beside this file).
+Bundled for the G desk (fork/design/godot-g/spec.md 4.2). Static TTFs, unmodified,
+fetched from the pinned upstream commit below. Imported with Godot 4.5.1's defaults.
+OFL.txt is the upstream licence file from the same commit (https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/ibmplexmono/OFL.txt),
+with line endings normalised to LF.
+
+file	sha256	url
+IBMPlexMono-Regular.ttf	6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46	https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/ibmplexmono/IBMPlexMono-Regular.ttf
+IBMPlexMono-Medium.ttf	a9b4c49bb299e05b5f6c481e7fb5e78943d2793249a0c8874ab574a2d1ea6755	https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/ibmplexmono/IBMPlexMono-Medium.ttf
+IBMPlexMono-SemiBold.ttf	d3c38e55c78f5b0f28009fddba4834ec503278936a5986032424c9bd2d23aa46	https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf

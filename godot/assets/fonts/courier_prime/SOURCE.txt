@@ -1,0 +1,9 @@
+Courier Prime -- SIL Open Font License 1.1 (OFL.txt beside this file).
+Bundled for the G desk (fork/design/godot-g/spec.md 4.2). Static TTFs, unmodified,
+fetched from the pinned upstream commit below. Imported with Godot 4.5.1's defaults.
+OFL.txt is the upstream licence file from the same commit (https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/courierprime/OFL.txt),
+with line endings normalised to LF.
+
+file	sha256	url
+CourierPrime-Regular.ttf	72f793376f8e2841656bf21d77a5de010f2929bd6956a22ee848ad0c7eb978af	https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/courierprime/CourierPrime-Regular.ttf
+CourierPrime-Bold.ttf	ff1f38786c849d1c41fa8e447960abdb2bd75fdfb0cfcdeb524fad65a5af3638	https://raw.githubusercontent.com/google/fonts/06bfe0d62a98375cb09c942fa18e68bd32cff057/ofl/courierprime/CourierPrime-Bold.ttf

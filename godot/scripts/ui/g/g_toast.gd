@@ -20,13 +20,8 @@ func _init() -> void:
 	name = "GToast"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
-	var sb := GDesk.make_box(GDesk.C.panel2, GDesk.C.warn, 1, 2)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 14
-	sb.content_margin_top = 6
-	sb.content_margin_bottom = 6
-	add_theme_stylebox_override("panel", sb)
-	_label = GDesk.make_label("", "body", GDesk.C.warn)
+	theme_type_variation = &"GToast"     # warn hairline on panel-2 (theme/g_theme.tres)
+	_label = GDesk.make_label("", "body", GDesk.C.warn, "GSansMed")
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_label)

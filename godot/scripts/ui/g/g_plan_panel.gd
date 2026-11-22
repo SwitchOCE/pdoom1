@@ -1,6 +1,7 @@
 class_name GPlanPanel
 extends GSheet
-## The Plan drawer (fork/design/godot-g/spec.md 5.8), plain look.
+## The Plan drawer (fork/design/godot-g/spec.md 5.8). The look is the theme's (2a): rows are
+## GRaised, hours in the pool's colour, numbers in mono.
 ##
 ## One row per entry of plan_controller.queued_actions, in order, with an x that runs
 ## main_ui._remove_queued_action(id, name). For a repeated play that removes the FIRST queued
@@ -51,7 +52,7 @@ func _build() -> void:
 	heads.add_theme_constant_override("separation", 10)
 	body.add_child(heads)
 	for spec in [["#", 32], ["PLAY", 0], ["HOURS", 110], ["COST", 150], ["", 40]]:
-		var l := GDesk.make_label(String(spec[0]), "small", GDesk.C.muted)
+		var l := GDesk.make_label(String(spec[0]), "small", GDesk.C.muted, "GCaps")
 		if int(spec[1]) > 0:
 			l.custom_minimum_size = Vector2(int(spec[1]), 0)
 		else:
@@ -69,7 +70,7 @@ func _build() -> void:
 	_rows_box.add_theme_constant_override("separation", 4)
 	_scroll.add_child(_rows_box)
 
-	_total = GDesk.make_label("", "small", GDesk.C.bone)
+	_total = GDesk.make_label("", "small", GDesk.C.bone, "GSansMed")
 	_total.name = "Total"
 	body.add_child(_total)
 	_after = GDesk.make_label("", "small", GDesk.C.muted)
@@ -105,8 +106,9 @@ func _foot_button(caption: String, bind: String, fallback: String) -> Button:
 	b.text = "%s [%s]" % [caption, GDesk.key_name(bind, fallback)]
 	b.custom_minimum_size = Vector2(0, 40)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
+	GDesk.set_step(b, "small")
 	GDesk.style_flat_button(b)
+	GDesk.track_theme_ink(b)
 	return b
 
 
@@ -174,11 +176,11 @@ func _make_row(i: int, q: Dictionary) -> Control:
 	var row := PanelContainer.new()
 	row.name = "Row%d" % i
 	row.set_meta("action_id", id)
-	row.add_theme_stylebox_override("panel", GDesk.make_box(GDesk.C.panel2, GDesk.C.frame, 1, 2))
+	row.theme_type_variation = &"GRaised"
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 10)
 	row.add_child(hb)
-	var num := GDesk.make_label(str(i + 1), "small", GDesk.C.muted)
+	var num := GDesk.make_label(str(i + 1), "small", GDesk.C.muted, "GMono")
 	num.custom_minimum_size = Vector2(32, 0)
 	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -199,11 +201,18 @@ func _make_row(i: int, q: Dictionary) -> Control:
 	name_l.clip_text = true
 	vb.add_child(name_l)
 	var where := String(action.get("category", ""))
-	vb.add_child(GDesk.make_label(where.capitalize() if where != "" else "--", "small", GDesk.C.muted))
+	# "--" (nothing in that column) is a thin glyph: the semi-bold mono carries it (2a addendum).
+	var where_l := GDesk.make_label(where.capitalize() if where != "" else "--", "small", GDesk.C.muted,
+		"" if where != "" else "GMonoSemi")
+	GDesk.compact_step_up(where_l)
+	vb.add_child(where_l)
 	var cost := GameActions.attention_cost(action)
+	var fam := MonthPlan.family_of(GameActions.hour_type(action))
 	var hours_l := GDesk.make_label(
-		"%d %s" % [cost, MonthPlan.family_of(GameActions.hour_type(action))] if cost > 0 else "--",
-		"small", GDesk.C.bone)
+		"%d %s" % [cost, fam] if cost > 0 else "--",
+		"small", (GDesk.C.plan if fam == "planning" else GDesk.C.op) if cost > 0 else GDesk.C.muted,
+		"GMono" if cost > 0 else "GMonoSemi")
+	GDesk.compact_step_up(hours_l)
 	hours_l.custom_minimum_size = Vector2(110, 0)
 	hours_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(hours_l)
@@ -212,7 +221,9 @@ func _make_row(i: int, q: Dictionary) -> Control:
 	costs.erase("action_points")
 	costs.erase("hour_type")
 	var ct := String(host._format_costs_inline(costs)) if host != null else "Free"
-	var cost_l := GDesk.make_label("--" if ct == "Free" else ct, "small", GDesk.C.bone)
+	var cost_l := GDesk.make_label("--" if ct == "Free" else ct, "small",
+		GDesk.C.muted if ct == "Free" else GDesk.C.bone, "GMonoSemi" if ct == "Free" else "GMono")
+	GDesk.compact_step_up(cost_l)
 	cost_l.custom_minimum_size = Vector2(150, 0)
 	cost_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cost_l.clip_text = true
@@ -223,8 +234,9 @@ func _make_row(i: int, q: Dictionary) -> Control:
 	x.tooltip_text = "Remove %s from the plan (removes the first queued copy)" % nm
 	x.focus_mode = Control.FOCUS_ALL
 	x.custom_minimum_size = Vector2(40, 36)
-	x.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
-	GDesk.style_flat_button(x)
+	GDesk.set_step(x, "body")
+	x.theme_type_variation = &"GClose"
+	GDesk.track_theme_ink(x)  # a thin glyph: lifted in the compact view
 	x.pressed.connect(func(): remove_entry(id, nm))
 	hb.add_child(x)
 	return row

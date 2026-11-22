@@ -1,33 +1,36 @@
 class_name GAttentionCard
-extends PanelContainer
-## Attention card, PLAN face (spec 5.5), plain look. Phase 1c adds the WATCH and closed faces.
+extends GPanel
+## Attention card, PLAN face (spec 5.5). Phase 1c adds the WATCH and closed faces.
+## The look (phase 2a, spec 4.4 rank 2): the hour bar and its HOURS LEFT figure at `label`
+## in mono; THIS MONTH (rank 3) in `small`; the panel is a GPanel (grime, hairline, ticks).
 ##
-## Hours: one cell per hour of each pool, filled = hours left after the plan so far: the
-## game's own planning_hours_left / operating_hours_left minus the hours the queued plays
-## list (queued_hours), so the figures move as plays are queued, as classic's "N/20
-## allocated" does, and agree with the held plate and the Plan drawer. (Today's game books a
-## queued play's hours only into attention_spent, not into the typed pools, so the typed
-## pools alone never move while planning.) The row's total is the pool's unspent hours plus
-## its spent hours (MonthPlan.hours_spent). No spill cell and no spill legend (spec 10.1).
-## "Reserved" shows the plan-time reserve (classic's "N reserved"). In WATCH the two hour
-## rows hide until 1c's WATCH face (the queue is gone and today's game never booked its hours
-## into the typed pools, so their "N left" would overstate), and the card shows the held
-## hours that remain instead, worked out as classic's WATCH strip does ("reserve N",
-## screen_mode.gd): attention_reserved, or the unspent hours when nothing is reserved.
+## Hours (Q1, Alex 2026-11-22): the card shows the TOTAL hours left, the aggregate the game's
+## own queue check uses: MonthPlan.available() = attention_total - attention_spent -
+## attention_reserved. GameManager.select_action already adds a queued play's hours to
+## attention_spent (and a removal or clear refunds them), so the queue is in the figure once
+## and it moves as plays are queued, as classic's "N/20 allocated" does. One bar shows the
+## same figure: one cell per hour of the month's total, lit = hours left, the rest unlit.
+## There is no per-pool split and no per-pool "left": today's game never books a queued
+## play's typed hours (Pip's #1379), so a per-pool figure would not be the game's.
+## No spill cell and no spill legend (spec 10.1). "Reserved" shows the plan-time reserve
+## (classic's "N reserved"). In WATCH the bar and the total hide until 1c's WATCH face,
+## and the card shows the held hours that remain instead, worked out as classic's WATCH strip
+## does ("reserve N", screen_mode.gd): attention_reserved, or the unspent hours when nothing
+## is reserved.
 ## THIS MONTH: the queued plays in order, consecutive repeats grouped with their row range,
 ## then "N plays" and the money total from PlanController.calculate_queued_costs().
 
 const CELL := Vector2(16, 26)
 const CELL_GAP := 3
+const EMPTY_ALPHA := 0.2
+const LEFT_W := 72.0     # "20 hr" in mono at `label`
 
 var _header_total: Label
-var _plan_cells: HBoxContainer
-var _plan_left: Label
-var _op_cells: HBoxContainer
-var _op_left: Label
+## The one hours bar and figure: total hours left this month (Q1).
+var _cells: HBoxContainer
+var _left: Label
+var _left_row: HBoxContainer
 var _reserved: Label
-var _plan_row: HBoxContainer
-var _op_row: HBoxContainer
 var _list: VBoxContainer
 var _total: Label
 ## 1b seam: "CHOOSE ACTIONS [A]" / "OPEN PLAN [Q]" opens the Actions sheet or the Plan
@@ -39,7 +42,6 @@ func _init() -> void:
 	name = "AttentionCard"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	custom_minimum_size = Vector2(416, 274)
-	add_theme_stylebox_override("panel", GDesk.make_box(GDesk.C.panel, GDesk.C.frame_hi, 1, 0))
 	var m := MarginContainer.new()
 	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.add_theme_constant_override("margin_left", 16)
@@ -65,7 +67,7 @@ func _init() -> void:
 		ic.custom_minimum_size = Vector2(24, 24)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		head.add_child(ic)
-	var title := GDesk.make_label("ATTENTION", "small", GDesk.C.muted)
+	var title := GDesk.make_label("ATTENTION", "body", GDesk.C.muted, "GCaps")
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
@@ -73,22 +75,37 @@ func _init() -> void:
 	_header_total.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(_header_total)
 
-	var rows := _hour_row(vb, "PLANNING", GDesk.C.plan)
-	_plan_cells = rows[0]
-	_plan_left = rows[1]
-	_plan_row = rows[2]
-	rows = _hour_row(vb, "OPERATING", GDesk.C.op)
-	_op_cells = rows[0]
-	_op_left = rows[1]
-	_op_row = rows[2]
-	_reserved = GDesk.make_label("", "small", GDesk.C.held)
+	_left_row = HBoxContainer.new()
+	_left_row.name = "HoursRow"
+	_left_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_left_row.add_theme_constant_override("separation", 10)
+	vb.add_child(_left_row)
+	var left_cap := GDesk.make_label("HOURS LEFT", "small", GDesk.C.muted, "GCaps")
+	left_cap.custom_minimum_size = Vector2(96, 0)
+	left_cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_left_row.add_child(left_cap)
+	_cells = HBoxContainer.new()
+	_cells.name = "Cells"
+	_cells.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cells.add_theme_constant_override("separation", CELL_GAP)
+	_cells.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_left_row.add_child(_cells)
+	_left = GDesk.make_label("", "label", GDesk.C.bone, "GMono")
+	_left.name = "HoursLeft"
+	_left.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_left.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_left.custom_minimum_size = Vector2(LEFT_W, 0)
+	_left_row.add_child(_left)
+	_reserved = GDesk.make_label("", "small", GDesk.C.held, "GMono")
 	_reserved.visible = false
 	vb.add_child(_reserved)
 
-	var sep := HSeparator.new()
+	var sep := ColorRect.new()
+	sep.color = GDesk.C.frame
+	sep.custom_minimum_size = Vector2(0, 1)
 	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(sep)
-	vb.add_child(GDesk.make_label("THIS MONTH", "small", GDesk.C.muted))
+	vb.add_child(GDesk.make_label("THIS MONTH", "small", GDesk.C.muted, "GCaps"))
 	_list = VBoxContainer.new()
 	_list.name = "ThisMonth"
 	_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -101,46 +118,22 @@ func _init() -> void:
 	choose_button.name = "ChooseButton"
 	choose_button.focus_mode = Control.FOCUS_NONE
 	choose_button.visible = false
+	choose_button.custom_minimum_size = Vector2(0, 44)
+	GDesk.set_step(choose_button, "body")
+	GDesk.style_flat_button(choose_button)
 	vb.add_child(choose_button)
-
-
-func _hour_row(parent: Control, caption: String, colour: Color) -> Array:
-	var hb := HBoxContainer.new()
-	hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hb.add_theme_constant_override("separation", 10)
-	parent.add_child(hb)
-	var cap := GDesk.make_label(caption, "small", colour)
-	cap.custom_minimum_size = Vector2(96, 0)
-	cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hb.add_child(cap)
-	var cells := HBoxContainer.new()
-	cells.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cells.add_theme_constant_override("separation", CELL_GAP)
-	cells.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(cells)
-	var left := GDesk.make_label("", "small", GDesk.C.bone)
-	left.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	left.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	left.custom_minimum_size = Vector2(64, 0)
-	hb.add_child(left)
-	return [cells, left, hb]
 
 
 func update_plan_face(state: Dictionary, queued: Array, costs: Dictionary,
 		watching: bool = false) -> void:
 	var mp: Dictionary = state.get("month_plan", {})
 	_header_total.text = "%d hr this month" % int(mp.get("attention_total", 0))
-	var spent: Dictionary = mp.get("hours_spent", {})
-	var unspent_plan := int(state.get("planning_hours_left", 0))
-	var unspent_op := int(state.get("operating_hours_left", 0))
-	var left := hours_left_after_queue(state, queued)
-	_fill(_plan_cells, int(left.planning), unspent_plan + int(spent.get("planning", 0)), GDesk.C.plan_fill)
-	_fill(_op_cells, int(left.operating), unspent_op + int(spent.get("operating", 0)), GDesk.C.op_fill)
-	_set_left(_plan_left, int(left.planning))
-	_set_left(_op_left, int(left.operating))
+	var left := hours_left(state)
+	# One bar, one colour (no planning/operating split, Q1): the warm paper tone.
+	_fill(_cells, left, int(mp.get("attention_total", 0)), GDesk.C.paper_dark)
+	_set_left(_left, left)
 	var reserved := int(mp.get("attention_reserved", 0))
-	_plan_row.visible = not watching
-	_op_row.visible = not watching
+	_left_row.visible = not watching
 	if watching:
 		_reserved.visible = true
 		_reserved.text = "Reserved: %d hr" % held_remaining(state)
@@ -160,6 +153,16 @@ static func held_remaining(state: Dictionary) -> int:
 	return maxi(0, int(mp.get("attention_total", 0)) - int(mp.get("attention_spent", 0)))
 
 
+static func hours_left(state: Dictionary) -> int:
+	"""Total hours left this month (Q1): MonthPlan.available() from the state's month_plan,
+	attention_total - attention_spent - attention_reserved, floored at 0. A queued play is
+	already in attention_spent (GameManager.select_action adds it), so the queue is counted
+	once. Pure."""
+	var mp: Dictionary = state.get("month_plan", {})
+	return maxi(0, int(mp.get("attention_total", 0)) - int(mp.get("attention_spent", 0))
+		- int(mp.get("attention_reserved", 0)))
+
+
 static func queued_hours(queued: Array) -> Dictionary:
 	"""Hours the queued plays list, by family: {planning, operating}. Each entry is a
 	PlanController queue entry ({id, name}); the hours are the action's own attention cost
@@ -172,23 +175,15 @@ static func queued_hours(queued: Array) -> Dictionary:
 	return out
 
 
-static func hours_left_after_queue(state: Dictionary, queued: Array) -> Dictionary:
-	"""Hours left after the plan so far, by family: the game's unspent hours minus the hours
-	the queue lists, floored at 0. {planning, operating}. Pure."""
-	var q := queued_hours(queued)
-	return {
-		"planning": maxi(0, int(state.get("planning_hours_left", 0)) - int(q.planning)),
-		"operating": maxi(0, int(state.get("operating_hours_left", 0)) - int(q.operating)),
-	}
-
-
 func _set_left(l: Label, n: int) -> void:
-	l.text = "%d left" % n
-	l.add_theme_color_override("font_color", GDesk.C.warn if n <= 0 else GDesk.C.bone)
+	l.text = "%d hr" % n
+	GDesk.set_ink(l, GDesk.C.warn if n <= 0 else GDesk.C.bone)
 
 
-func _fill(row: HBoxContainer, filled: int, total: int, colour: Color) -> void:
-	total = maxi(total, filled)
+func _fill(row: HBoxContainer, lit: int, total: int, colour: Color) -> void:
+	"""One cell per hour of the month's total; the first `lit` (the hours left) lit, the
+	rest a faint ghost (Q1: the same figure as HOURS LEFT, no per-pool split)."""
+	total = maxi(total, lit)
 	while row.get_child_count() > total:
 		var c := row.get_child(row.get_child_count() - 1)
 		row.remove_child(c)
@@ -198,14 +193,14 @@ func _fill(row: HBoxContainer, filled: int, total: int, colour: Color) -> void:
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(cell)
 	# Shrink cells to fit when a month has more hours than the card is wide.
-	var room := 416.0 - 32.0 - 96.0 - 64.0 - 20.0
+	var room := 416.0 - 32.0 - 96.0 - LEFT_W - 20.0
 	var w := CELL.x
 	if total > 0:
 		w = clampf(floorf((room - CELL_GAP * (total - 1)) / float(total)), 4.0, CELL.x)
 	for i in range(row.get_child_count()):
 		var cell := row.get_child(i) as ColorRect
 		cell.custom_minimum_size = Vector2(w, CELL.y)
-		cell.color = colour if i < filled else GDesk.C.well
+		cell.color = colour if i < lit else Color(colour, EMPTY_ALPHA)
 
 
 func _fill_list(queued: Array, costs: Dictionary) -> void:
@@ -220,7 +215,7 @@ func _fill_list(queued: Array, costs: Dictionary) -> void:
 		var hb := HBoxContainer.new()
 		hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hb.add_theme_constant_override("separation", 10)
-		var num := GDesk.make_label(g.rows, "small", GDesk.C.muted)
+		var num := GDesk.make_label(g.rows, "small", GDesk.C.muted, "GMono")
 		num.custom_minimum_size = Vector2(40, 0)
 		hb.add_child(num)
 		var nm := String(g.name)

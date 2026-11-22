@@ -1,7 +1,8 @@
 class_name GSheet
 extends Control
 ## Shared base for the three G sheets (fork/design/godot-g/spec.md 2.3-2.4, 6.2-6.4): Actions,
-## the Plan drawer and Upgrades. Plain look (phase 1b); 2a swaps the styleboxes for the theme.
+## the Plan drawer and Upgrades. The look is the theme's (phase 2a): the panel is a GPanel with
+## the GSheetPanel ground (grime, hairline, corner ticks), the head is caps over a hairline.
 ##
 ## Each sheet is a full-rect Control that stays a child of GDesk/Sheets for its whole life
 ## (never freed while G is on, so the live nodes reparented into it are never freed with it).
@@ -28,7 +29,7 @@ var desk: Node = null           # GDesk (null standalone)
 var modal_stack = null          # host.modal_stack (null standalone)
 
 var barrier: ColorRect
-var panel: PanelContainer
+var panel: GPanel
 var body: VBoxContainer
 var header: HBoxContainer
 var title_label: Label
@@ -80,15 +81,10 @@ func _build_base() -> void:
 	barrier.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	barrier.gui_input.connect(_on_barrier_input)
 
-	panel = PanelContainer.new()
+	panel = GPanel.new()
 	panel.name = "Panel"
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	var sb := GDesk.make_box(GDesk.C.panel_solid, GDesk.C.frame_hi, 1, 2)
-	sb.content_margin_left = 20
-	sb.content_margin_right = 20
-	sb.content_margin_top = 14
-	sb.content_margin_bottom = 16
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.theme_type_variation = &"GSheetPanel"
 	add_child(panel)
 	_panel_layout()
 	var vb := VBoxContainer.new()
@@ -99,7 +95,7 @@ func _build_base() -> void:
 	header.name = "Header"
 	header.add_theme_constant_override("separation", 10)
 	vb.add_child(header)
-	title_label = GDesk.make_label("", "body", GDesk.C.bone)
+	title_label = GDesk.make_label("", "body", GDesk.C.muted, "GCaps")
 	title_label.name = "Title"
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -113,10 +109,17 @@ func _build_base() -> void:
 	close_button.tooltip_text = "Close (Esc)"
 	close_button.focus_mode = Control.FOCUS_NONE
 	close_button.custom_minimum_size = Vector2(36, 32)
-	close_button.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
-	GDesk.style_flat_button(close_button)
+	GDesk.set_step(close_button, "body")
+	close_button.theme_type_variation = &"GClose"
+	GDesk.track_theme_ink(close_button)  # a thin glyph: lifted in the compact view
 	close_button.pressed.connect(_request_close)
 	header.add_child(close_button)
+	var rule := ColorRect.new()
+	rule.name = "HeadRule"
+	rule.color = GDesk.C.frame
+	rule.custom_minimum_size = Vector2(0, 1)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(rule)
 	body = VBoxContainer.new()
 	body.name = "Body"
 	body.add_theme_constant_override("separation", 10)

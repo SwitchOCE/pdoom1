@@ -1,6 +1,7 @@
 class_name GActionsPanel
 extends GSheet
-## The Actions sheet (fork/design/godot-g/spec.md 5.7), plain look.
+## The Actions sheet (fork/design/godot-g/spec.md 5.7). The look is the theme's (2a): rows
+## are GRow / GRowBlocked (hatched, dashed edge), the detail card is a GCardPanel.
 ##
 ## Rows: the list ActionBarRenderer already builds, in the same order and with the same
 ## filters (hidden ids, coming-soon ids, locks). The renderer hands it to the desk when the
@@ -24,6 +25,7 @@ var hint_id: String = ""
 
 var _list: VBoxContainer
 var _scroll: ScrollContainer
+var _tail: Control
 var _row_nodes: Dictionary = {}      # action id -> Button
 var _row_info: Dictionary = {}       # action id -> {blocked, reason, coming_soon, clickable, ...}
 var _ids_built: Array = []
@@ -31,7 +33,7 @@ var _hint_tween: Tween
 var _hint_row: Control = null
 
 # Detail card (spec 5.7.2).
-var detail: PanelContainer
+var detail: GPanel
 var _d_name: Label
 var _d_desc: Label
 var _d_cost: Label
@@ -58,24 +60,29 @@ func _build() -> void:
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body.add_child(_scroll)
+	var wrap := VBoxContainer.new()
+	wrap.name = "ListWrap"
+	wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wrap.add_theme_constant_override("separation", 0)
+	_scroll.add_child(wrap)
 	_list = VBoxContainer.new()
 	_list.name = "Rows"
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override("separation", 6)
-	_scroll.add_child(_list)
+	wrap.add_child(_list)
+	# Room under the last row, so the hint scroll can land on a whole row (reveal_hint).
+	_tail = Control.new()
+	_tail.name = "Tail"
+	_tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(_tail)
 	_build_detail()
 
 
 func _build_detail() -> void:
-	detail = PanelContainer.new()
+	detail = GPanel.new()
 	detail.name = "DetailCard"
 	detail.mouse_filter = Control.MOUSE_FILTER_STOP
-	var sb := GDesk.make_box(GDesk.C.panel2, GDesk.C.frame_hi, 1, 2)
-	sb.content_margin_left = 18
-	sb.content_margin_right = 18
-	sb.content_margin_top = 14
-	sb.content_margin_bottom = 14
-	detail.add_theme_stylebox_override("panel", sb)
+	detail.theme_type_variation = &"GCardPanel"
 	add_child(detail)
 	detail.position = Vector2(904, 544)
 	detail.custom_minimum_size = Vector2(480, 272)
@@ -84,19 +91,19 @@ func _build_detail() -> void:
 	vb.add_theme_constant_override("separation", 8)
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	detail.add_child(vb)
-	_d_name = GDesk.make_label("", "body", GDesk.C.bone)
+	_d_name = GDesk.make_label("", "label", GDesk.C.bone, "GSansMed")
 	vb.add_child(_d_name)
 	_d_desc = GDesk.make_label("", "small", GDesk.C.muted)
 	_d_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_d_desc.custom_minimum_size = Vector2(440, 0)
 	vb.add_child(_d_desc)
-	_d_cost = GDesk.make_label("", "small", GDesk.C.bone)
+	_d_cost = GDesk.make_label("", "small", GDesk.C.bone, "GMono")
 	vb.add_child(_d_cost)
 	_d_fit = GDesk.make_label("", "small", GDesk.C.muted)
 	_d_fit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_d_fit.custom_minimum_size = Vector2(440, 0)
 	vb.add_child(_d_fit)
-	_d_reason = GDesk.make_label("", "small", GDesk.C.warn)
+	_d_reason = GDesk.make_label("", "small", GDesk.C.warn, "GSansMed")
 	vb.add_child(_d_reason)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -109,8 +116,9 @@ func _build_detail() -> void:
 	detail_primary.name = "Primary"
 	detail_primary.focus_mode = Control.FOCUS_NONE
 	detail_primary.custom_minimum_size = Vector2(180, 40)
-	detail_primary.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
+	GDesk.set_step(detail_primary, "small")
 	GDesk.style_flat_button(detail_primary, true)
+	GDesk.track_theme_ink(detail_primary)
 	detail_primary.pressed.connect(_on_detail_primary)
 	hb.add_child(detail_primary)
 	detail_back = Button.new()
@@ -119,8 +127,9 @@ func _build_detail() -> void:
 	detail_back.tooltip_text = "Hide this card"
 	detail_back.focus_mode = Control.FOCUS_NONE
 	detail_back.custom_minimum_size = Vector2(110, 40)
-	detail_back.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
+	GDesk.set_step(detail_back, "small")
 	GDesk.style_flat_button(detail_back)
+	GDesk.track_theme_ink(detail_back)
 	detail_back.pressed.connect(hide_detail)
 	hb.add_child(detail_back)
 	detail.visible = false
@@ -143,8 +152,8 @@ func refresh() -> void:
 	_rebuild_if_needed()
 	var gs = _state()
 	var st: Dictionary = host._last_state if host != null and host.get("_last_state") is Dictionary else {}
-	var left := GAttentionCard.hours_left_after_queue(st, _queued())
-	header_right.text = "Hours left: %d plan, %d op" % [int(left.planning), int(left.operating)]
+	# Q1: the total hours left (the game's own aggregate), no per-pool figures.
+	header_right.text = "Hours left: %d" % GAttentionCard.hours_left(st)
 	var in_plan := {}
 	if host != null and host.get("plan_controller") != null:
 		for q in host.plan_controller.queued_actions:
@@ -279,7 +288,8 @@ func _make_row(action: Dictionary, slot: int) -> Button:
 	b.focus_mode = Control.FOCUS_ALL
 	b.custom_minimum_size = Vector2(0, ROW_HEIGHT)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.tooltip_text = String(action.get("description", ""))
+	# No hover tooltip: hovering or focusing the row already shows its description in the
+	# detail card (show_detail below), and a tooltip drew over the next row and the scrollbar.
 	var hb := HBoxContainer.new()
 	hb.name = "H"
 	hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -297,7 +307,7 @@ func _make_row(action: Dictionary, slot: int) -> Button:
 	tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tile.custom_minimum_size = Vector2(40, 40)
 	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tile.add_theme_stylebox_override("panel", GDesk.make_box(GDesk.C.well, GDesk.C.frame, 1, 2))
+	tile.theme_type_variation = &"GTile"
 	hb.add_child(tile)
 	var ic := TextureRect.new()
 	ic.name = "Icon"
@@ -314,24 +324,28 @@ func _make_row(action: Dictionary, slot: int) -> Button:
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.name = "VBox"
 	hb.add_child(vb)
-	var name_l := GDesk.make_label(nm, "body", GDesk.C.bone)
+	var name_l := GDesk.make_label(nm, "body", GDesk.C.bone, "GSansMed")
 	name_l.name = "Name"
 	name_l.clip_text = true
 	vb.add_child(name_l)
 	var line2 := GDesk.make_label("", "small", GDesk.C.muted)
 	line2.name = "Line2"
+	GDesk.compact_step_up(line2)
 	line2.clip_text = true
 	vb.add_child(line2)
-	var chip := GDesk.make_label("", "small", GDesk.C.held)
+	var chip := GDesk.make_label("", "small", GDesk.C.plan, "GMono")
 	chip.name = "Chip"
 	chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(chip)
-	var reason := GDesk.make_label("", "small", GDesk.C.warn)
+	var reason := GDesk.make_label("", "small", GDesk.C.warn, "GSansMed")
 	reason.name = "Reason"
 	reason.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(reason)
-	var tab := GDesk.make_label("", "body", GDesk.C.muted)
+	var tab := GDesk.make_label("", "label", GDesk.C.muted, "GMono")
 	tab.name = "Tab"
+	# A thin glyph (">", "+"): lifted with the small text in the compact view.
+	tab.set_meta("g_lift", true)
+	GDesk.set_ink(tab, GDesk.C.muted)
 	tab.custom_minimum_size = Vector2(16, 0)
 	tab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -355,6 +369,12 @@ func _paint_row(b: Button, action: Dictionary, info: Dictionary) -> void:
 	(hb.get_node("Tab") as Label).text = ">" if info.door else ("" if info.blocked else "+")
 	b.disabled = not bool(info.clickable)
 	GDesk.style_row(b, bool(info.blocked))
+	# A blocked row's name recedes to `muted` (the mock-up's .arow.blk); never faded.
+	GDesk.set_ink(hb.get_node("VBox/Name") as Label,
+		GDesk.C.muted if bool(info.blocked) else GDesk.C.bone)
+	var tile_icon := hb.find_child("Icon", true, false) as TextureRect
+	if tile_icon != null:
+		tile_icon.self_modulate = Color(1, 1, 1, 0.45 if bool(info.blocked) else 1.0)
 
 
 func press_row(id: String) -> void:
@@ -405,13 +425,12 @@ func show_detail(id: String) -> void:
 
 
 func fit_line(action: Dictionary) -> String:
-	"""N <pool> hours left, $M left after the plan so far (hours and money shown minus what
-	the queue lists, as the Attention card and the header show them)."""
+	"""N hours left, $M left after the plan so far (the total hours left, as the Attention
+	card and the header show them, Q1; money minus what the queue lists)."""
 	if host == null:
 		return ""
 	var st: Dictionary = host._last_state if host.get("_last_state") is Dictionary else {}
-	var fam := MonthPlan.family_of(GameActions.hour_type(action))
-	var left := int(GAttentionCard.hours_left_after_queue(st, _queued()).get(fam, 0))
+	var left := GAttentionCard.hours_left(st)
 	var queued_money := 0.0
 	if host.get("plan_controller") != null:
 		queued_money = float(host.plan_controller.calculate_queued_costs().get("money", 0))
@@ -420,13 +439,7 @@ func fit_line(action: Dictionary) -> String:
 	# A play that costs no hours (Purchase Compute) gets no hours part.
 	if GameActions.attention_cost(action) <= 0:
 		return money_part
-	return "%d %s hours left, %s" % [left, fam, money_part]
-
-
-func _queued() -> Array:
-	if host == null or host.get("plan_controller") == null:
-		return []
-	return host.plan_controller.queued_actions
+	return "%d hours left, %s" % [left, money_part]
 
 
 func hide_detail() -> void:
@@ -476,7 +489,7 @@ func _reveal_hint_later(take_focus: bool = false) -> void:
 		return
 	await get_tree().process_frame
 	await get_tree().process_frame
-	reveal_hint()
+	await reveal_hint()
 	if take_focus and visible:
 		var row: Control = _row_nodes.get(hint_id, null)
 		var owner_c := get_viewport().gui_get_focus_owner()
@@ -490,6 +503,32 @@ func reveal_hint() -> void:
 	if row == null or not is_instance_valid(row) or not visible:
 		return
 	_scroll.ensure_control_visible(row)
+	await _snap_to_whole_row()
+
+
+func _snap_to_whole_row() -> void:
+	"""Land the list's scroll on a whole row: the first row whose top is at or below the
+	current scroll (so the row ensure_control_visible brought in stays in view). When that
+	is past the list's end, the tail spacer under the list grows to make room. Display only."""
+	var v := _scroll.scroll_vertical
+	var top := -1
+	for r in _list.get_children():
+		var c := r as Control
+		if c == null or not c.visible:
+			continue
+		var y := int(round(c.position.y))
+		if y >= v:
+			top = y
+			break
+	if top <= v:
+		return
+	var need := top + int(ceil(_scroll.size.y)) - int(ceil(_list.size.y))
+	if need > int(_tail.custom_minimum_size.y):
+		_tail.custom_minimum_size.y = need
+		await get_tree().process_frame
+		await get_tree().process_frame
+	if is_instance_valid(_scroll):
+		_scroll.scroll_vertical = top
 
 
 func _stop_hint() -> void:

@@ -214,6 +214,11 @@ func test_the_scale_is_ordered_and_moves_with_the_one_number():
 	assert_eq(small, base + ThemeManager.FONT_STEPS["small"])
 	assert_eq(header, base + ThemeManager.FONT_STEPS["header"])
 	assert_eq(title, base + ThemeManager.FONT_STEPS["title"])
+	# G's `label` step (fork/design/godot-g/spec.md 4.2) sits between body and header.
+	var label := ThemeManager.get_font_size("label")
+	assert_eq(label, base + ThemeManager.FONT_STEPS["label"])
+	assert_lt(body, label, "label must be larger than body")
+	assert_lt(label, header, "label must be smaller than header")
 
 
 func test_a_theme_swap_does_not_move_a_font_size():

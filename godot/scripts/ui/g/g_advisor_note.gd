@@ -45,7 +45,8 @@ func _init() -> void:
 	var head := HBoxContainer.new()
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(head)
-	var title := GDesk.make_label("ADVISOR", "small", GDesk.C.ink)
+	# Faces only in 2a (spec 4.2: Courier Prime for all paper); the paper itself is 2b.
+	var title := GDesk.make_label("ADVISOR", "small", GDesk.C.ink, "GCapsBold")
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
@@ -64,7 +65,7 @@ func _init() -> void:
 	close_button.add_theme_stylebox_override("pressed", xb)
 	close_button.pressed.connect(func(): dismissed.emit())
 	head.add_child(close_button)
-	_body = GDesk.make_label("", "body", GDesk.C.ink)
+	_body = GDesk.make_label("", "body", GDesk.C.ink, "GType")
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.custom_minimum_size = Vector2(390, 0)
 	vb.add_child(_body)
@@ -73,7 +74,7 @@ func _init() -> void:
 	_rule.custom_minimum_size = Vector2(0, 1)
 	_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(_rule)
-	_where = GDesk.make_label("", "small", GDesk.C.ink)
+	_where = GDesk.make_label("", "small", GDesk.C.ink, "GTypeBold")
 	_where.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_where.custom_minimum_size = Vector2(390, 0)
 	vb.add_child(_where)

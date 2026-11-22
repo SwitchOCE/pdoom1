@@ -235,6 +235,24 @@ func test_an_event_replaces_an_open_sheet() -> void:
 	await _frames()
 
 
+func test_action_rows_have_no_tooltip_the_detail_card_shows_the_description() -> void:
+	var main_ui: Node = await _boot()
+	var desk = main_ui.get_g_desk()
+	desk.open_sheet("g_actions")
+	await _frames()
+	for id in _play_rows(desk):
+		var row: Button = desk.actions_panel.row_for(id)
+		assert_eq(row.tooltip_text, "", "%s: no hover tooltip over the next row" % id)
+	var row6: Button = desk.actions_panel.row_for("buy_compute")
+	assert_not_null(row6, "Purchase Compute has a row")
+	row6.mouse_entered.emit()
+	await _frames()
+	var want := String(GameActions.get_action_by_id("buy_compute").get("description", ""))
+	assert_ne(want, "", "the action has a description")
+	assert_eq(desk.actions_panel.detail_id, "buy_compute", "hover shows the row in the detail card")
+	assert_eq(desk.actions_panel._d_desc.text, want, "the card carries the description")
+
+
 # --- doors (spec 5.7.4) -------------------------------------------------------------------
 
 func test_door_from_the_sheet_returns_to_the_sheet() -> void:
@@ -736,9 +754,16 @@ func test_sheet_plates_show_their_keys_only_in_the_plan() -> void:
 
 # --- scope review fixes: today's readouts kept in G -----------------------------------------
 
-func _shown_left(desk) -> Array:
-	return [int(String(desk.attention_card._plan_left.text).split(" ")[0]),
-		int(String(desk.attention_card._op_left.text).split(" ")[0])]
+func _shown_left(desk) -> int:
+	return int(String(desk.attention_card._left.text).split(" ")[0])
+
+
+func _lit(desk) -> int:
+	var n := 0
+	for c in desk.attention_card._cells.get_children():
+		if is_equal_approx((c as ColorRect).color.a, 1.0):
+			n += 1
+	return n
 
 
 func test_fit_line_leaves_out_hours_for_a_play_that_costs_none() -> void:
@@ -750,35 +775,45 @@ func test_fit_line_leaves_out_hours_for_a_play_that_costs_none() -> void:
 	assert_false(ap.fit_line(compute).contains("hours"), "no hours part: %s" % ap.fit_line(compute))
 	assert_string_contains(ap.fit_line(compute), "left after the plan so far")
 	var read := GameActions.get_action_by_id("scout_read")
-	assert_string_contains(ap.fit_line(read), "planning hours left", "a play with hours keeps it")
+	assert_string_contains(ap.fit_line(read), "hours left", "a play with hours keeps it")
+	assert_false(ap.fit_line(read).contains("planning"), "the total, no per-pool figure (Q1)")
 
 
 func test_hours_left_follow_the_queue_and_agree_with_the_held_plate() -> void:
+	# Q1 (Alex 2026-11-22): one figure, the TOTAL hours left -- the game's own aggregate,
+	# MonthPlan.available() (total - spent - reserved; select_action puts a queued play's
+	# hours into spent). No per-pool "left".
 	var main_ui: Node = await _boot()
 	var desk = main_ui.get_g_desk()
 	desk.open_sheet("g_actions")
 	await _frames()
-	var st: Dictionary = main_ui._last_state
-	var p0 := int(st.get("planning_hours_left", 0))
-	var o0 := int(st.get("operating_hours_left", 0))
-	assert_eq(_shown_left(desk), [p0, o0], "empty queue: the game's own figures")
+	var gs = GameManager.state
+	var h0: int = gs.month_plan.available()
+	assert_eq(_shown_left(desk), h0, "empty queue: the game's own available hours")
+	assert_eq(GAttentionCard.hours_left(main_ui._last_state), int(main_ui._last_state.get("attention", -1)),
+		"the same figure as the state's attention")
+	assert_eq(desk.attention_card.get("_plan_left"), null, "no per-pool N left on the card")
+	assert_eq(desk.attention_card.get("_op_left"), null)
 	main_ui._on_dynamic_action_pressed("scout_read", "Read the Literature")      # 1 planning hr
 	main_ui._on_dynamic_action_pressed("scout_meetups", "Go to Meetups")         # 1 operating hr
 	await _frames()
 	assert_eq(main_ui.plan_controller.queue_size(), 2, "both plays queued")
-	assert_eq(_shown_left(desk), [p0 - 1, o0 - 1], "the card's N left drop with the queue")
-	assert_eq(desk.actions_panel.header_right.text, "Hours left: %d plan, %d op" % [p0 - 1, o0 - 1],
-		"the sheet header agrees")
-	var filled := 0
-	for c in desk.attention_card._plan_cells.get_children():
-		if (c as ColorRect).color == GDesk.C.plan_fill:
-			filled += 1
-	assert_eq(filled, p0 - 1, "the planning cells drop too")
+	assert_eq(gs.month_plan.available(), h0 - 2, "the game counts the queue once")
+	assert_eq(_shown_left(desk), h0 - 2, "the card's total drops with the queue, once")
+	assert_eq(desk.actions_panel.header_right.text, "Hours left: %d" % (h0 - 2),
+		"the sheet header agrees, one figure")
+	var mp: Dictionary = main_ui._last_state.get("month_plan", {})
+	assert_eq(desk.attention_card.get("_plan_cells"), null, "no planning bar")
+	assert_eq(desk.attention_card.get("_op_cells"), null, "no operating bar")
+	assert_eq(desk.attention_card._cells.get_child_count(), int(mp.attention_total),
+		"one bar: a cell per hour of the month's total")
+	assert_eq(_lit(desk), h0 - 2, "lit cells = hours left, the readout's figure")
 	var held := int(String(desk.held_value.text).split(" ")[2])
-	assert_eq(held, (p0 - 1) + (o0 - 1), "hours left add up to the held plate's figure")
+	assert_eq(held, h0 - 2, "the total agrees with the held plate's figure")
 	main_ui._on_clear_queue_button_pressed()
 	await _frames()
-	assert_eq(_shown_left(desk), [p0, o0], "clearing the queue gives them back")
+	assert_eq(_shown_left(desk), h0, "clearing the queue gives them back")
+	assert_eq(_lit(desk), h0, "and the bar follows")
 
 
 func test_watch_shows_the_held_hours_not_the_plan_rows() -> void:
@@ -793,11 +828,11 @@ func test_watch_shows_the_held_hours_not_the_plan_rows() -> void:
 	st["month_plan"]["attention_spent"] = 3
 	st["month_plan"]["attention_reserved"] = 17
 	card.update_plan_face(st, [], {}, false)
-	assert_true(card._plan_row.visible and card._op_row.visible, "PLAN: both hour rows")
+	assert_true(card._left_row.visible, "PLAN: the hours bar and the total hours left")
+	assert_eq(card._left.text, "0 hr", "20 - 3 spent - 17 reserved")
 	assert_eq(card._reserved.text, "Reserved: 17 hr", "PLAN: the plan-time reserve (classic's 'N reserved')")
 	card.update_plan_face(st, [], {}, true)
-	assert_false(card._plan_row.visible, "WATCH: no planning row (1c)")
-	assert_false(card._op_row.visible, "WATCH: no operating row (1c)")
+	assert_false(card._left_row.visible, "WATCH: no hours bar or figure (held hours instead, until 1c)")
 	assert_true(card._reserved.visible, "WATCH: the held hours show")
 	main_ui.screen_mode.update_from_state(st)
 	assert_eq(main_ui.screen_mode._reserve_label.text, "reserve 17", "classic's WATCH strip says 17")
@@ -881,3 +916,31 @@ func test_resource_cells_carry_todays_last_turn_chips() -> void:
 				"%s chip colour is classic's" % key)
 	assert_true(desk.resource_chips["money"].visible, "a money change shows")
 	assert_string_contains(desk.resource_chips["money"].text, "-")
+
+
+func test_hint_scroll_lands_on_a_whole_row() -> void:
+	# The hint reveal never leaves a row cut by the top edge of the Actions list.
+	var main_ui: Node = await _boot()
+	var desk = main_ui.get_g_desk()
+	var ap = desk.actions_panel
+	desk.open_sheet("g_actions")
+	await _frames()
+	await ap.reveal_hint()
+	await _frames()
+	var v: int = ap._scroll.scroll_vertical
+	var tops := [0]
+	for r in ap._list.get_children():
+		tops.append(int(round((r as Control).position.y)))
+	assert_true(tops.has(v), "scroll %d lands on a row top %s" % [v, str(tops)])
+	# Forced: from a scroll in the middle of a row, the snap moves to the next row's top.
+	var rows: Array = ap._list.get_children()
+	assert_gt(rows.size(), 2, "the list has rows")
+	ap._tail.custom_minimum_size.y = 2000   # room to scroll even when the list fits
+	await _frames(3)
+	ap._scroll.scroll_vertical = int((rows[1] as Control).position.y) + 5
+	await _frames()
+	await ap._snap_to_whole_row()
+	await _frames()
+	assert_eq(ap._scroll.scroll_vertical, int(round((rows[2] as Control).position.y)),
+		"a cut row gives way to the next whole row")
+	ap._tail.custom_minimum_size.y = 0

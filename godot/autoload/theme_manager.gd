@@ -52,6 +52,10 @@ const DOOM_STROKE_BRIGHT := Color(0.90, 0.40, 0.85)
 const FONT_STEPS := {
 	"small": -4,
 	"body": 0,
+	# G desk (fork/design/godot-g/spec.md 4.2): the mock-ups' 22 px step, between body and
+	# header, for G's band name, section heads and level-3 values. Additive: no existing
+	# step moves.
+	"label": 3,
 	"header": 8,
 	"title": 16,
 }

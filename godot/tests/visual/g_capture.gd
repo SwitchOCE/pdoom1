@@ -328,11 +328,18 @@ func _slot_button(i: int) -> Button:
 
 # --- the plays, the way a player makes them ---------------------------------------------
 
+func _to_window(p: Vector2) -> Vector2:
+	"""Canvas position -> window position. Input events are in window pixels; the canvas is
+	1920x1080 at any window size (stretch canvas_items), so at 1280x720 a click must be scaled.
+	At 1920x1080 this is the identity."""
+	return get_viewport().get_final_transform() * p
+
+
 func _click(c: Control) -> void:
 	"""A real left click at the centre of the control, through Input (so GUI hit-testing,
 	barriers and z-order decide what it lands on, as for a player)."""
 	await _frames(1)
-	var p := c.get_global_rect().get_center()
+	var p := _to_window(c.get_global_rect().get_center())
 	var mm := InputEventMouseMotion.new()
 	mm.position = p
 	mm.global_position = p
@@ -370,7 +377,7 @@ func _wheel_into_view(c: Control) -> void:
 		w.button_index = MOUSE_BUTTON_WHEEL_DOWN if down else MOUSE_BUTTON_WHEEL_UP
 		w.pressed = true
 		w.factor = 1.0
-		w.position = sc.get_global_rect().get_center()
+		w.position = _to_window(sc.get_global_rect().get_center())
 		w.global_position = w.position
 		Input.parse_input_event(w)
 		var wu := w.duplicate() as InputEventMouseButton
@@ -384,7 +391,7 @@ func _wheel_into_view(c: Control) -> void:
 
 func _hover(c: Control) -> void:
 	var mm := InputEventMouseMotion.new()
-	mm.position = c.get_global_rect().get_center()
+	mm.position = _to_window(c.get_global_rect().get_center())
 	mm.global_position = mm.position
 	Input.parse_input_event(mm)
 	await _frames(3)
@@ -455,6 +462,8 @@ func _close_g_sheets() -> void:
 
 func _shots_plan_phase() -> void:
 	await _frames(20)
+	# For the record: one month-1 shot with the hint pulse left running (caught wherever it is).
+	await _shot("01_month1_pulse", false)
 	await _shot("01_month1")
 	var desk := _desk()
 
@@ -581,9 +590,17 @@ func _shots_queued() -> void:
 	await _frames(5)
 
 
-func _shot(name: String) -> void:
+func _shot(name: String, hold_pulse: bool = true) -> void:
+	# The contrast gate measures the rest state: hold today's hint pulses (the ACTIONS plate
+	# and the hinted Actions row, alpha 1 -> 0.4 -> 1) at full alpha for this frame only.
+	var held := _hold_pulses() if hold_pulse else []
 	await RenderingServer.frame_post_draw
+	if hold_pulse:
+		await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
+	for t in held:
+		if is_instance_valid(t) and (t as Tween).is_valid():
+			(t as Tween).play()
 	var png := out_dir.path_join("%s-%s.png" % [layout, name])
 	var err := img.save_png(png)
 	var vp_size := get_viewport().get_visible_rect().size
@@ -593,6 +610,24 @@ func _shot(name: String) -> void:
 	jf.store_string(JSON.stringify({"size": [img.get_width(), img.get_height()], "boxes": boxes}, " "))
 	jf.close()
 	_say("shot %s (%dx%d, %d boxes, err %d)" % [png, img.get_width(), img.get_height(), boxes.size(), err])
+
+
+func _hold_pulses() -> Array:
+	"""Pause the desk's pulse tweens and put their nodes at full alpha. Presentation only."""
+	var out: Array = []
+	var d := _desk()
+	if d == null:
+		return out
+	var ap = d.get("actions_panel")
+	for pair in [[d.get("_advisor_pulse"), d.get("plate_actions")],
+			[ap.get("_hint_tween") if ap != null else null, ap.get("_hint_row") if ap != null else null]]:
+		var t = pair[0]
+		if t is Tween and (t as Tween).is_valid() and (t as Tween).is_running():
+			(t as Tween).pause()
+			out.append(t)
+			if pair[1] is CanvasItem and is_instance_valid(pair[1]):
+				(pair[1] as CanvasItem).modulate.a = 1.0
+	return out
 
 
 func _text_boxes(scale: Vector2) -> Array:
@@ -616,16 +651,38 @@ func _collect(n: Node, scale: Vector2, out: Array) -> void:
 		text = text.strip_edges()
 		if text != "" and _alpha(c) > 0.05:
 			var r: Rect2 = c.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, c.size)
-			out.append({
-				"x": r.position.x * scale.x, "y": r.position.y * scale.y,
-				"w": r.size.x * scale.x, "h": r.size.y * scale.y,
-				"text": text.substr(0, 80), "node": String(c.get_path()),
-			})
+			# Only what is on screen: a row scrolled out of a ScrollContainer (or any ancestor
+			# that clips its contents) is cut to its visible part, or left out when none shows.
+			var vis := _visible_part(c, r)
+			if vis.size.x >= 1.0 and vis.size.y >= 1.0:
+				var box := {
+					"x": vis.position.x * scale.x, "y": vis.position.y * scale.y,
+					"w": vis.size.x * scale.x, "h": vis.size.y * scale.y,
+					"text": text.substr(0, 80), "node": String(c.get_path()),
+				}
+				if vis != r:
+					box["clipped"] = true
+					box["full_h"] = r.size.y * scale.y
+				out.append(box)
 	if n.has_method("get_text_boxes"):
 		for b in n.call("get_text_boxes"):
 			out.append(b)
 	for ch in n.get_children():
 		_collect(ch, scale, out)
+
+
+func _visible_part(c: Control, r: Rect2) -> Rect2:
+	var vis := r
+	var n: Node = c.get_parent()
+	while n != null:
+		if n is Control and (n as Control).clip_contents:
+			var pc := n as Control
+			var pr: Rect2 = pc.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, pc.size)
+			vis = vis.intersection(pr)
+			if vis.size.x <= 0.0 or vis.size.y <= 0.0:
+				return Rect2()
+		n = n.get_parent()
+	return vis
 
 
 func _alpha(c: CanvasItem) -> float:

@@ -11,12 +11,17 @@ extends Control
 ## Phase 1b: the three sheets (Actions with its detail card and door return, the Plan drawer,
 ## Upgrades), presented through ModalStack (spec 2.4); G's keys through GKeys (spec 8); a plain
 ## WATCH feed (spec 5.10, finished in 1c).
+## Phase 2a, the look (spec 4): the desk's root carries theme/g_theme.tres (g_desk.tscn), so
+## every G control takes its faces, styleboxes and colour tokens from it through a theme type
+## variation (GPanel, GPlate, GKeycap, GCaps, GMono, ...). The theme sets no font size: every
+## size is set here in code through ThemeManager.get_font_size(), by rank (spec 4.4).
 ##
 ## VIEW-ONLY: reads the state dicts main_ui already receives, writes no game state, draws no
 ## random number (spec 7.4), creates no timers (spec 6.1).
 
-# --- Colour tokens (spec 4.1, H's palette). g_theme.tres arrives in 2a; until then code
-# that draws reads them from here. ---
+# --- Colour tokens (spec 4.1, H's palette). The same tokens are the `GColors` colours in
+# theme/g_theme.tres (tests/unit/test_g_theme.gd keeps the two equal); code that draws or
+# sets a per-node colour reads them from here. ---
 const C := {
 	"void": Color("#090807"),
 	"panel": Color(16.0 / 255.0, 14.0 / 255.0, 12.0 / 255.0, 0.95),
@@ -47,6 +52,7 @@ const C := {
 	"dateline": Color("#d9d1bf"),
 }
 
+const THEME_PATH := "res://theme/g_theme.tres"
 const ICON_ROOT := "res://assets/icons/"
 const RESOURCE_KEYS := ["money", "compute", "research", "papers", "reputation"]
 const RESOURCE_CAPS := {
@@ -136,6 +142,7 @@ func setup(main_ui: Node) -> void:
 	with a modal up draws the right face at once."""
 	host = main_ui
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_update_compact(true)
 	_build()
 	_connect()
 	visible = host.visible
@@ -158,6 +165,8 @@ func detach() -> void:
 	_stop_advisor_pulse()
 	if KeybindManager.keybind_changed.is_connected(_on_binds_changed):
 		KeybindManager.keybind_changed.disconnect(_on_binds_changed)
+	if is_inside_tree() and get_viewport().size_changed.is_connected(_on_view_resized):
+		get_viewport().size_changed.disconnect(_on_view_resized)
 	if KeybindManager.profile_loaded.is_connected(_on_profile_loaded):
 		KeybindManager.profile_loaded.disconnect(_on_profile_loaded)
 	var gm = _gm()
@@ -203,6 +212,8 @@ func _connect() -> void:
 	host.visibility_changed.connect(_on_host_visibility_changed)
 	KeybindManager.keybind_changed.connect(_on_binds_changed)
 	KeybindManager.profile_loaded.connect(_on_profile_loaded)
+	if is_inside_tree() and not get_viewport().size_changed.is_connected(_on_view_resized):
+		get_viewport().size_changed.connect(_on_view_resized)
 
 
 # --- build -------------------------------------------------------------------------------
@@ -283,7 +294,7 @@ func _build_sheets() -> void:
 
 
 func _build_top_strip() -> void:
-	top_strip = make_panel(C.panel)
+	top_strip = make_panel("GStripTop")
 	top_strip.name = "TopStrip"
 	add_child(top_strip)
 	# L, T, R (spec 3.2): anchors AND offsets, so the strip spans the full width.
@@ -291,11 +302,12 @@ func _build_top_strip() -> void:
 	top_strip.offset_top = 0
 	top_strip.offset_bottom = 56
 	var hb := _margin_hbox(top_strip, 24, 24, 24)
-	dateline = make_label("", "header", C.dateline)
+	# The dateline slot keeps today's turn label text until phase 4 (GDateline); it already
+	# takes the dateline's face, Courier Prime Bold, tracked (spec 5.1.1). 420 wide at least.
+	dateline = make_label("", "header", C.dateline, "GDateline")
 	dateline.name = "Dateline"
 	dateline.custom_minimum_size = Vector2(420, 0)
 	dateline.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	dateline.clip_text = true
 	hb.add_child(dateline)
 	var cells := HBoxContainer.new()
 	cells.name = "ResourceStrip"
@@ -303,20 +315,29 @@ func _build_top_strip() -> void:
 	cells.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(cells)
 	for key in RESOURCE_KEYS:
+		# A 1 px frame rule before each cell (the mock-up's cell separators).
+		var rule := ColorRect.new()
+		rule.color = C.frame
+		rule.custom_minimum_size = Vector2(1, 32)
+		rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cells.add_child(rule)
 		var cell := HBoxContainer.new()
 		cell.name = "Cell_%s" % key
 		cell.add_theme_constant_override("separation", 8)
 		cell.mouse_filter = Control.MOUSE_FILTER_PASS
-		var cap := make_label(RESOURCE_CAPS[key], "small", C.dim)
+		# Hierarchy (spec 4.4): money's value at `header` (rank 2), the rest at `label` (rank 3);
+		# caps labels `small` in `dim`; every number in mono.
+		var cap := make_label(RESOURCE_CAPS[key], "small", C.dim, "GCaps")
 		cap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		cap.mouse_filter = Control.MOUSE_FILTER_PASS
 		cell.add_child(cap)
-		var val := make_label("--", "header" if key == "money" else "body", C.bone)
+		var val := make_label("--", "header" if key == "money" else "label", C.bone, "GMono")
 		val.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		val.mouse_filter = Control.MOUSE_FILTER_PASS
 		cell.add_child(val)
 		if DELTA_CHIP_KEYS.has(key):
-			var chip := make_label("", "small", C.bone)
+			var chip := make_label("", "small", C.bone, "GMono")
 			chip.name = "Delta"
 			chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			chip.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -339,21 +360,21 @@ func _build_top_strip() -> void:
 
 
 func _build_banner() -> void:
-	banner = make_panel(C.panel)
+	banner = make_panel("GBanner")
 	banner.name = "Banner"
 	add_child(banner)
 	banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	banner.offset_top = 56
 	banner.offset_bottom = 108
 	var hb := _margin_hbox(banner, 24, 24, 12)
-	mode_label = make_label("## PLAN", "body", C.amber)
+	mode_label = make_label("## PLAN", "label", C.amber, "GCaps")
 	mode_label.name = "ModeLabel"
 	mode_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(mode_label)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(spacer)
-	var view := make_label("VIEW", "small", C.muted)
+	var view := make_label("VIEW", "small", C.muted, "GCaps")
 	view.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(view)
 	var seg := HBoxContainer.new()
@@ -420,7 +441,7 @@ func _build_rail() -> void:
 
 
 func _build_bottom_strip() -> void:
-	bottom_strip = make_panel(C.panel)
+	bottom_strip = make_panel("GStripBottom")
 	bottom_strip.name = "BottomStrip"
 	add_child(bottom_strip)
 	# L, B, R (spec 3.2): Feedback left, the held and Commit plates right (1276 and 1600).
@@ -439,16 +460,16 @@ func _build_bottom_strip() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(spacer)
 
-	held_plate = make_panel(C.panel2, C.frame)
+	held_plate = make_panel("GHeld")
 	held_plate.name = "HeldPlate"
 	held_plate.custom_minimum_size = Vector2(308, 48)
 	held_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var hhb := _margin_hbox(held_plate, 14, 14, 10)
-	var hl := make_label("HELD FOR EVENTS", "small", C.muted)
+	var hl := make_label("HELD FOR EVENTS", "small", C.muted, "GCaps")
 	hl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hhb.add_child(hl)
-	held_value = make_label("up to -- hr", "body", C.bone)
+	held_value = make_label("up to -- hr", "label", C.bone, "GMono")
 	held_value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hhb.add_child(held_value)
 	held_plate.tooltip_text = "Hours not spent on plays are held for events this month. Plays that charge their own hours (hiring) take more at Commit, so the hold can end up smaller."
@@ -460,6 +481,7 @@ func _build_bottom_strip() -> void:
 	commit_plate.custom_minimum_size = Vector2(296, 48)
 	commit_plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	commit_plate.pressed.connect(press_commit_plate)
+	hook_dashed_edge(commit_plate)
 	var chb := HBoxContainer.new()
 	chb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -467,7 +489,7 @@ func _build_bottom_strip() -> void:
 	chb.offset_right = -10
 	chb.add_theme_constant_override("separation", 10)
 	commit_plate.add_child(chb)
-	commit_caption = make_label("COMMIT THE MONTH", "body", C.amber)
+	commit_caption = make_label("COMMIT THE MONTH", "label", C.amber, "GCapsBold")
 	commit_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	commit_caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	commit_caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -522,7 +544,7 @@ func _on_state(state: Dictionary) -> void:
 		lbl.text = GameConfig.format_money(raw) if key == "money" else GameConfig.format_scalar(raw)
 		# Warn colour reads the SHOWN amount (spec 5.1.2): "-0" never turns red.
 		var shown := _shown_amount(float(raw))
-		lbl.add_theme_color_override("font_color", C.warn if shown < 0.0 else C.bone)
+		set_ink(lbl, C.warn if shown < 0.0 else C.bone)
 	plate_staff.set_status(str(int(state.get("total_staff", 0))))
 	_refresh_ledger_plate()
 	_refresh_delta_chips()
@@ -548,7 +570,7 @@ func _refresh_delta_chips() -> void:
 			continue
 		chip.text = String(from.text)
 		chip.tooltip_text = String(from.tooltip_text)
-		chip.add_theme_color_override("font_color", (from as Label).get_theme_color("font_color"))
+		set_ink(chip, (from as Label).get_theme_color("font_color"))
 		chip.visible = true
 
 
@@ -696,24 +718,23 @@ func _refresh_commit() -> void:
 			path = "commit_plan"
 	commit_path = path
 	commit_plate.disabled = path == ""
+	# Commit stays muted until something is queued (spec 4.4 rank 4): amber only when the
+	# queue holds a play; inert is hatched with a dashed edge and keeps `dim` text (spec 4.3).
 	match path:
 		"end_turn":
 			commit_caption.text = "COMMIT THE MONTH"
-			commit_caption.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
-			commit_caption.add_theme_color_override("font_color", C.amber)
+			_set_commit_caption("label", C.amber, "GCapsBold")
 			commit_keycap_label.text = _key_name("end_turn", "Space")
-			_style_commit(true)
+			_style_commit("GCommitReady")
 		"commit_plan":
 			commit_caption.text = "HOLD ALL HOURS FOR EVENTS"
-			commit_caption.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
-			commit_caption.add_theme_color_override("font_color", C.muted)
+			_set_commit_caption("small", C.muted, "GCaps")
 			commit_keycap_label.text = _key_name("commit_plan", "Enter")
-			_style_commit(false)
+			_style_commit("GCommitHold")
 		_:
 			commit_caption.text = "MONTH IN PLAY" if not _in_plan_phase() else "COMMIT THE MONTH"
-			commit_caption.add_theme_font_size_override("font_size", ThemeManager.get_font_size("body"))
-			commit_caption.add_theme_color_override("font_color", C.dim)
-			_style_commit(false)
+			_set_commit_caption("label", C.dim, "GCaps")
+			_style_commit("GCommitHold")
 	commit_keycap.visible = path != "" and not _modal_open()
 
 
@@ -1208,13 +1229,22 @@ func get_text_boxes() -> Array:
 	return []
 
 
-# --- static builders (plain look; 2a replaces them with g_theme.tres) --------------------
+# --- static builders: the look comes from theme/g_theme.tres (spec 4) ----------------------
+# Each builder names a theme type variation; the desk's root carries the theme, so a control
+# built here takes its face, stylebox and colours from it once it is in the desk's tree. Only
+# sizes (always ThemeManager.get_font_size, spec 4.2) and per-state text colours are set here.
 
-static func make_label(text: String, size_name: String, color: Color) -> Label:
+static func make_label(text: String, size_name: String, color: Color, face: String = "") -> Label:
+	"""A label at a ThemeManager size step, in `color`. `face` is a Label variation of the theme:
+	GCaps (Barlow Condensed SemiBold, tracked caps), GCapsBold, GCapsMed, GMono (IBM Plex Mono
+	Medium, every number), GMonoReg, GMonoSemi, GSansMed, GType / GTypeBold (Courier Prime),
+	GDateline; "" = the theme's default face, IBM Plex Sans."""
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", ThemeManager.get_font_size(size_name))
-	l.add_theme_color_override("font_color", color)
+	if face != "":
+		l.theme_type_variation = StringName(face)
+	set_step(l, size_name)
+	set_ink(l, color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
@@ -1230,31 +1260,39 @@ static func make_box(bg: Color, border: Color = Color(0, 0, 0, 0), width: int = 
 	return sb
 
 
-static func make_panel(bg: Color, border: Color = Color(196.0 / 255.0, 176.0 / 255.0, 138.0 / 255.0, 0.16)) -> PanelContainer:
+static func make_panel(variation: String = "GPanel") -> PanelContainer:
+	"""A PanelContainer whose stylebox is the theme's `variation` (GStripTop, GBanner,
+	GStripBottom, GHeld, GRaised, GTile, ...). For a grimed card with ticks use GPanel.new()."""
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", make_box(bg, border, 1, 0))
+	p.theme_type_variation = StringName(variation)
 	return p
 
 
-static func make_keycap(text: String) -> PanelContainer:
+static func make_keycap(text: String, amber: bool = false) -> PanelContainer:
+	"""A keycap (spec 4.3): the theme's GKeycap (or GKeycapAmber) hairline box, mono `small`."""
 	var kc := PanelContainer.new()
 	kc.name = "Keycap"
 	kc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := make_box(Color(0, 0, 0, 0), C.frame_hi, 1, 2)
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
-	sb.content_margin_top = 1
-	sb.content_margin_bottom = 1
-	kc.add_theme_stylebox_override("panel", sb)
-	var l := make_label(text, "small", C.muted)
+	kc.theme_type_variation = &"GKeycapAmber" if amber else &"GKeycap"
+	var l := make_label(text, "small", C.amber if amber else C.muted, "GMono")
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	kc.add_child(l)
 	kc.set_meta("label", l)
 	return kc
 
 
+static func set_keycap_amber(kc: Control, amber: bool) -> void:
+	if kc == null:
+		return
+	kc.theme_type_variation = &"GKeycapAmber" if amber else &"GKeycap"
+	var l = kc.get_meta("label", null)
+	if l is Label:
+		set_ink(l as Label, C.amber if amber else C.muted)
+
+
 static func make_plate_button(title: String, icon_path: String, key_text: String) -> Button:
-	"""A flat text button with an icon and a keycap (Menu, Feedback)."""
+	"""A flat text button with an icon and a keycap (Menu, Feedback): rank 4, caps `small` in
+	`muted` (spec 4.4)."""
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
 	b.flat = true
@@ -1272,8 +1310,9 @@ static func make_plate_button(title: String, icon_path: String, key_text: String
 		ic.custom_minimum_size = Vector2(24, 24)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		ic.self_modulate = Color(1, 1, 1, 0.82)
 		hb.add_child(ic)
-	var l := make_label(title, "small", C.muted)
+	var l := make_label(title, "small", C.muted, "GCaps")
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hb.add_child(l)
 	var kc := make_keycap(key_text)
@@ -1288,47 +1327,54 @@ static func make_plate_button(title: String, icon_path: String, key_text: String
 
 
 static func style_flat_button(b: Button, primary: bool = false) -> void:
-	"""Plain look for a G text button (2a replaces it with the theme)."""
-	var border: Color = C.amber_line if primary else C.frame_hi
-	var normal := make_box(C.panel2, border, 1, 2)
-	var hover := make_box(C.panel2, C.amber if primary else C.bone, 1, 2)
-	var dis := make_box(C.well, C.frame, 1, 2)
-	var focus := make_box(Color(0, 0, 0, 0), C.amber, 1, 2)
-	focus.draw_center = false
-	b.add_theme_stylebox_override("normal", normal)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("pressed", hover)
-	b.add_theme_stylebox_override("disabled", dis)
-	b.add_theme_stylebox_override("focus", focus)
-	b.add_theme_color_override("font_color", C.amber if primary else C.bone)
-	b.add_theme_color_override("font_hover_color", C.bone)
-	b.add_theme_color_override("font_pressed_color", C.bone)
-	b.add_theme_color_override("font_focus_color", C.bone)
-	b.add_theme_color_override("font_disabled_color", C.dim)
+	"""A G text button: the theme's GButton (bone on a dark plate, frame-hi hairline) or, for
+	the one primary action on a card, GButtonAmber. Disabled = hatch and a dashed edge, the
+	text keeps `dim` (spec 4.3)."""
+	b.theme_type_variation = &"GButtonAmber" if primary else &"GButton"
+	hook_dashed_edge(b)
 
 
 static func style_row(b: Button, blocked: bool) -> void:
-	"""A sheet row (spec 5.7.1): rest, hover/focus (amber hairline), blocked (well ground, warn
-	reason; the label keeps its colour, never faded, spec 4.3). Plain look until 2a."""
-	var rest := make_box(C.panel2 if not blocked else C.well, C.frame, 1, 2)
-	var hover := make_box(C.panel2, C.amber_line, 1, 2)
-	var focus := make_box(Color(0, 0, 0, 0), C.amber, 1, 2)
-	focus.draw_center = false
-	b.add_theme_stylebox_override("normal", rest)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("pressed", hover)
-	b.add_theme_stylebox_override("disabled", make_box(C.well, C.frame, 1, 2))
-	b.add_theme_stylebox_override("focus", focus)
+	"""A sheet row (spec 5.7.1): GRow at rest (bare), hover/focus with the amber hairline;
+	GRowBlocked for a blocked row, hatched with a dashed edge (spec 4.3). The row's text keeps
+	its colour, never faded."""
+	b.theme_type_variation = &"GRowBlocked" if blocked else &"GRow"
+	b.set_meta("g_dashed", blocked)
+	hook_dashed_edge(b)
+	b.queue_redraw()
 
 
 static func style_upgrade_row(b: Button) -> void:
-	"""The G upgrades row (A4) in the plain look: bought and unaffordable rows use the disabled
-	box (no modulate), the text keeps `dim`, never faded."""
-	style_row(b, false)
-	b.add_theme_color_override("font_color", C.bone)
-	b.add_theme_color_override("font_hover_color", C.bone)
-	b.add_theme_color_override("font_focus_color", C.bone)
-	b.add_theme_color_override("font_disabled_color", C.dim)
+	"""The G upgrades row (A4): the theme's GUpgradeRow (raised panel-2 row; bought and
+	unaffordable rows are the hatch with a dashed edge, no modulate), the text keeps `dim`."""
+	b.theme_type_variation = &"GUpgradeRow"
+	hook_dashed_edge(b)
+	set_step(b, "body")
+	track_theme_ink(b)
+
+
+static func hook_dashed_edge(b: Control) -> void:
+	"""StyleBoxes draw solid borders only, so a disabled control's dashed edge (spec 3.3, 4.3)
+	is drawn on its own draw signal, over the hatch: while it is a disabled BaseButton, or while
+	its meta "g_dashed" is true (blocked rows that stay clickable). Hooked once per control."""
+	if b == null or b.has_meta("g_dash_hooked"):
+		return
+	b.set_meta("g_dash_hooked", true)
+	var draw_it := func() -> void:
+		var dashed: bool = bool(b.get_meta("g_dashed", false)) \
+			or (b is BaseButton and (b as BaseButton).disabled)
+		if dashed:
+			draw_dashed_rect(b, Rect2(Vector2.ZERO, b.size), C.frame_hi)
+	b.draw.connect(draw_it)
+
+
+static func draw_dashed_rect(ci: CanvasItem, r: Rect2, colour: Color, dash: float = 4.0) -> void:
+	var a := r.position + Vector2(0.5, 0.5)
+	var e := r.end - Vector2(0.5, 0.5)
+	ci.draw_dashed_line(a, Vector2(e.x, a.y), colour, 1.0, dash)
+	ci.draw_dashed_line(Vector2(e.x, a.y), e, colour, 1.0, dash)
+	ci.draw_dashed_line(e, Vector2(a.x, e.y), colour, 1.0, dash)
+	ci.draw_dashed_line(Vector2(a.x, e.y), a, colour, 1.0, dash)
 
 
 static func key_name(action: String, fallback: String) -> String:
@@ -1347,10 +1393,11 @@ static func _rel_lum(c: Color) -> float:
 	return 0.2126 * f.call(c.r) + 0.7152 * f.call(c.g) + 0.0722 * f.call(c.b)
 
 
-static func lift_to(c: Color, bg: Color, target: float) -> Color:
-	"""Lift a text colour toward a pale tint of itself until it reaches `target`:1 on `bg`
-	(spec 4.1: doom text). The game's own colour is kept for strokes."""
-	var pale := c.lerp(Color(0.96, 0.94, 0.92), 0.85)
+static func lift_to(c: Color, bg: Color, target: float, toward: Color = Color(0, 0, 0, 0)) -> Color:
+	"""Lift a text colour toward a pale tint of itself (or toward `toward`, when given) until
+	it reaches `target`:1 on `bg` (spec 4.1: doom text). The game's own colour is kept for
+	strokes."""
+	var pale := c.lerp(Color(0.96, 0.94, 0.92), 0.85) if toward.a <= 0.0 else Color(toward, 1.0)
 	for i in range(0, 21):
 		var t := float(i) / 20.0
 		var cc := c.lerp(pale, t)
@@ -1358,6 +1405,148 @@ static func lift_to(c: Color, bg: Color, target: float) -> Color:
 		if contrast_ratio(cc, bg) >= target:
 			return cc
 	return pale
+
+
+# --- compact view (2a addendum) ---------------------------------------------------------
+# Below COMPACT_SCALE of the 1920x1080 canvas (1280x720 is 0.667) the canvas_items stretch
+# draws `small` text a third smaller, and its strokes no longer reach their colour on screen.
+# There G lifts its own small text toward `bone` (lift_to) and, for the classes that still
+# fall short, takes the next size step (ThemeManager.get_font_size, never a literal). Every
+# label made by make_label, and every control passed to set_step / set_ink /
+# track_theme_ink, remembers its size step and colour in metadata; the live desk re-applies
+# them when the viewport's size changes. At 1920x1080 nothing changes. Display only.
+
+const COMPACT_SCALE := 0.8
+## Lift target on the panel, toward bone (bone on the panel is ~12.4:1).
+const COMPACT_TARGET := 11.0
+## Size steps whose text is lifted in the compact view.
+const COMPACT_LIFT_SIZES := ["small"]
+const COMPACT_NEXT_STEP := {"small": "body"}
+
+## True while the live desk's canvas renders below COMPACT_SCALE.
+static var compact := false
+
+
+static func is_compact_scale(scale: float) -> bool:
+	return scale > 0.0 and scale < COMPACT_SCALE
+
+
+static func compact_ink(c: Color) -> Color:
+	"""The compact view's colour for lifted text: toward bone until COMPACT_TARGET on the
+	panel (never darker than the colour itself). Dark ink (text on paper) is left alone."""
+	if _rel_lum(c) < 0.1 or contrast_ratio(c, C.panel_solid) >= COMPACT_TARGET:
+		return c
+	var out := lift_to(c, C.panel_solid, COMPACT_TARGET, C.bone)
+	out.a = c.a
+	return out
+
+
+static func _lifts(c: Control) -> bool:
+	if c.has_meta("g_lift"):
+		return bool(c.get_meta("g_lift"))
+	return COMPACT_LIFT_SIZES.has(String(c.get_meta("g_size", "")))
+
+
+static func set_step(c: Control, size_name: String) -> void:
+	"""Set a control's font size step (remembered for the compact view)."""
+	c.set_meta("g_size", size_name)
+	_apply_step(c)
+
+
+static func compact_step_up(c: Control) -> void:
+	"""Mark a text class that a colour lift alone cannot carry at 720p: in the compact view it
+	takes the next size step (COMPACT_NEXT_STEP)."""
+	c.set_meta("g_up", true)
+	_apply_step(c)
+
+
+static func _apply_step(c: Control) -> void:
+	var s := String(c.get_meta("g_size", ""))
+	if s == "":
+		return
+	if compact and COMPACT_NEXT_STEP.has(s) and bool(c.get_meta("g_up", false)):
+		s = COMPACT_NEXT_STEP[s]
+	c.add_theme_font_size_override(StringName(c.get_meta("g_size_prop", "font_size")),
+		ThemeManager.get_font_size(s))
+
+
+static func set_ink(c: Control, colour: Color, prop: String = "font_color") -> void:
+	"""Set a text colour override (remembered, and lifted in the compact view when the
+	control's size step is lifted)."""
+	var inks: Dictionary = c.get_meta("g_ink", {})
+	inks[prop] = colour
+	c.set_meta("g_ink", inks)
+	c.add_theme_color_override(StringName(prop), compact_ink(colour) if compact and _lifts(c) else colour)
+
+
+static func ink_of(c: Control, prop: String = "font_color") -> Color:
+	"""The colour set_ink was given (before any compact lift)."""
+	var inks: Dictionary = c.get_meta("g_ink", {})
+	return inks.get(prop, c.get_theme_color(StringName(prop)))
+
+
+static func track_theme_ink(c: Control, lift: bool = true) -> void:
+	"""For a control whose text colours come from its theme variation (G buttons): in the
+	compact view, override them with their lifted colours; re-applied whenever it enters the
+	tree, so rows rebuilt later follow too."""
+	c.set_meta("g_theme_ink", true)
+	c.set_meta("g_lift", lift)
+	if not c.has_meta("g_theme_ink_hooked"):
+		c.set_meta("g_theme_ink_hooked", true)
+		c.tree_entered.connect(_apply_theme_ink.bind(c))
+	_apply_theme_ink(c)
+
+
+const THEME_INK_PROPS := ["font_color", "font_disabled_color", "font_focus_color"]
+
+
+static func _apply_theme_ink(c: Control) -> void:
+	if not is_instance_valid(c) or not c.is_inside_tree():
+		return
+	for prop in THEME_INK_PROPS:
+		c.remove_theme_color_override(StringName(prop))
+	if not (compact and _lifts(c)):
+		return
+	for prop in THEME_INK_PROPS:
+		c.add_theme_color_override(StringName(prop), compact_ink(c.get_theme_color(StringName(prop))))
+
+
+static func apply_compact(root: Node) -> void:
+	"""Re-apply every remembered size and colour under `root` for the current view."""
+	if root is Control:
+		var c := root as Control
+		if c.has_meta("g_size"):
+			_apply_step(c)
+		if c.has_meta("g_ink"):
+			var inks: Dictionary = c.get_meta("g_ink")
+			for prop in inks:
+				c.add_theme_color_override(StringName(prop),
+					compact_ink(inks[prop]) if compact and _lifts(c) else inks[prop])
+		if c.has_meta("g_theme_ink"):
+			_apply_theme_ink(c)
+	for ch in root.get_children():
+		apply_compact(ch)
+
+
+func view_scale() -> float:
+	"""The canvas's scale on screen (1.0 at 1920x1080, 0.667 at 1280x720). A headless run
+	draws nothing, so it counts as full size."""
+	if not is_inside_tree() or DisplayServer.get_name() == "headless":
+		return 1.0
+	return get_viewport().get_final_transform().get_scale().x
+
+
+func _on_view_resized() -> void:
+	_update_compact(false)
+
+
+func _update_compact(force: bool, scale: float = -1.0) -> void:
+	"""Follow the view's scale: on a change into or out of the compact view, re-apply."""
+	var on := is_compact_scale(view_scale() if scale < 0.0 else scale)
+	if on == compact and not force:
+		return
+	compact = on
+	apply_compact(self)
 
 
 # --- small helpers ---------------------------------------------------------------------
@@ -1380,38 +1569,33 @@ func _make_segment(text: String) -> Button:
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(84, 32)
-	b.add_theme_font_size_override("font_size", ThemeManager.get_font_size("small"))
+	set_step(b, "small")
+	track_theme_ink(b)
+	hook_dashed_edge(b)
 	return b
 
 
 func _style_segment(b: Button, current: bool) -> void:
-	var sb := make_box(C.panel2 if current else C.well, C.frame_hi, 1, 0)
-	if current:
-		sb.border_width_bottom = 2
-		sb.border_color = C.frame_hi
-	var under := sb.duplicate() as StyleBoxFlat
-	if current:
-		under.border_color = C.amber
-		under.border_width_left = 0
-		under.border_width_right = 0
-		under.border_width_top = 0
-		under.border_width_bottom = 2
-	for s in ["normal", "hover", "pressed", "disabled"]:
-		b.add_theme_stylebox_override(s, under if current else sb)
-	b.add_theme_color_override("font_color", C.bone if current else C.muted)
-	b.add_theme_color_override("font_hover_color", C.bone)
-	b.add_theme_color_override("font_disabled_color", C.dim)
+	"""The current view has the amber underline (GSegmentOn); inert while an event waits
+	(disabled: hatch and a dashed edge, spec 5.2)."""
+	b.theme_type_variation = &"GSegmentOn" if current else &"GSegment"
+	_apply_theme_ink(b)
+	b.queue_redraw()
 
 
-func _style_commit(ready: bool) -> void:
-	var border: Color = C.amber_line if ready else C.frame_hi
-	var normal := make_box(C.panel2 if ready else C.well, border, 1, 2)
-	var hover := make_box(C.panel2, C.amber if ready else C.frame_hi, 1, 2)
-	var disabled := make_box(C.well, C.frame, 1, 2)
-	commit_plate.add_theme_stylebox_override("normal", normal)
-	commit_plate.add_theme_stylebox_override("hover", hover)
-	commit_plate.add_theme_stylebox_override("pressed", hover)
-	commit_plate.add_theme_stylebox_override("disabled", disabled)
+func _style_commit(variation: String) -> void:
+	"""The plate's styleboxes come from the theme (GCommitReady / GCommitHold; disabled is the
+	hatch in both). The keycap turns amber with the ready plate."""
+	commit_plate.theme_type_variation = StringName(variation)
+	commit_keycap.theme_type_variation = &"GKeycapAmber" if variation == "GCommitReady" else &"GKeycap"
+	set_ink(commit_keycap_label, C.amber if variation == "GCommitReady" else C.muted)
+	commit_plate.queue_redraw()
+
+
+func _set_commit_caption(size_name: String, colour: Color, face: String) -> void:
+	commit_caption.theme_type_variation = StringName(face)
+	set_step(commit_caption, size_name)
+	set_ink(commit_caption, colour)
 
 
 static func _key_name(action: String, fallback: String) -> String:

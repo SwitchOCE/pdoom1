@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/g/g_desk.gd" id="1_gdesk"]
+[ext_resource type="Theme" path="res://theme/g_theme.tres" id="2_gtheme"]
 
 [node name="GDesk" type="Control"]
 layout_mode = 3
@@ -10,4 +11,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme = ExtResource("2_gtheme")
 script = ExtResource("1_gdesk")

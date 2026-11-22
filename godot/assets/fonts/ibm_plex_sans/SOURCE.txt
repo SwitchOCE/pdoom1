@@ -1,0 +1,9 @@
+IBM Plex Sans -- SIL Open Font License 1.1 (OFL.txt beside this file).
+Bundled for the G desk (fork/design/godot-g/spec.md 4.2). Static TTFs, unmodified,
+fetched from the pinned upstream commit below. Imported with Godot 4.5.1's defaults.
+OFL.txt is the upstream licence file from the same commit (https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/LICENSE.txt),
+with line endings normalised to LF.
+
+file	sha256	url
+IBMPlexSans-Regular.ttf	b47ebd72b5ce53b60f909033ff84d6fc12358cc147e2981f8c321ad3f36246b6	https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf
+IBMPlexSans-Medium.ttf	a494d5a69fa094f7071a9ffbc98e86c85337d1a29f3fc1ff7c2e1c46161ddf27	https://raw.githubusercontent.com/IBM/plex/2e90fe366fdc27c12682db13e5aa20ded3d90908/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Medium.ttf

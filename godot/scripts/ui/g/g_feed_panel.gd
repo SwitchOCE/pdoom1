@@ -1,5 +1,5 @@
 class_name GFeedPanel
-extends PanelContainer
+extends GPanel
 ## The WATCH feed (fork/design/godot-g/spec.md 5.10), plain first cut so the month is not
 ## silent in G: bottom-left, 24 / bottom 1004, 560x288, shown in WATCH only. Phase 1c finishes
 ## it (styling, day column, folding, the filter toggles, the full-log overlay).
@@ -19,7 +19,6 @@ var _rendered_count := -1
 func _init() -> void:
 	name = "FeedPanel"
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	add_theme_stylebox_override("panel", GDesk.make_box(GDesk.C.panel, GDesk.C.frame_hi, 1, 0))
 	var m := MarginContainer.new()
 	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.add_theme_constant_override("margin_left", 16)
@@ -31,7 +30,7 @@ func _init() -> void:
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_theme_constant_override("separation", 8)
 	m.add_child(vb)
-	_title = GDesk.make_label("FEED", "small", GDesk.C.muted)
+	_title = GDesk.make_label("FEED", "small", GDesk.C.muted, "GCaps")
 	vb.add_child(_title)
 	_text = RichTextLabel.new()
 	_text.name = "Lines"

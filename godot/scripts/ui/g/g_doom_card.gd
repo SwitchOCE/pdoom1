@@ -1,10 +1,16 @@
 class_name GDoomCard
-extends PanelContainer
-## P(Doom) card (spec 5.4), plain look. A 270-degree ring in the game's doom stroke colour,
+extends GPanel
+## P(Doom) card (spec 5.4). A 270-degree ring in the game's doom stroke colour,
 ## the percentage exactly as today's readout prints it ("%.1f%%"), the band name, a RISING
 ## tag from the doom system's own trend word, a seven-chip band ladder and "band N of 7".
 ## No delta chip and no momentum number (spec 10.9, ADR-0015 reading). Click: today's
 ## expanded trend dialog. Doom colours and bands come from ThemeManager only.
+##
+## The look (phase 2a, spec 4.4 rank 1): the only panel framed in its own colour -- the band's
+## stroke at 55% for the hairline, a 3 px top edge in the full colour, an outer glow of the
+## stroke at 30% (StyleBoxFlat shadow, size 8; drawn with draw_center off, so it is a ring
+## outside the card). The percentage at `title` and the band name at `label`, mono, in the
+## stroke colour lifted to 5:1 on the card (spec 4.1).
 
 signal pressed
 
@@ -29,6 +35,11 @@ var _ladder: Control
 var lose_label: Label
 
 
+const TOP_EDGE := 3.0
+
+var _stroke: Color = Color(0, 0, 0, 0)
+
+
 func _init() -> void:
 	name = "DoomCard"
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -38,7 +49,6 @@ func _init() -> void:
 
 
 func _build() -> void:
-	add_theme_stylebox_override("panel", GDesk.make_box(GDesk.C.panel, GDesk.C.frame_hi, 1, 0))
 	var m := MarginContainer.new()
 	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["left", "right"]:
@@ -63,12 +73,12 @@ func _build() -> void:
 		ic.custom_minimum_size = Vector2(24, 24)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		head.add_child(ic)
-	var title := GDesk.make_label("P(DOOM)", "small", GDesk.C.muted)
+	var title := GDesk.make_label("P(DOOM)", "body", GDesk.C.muted, "GCaps")
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	# From band index 5 the header carries the game's own words (main_ui commit warning).
-	_warn_label = GDesk.make_label("Very close to game over", "small", GDesk.C.warn)
+	_warn_label = GDesk.make_label("Very close to game over", "small", GDesk.C.warn, "GSansMed")
 	_warn_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_warn_label.visible = false
 	head.add_child(_warn_label)
@@ -83,7 +93,7 @@ func _build() -> void:
 	_ring.custom_minimum_size = Vector2(RING_SIZE, RING_SIZE)
 	_ring.draw.connect(_draw_ring)
 	body.add_child(_ring)
-	_pct = GDesk.make_label("--", "title", GDesk.C.bone)
+	_pct = GDesk.make_label("--", "title", GDesk.C.bone, "GMonoSemi")
 	_pct.name = "Percent"
 	_pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_pct.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -96,12 +106,12 @@ func _build() -> void:
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.alignment = BoxContainer.ALIGNMENT_CENTER
 	body.add_child(right)
-	_band_name = GDesk.make_label("--", "body", GDesk.C.bone)
+	_band_name = GDesk.make_label("--", "label", GDesk.C.bone, "GMonoSemi")
 	_band_name.name = "BandName"
 	right.add_child(_band_name)
 	_rising = GDesk.make_keycap("RISING")
-	_rising.add_theme_stylebox_override("panel", _tag_box())
-	(_rising.get_meta("label") as Label).add_theme_color_override("font_color", GDesk.C.warn)
+	_rising.theme_type_variation = &"GTag"
+	GDesk.set_ink(_rising.get_meta("label") as Label, GDesk.C.warn)
 	_rising.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_rising.visible = false
 	right.add_child(_rising)
@@ -111,7 +121,7 @@ func _build() -> void:
 	_ladder.custom_minimum_size = Vector2(170, 14)
 	_ladder.draw.connect(_draw_ladder)
 	right.add_child(_ladder)
-	_band_n = GDesk.make_label("band -- of 7", "small", GDesk.C.muted)
+	_band_n = GDesk.make_label("band -- of 7", "small", GDesk.C.muted, "GMono")
 	right.add_child(_band_n)
 	lose_label = GDesk.make_label("", "small", GDesk.C.muted)
 	lose_label.name = "LoseLine"
@@ -127,13 +137,6 @@ func set_lose_line(text: String) -> void:
 	lose_label.visible = text != ""
 
 
-static func _tag_box() -> StyleBoxFlat:
-	var sb := GDesk.make_box(Color(0, 0, 0, 0), GDesk.C.warn, 1, 2)
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
-	return sb
-
-
 func update_from_state(state: Dictionary) -> void:
 	doom = float(state.get("doom", 0.0))
 	band_index = ThemeManager.get_doom_band_index(doom)
@@ -143,19 +146,40 @@ func update_from_state(state: Dictionary) -> void:
 	var bg: Color = GDesk.C.panel_solid
 	# Exactly today's readout format (main_ui numeric doom label).
 	_pct.text = "%.1f%%" % doom
-	_pct.add_theme_color_override("font_color", GDesk.lift_to(stroke, bg, 5.0))
+	GDesk.set_ink(_pct, GDesk.lift_to(stroke, bg, 5.0))
 	_band_name.text = ThemeManager.get_doom_status_label(doom)
-	_band_name.add_theme_color_override("font_color", GDesk.lift_to(stroke, bg, 5.0))
+	GDesk.set_ink(_band_name, GDesk.lift_to(stroke, bg, 5.0))
 	_rising.visible = trend == "increasing" or trend == "strongly_increasing"
 	_band_n.text = "band %d of %d" % [band_index + 1, ThemeManager.DOOM_STATUS_BANDS.size()]
 	_warn_label.visible = band_index >= 5
-	var frame := stroke
-	frame.a = 0.55
-	var sb := GDesk.make_box(GDesk.C.panel, frame, 1, 0)
-	sb.border_width_top = 3
-	add_theme_stylebox_override("panel", sb)
+	if stroke != _stroke:
+		_stroke = stroke
+		frame_override = band_frame(stroke)
+		queue_redraw()
 	_ring.queue_redraw()
 	_ladder.queue_redraw()
+
+
+static func band_frame(stroke: Color) -> StyleBoxFlat:
+	"""The card's own frame (spec 4.4): a 1 px hairline of the band stroke at 55% and the outer
+	glow, the stroke at 30% (shadow size 8). No fill: it is drawn over the grime ground."""
+	var sb := StyleBoxFlat.new()
+	sb.draw_center = false
+	sb.border_color = Color(stroke, 0.55)
+	sb.set_border_width_all(1)
+	sb.shadow_color = Color(stroke, 0.30)
+	sb.shadow_size = 8
+	return sb
+
+
+func _draw() -> void:
+	super._draw()
+	# The 3 px top edge in the band's full colour, over the hairline.
+	draw_rect(Rect2(0, 0, size.x, TOP_EDGE), _stroke)
+
+
+func band_stroke() -> Color:
+	return _stroke
 
 
 func _draw_ring() -> void:

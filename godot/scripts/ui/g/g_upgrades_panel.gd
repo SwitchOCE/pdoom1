@@ -30,6 +30,31 @@ func _build() -> void:
 	body.add_child(body_slot)
 	_empty_note = GDesk.make_label("No upgrades to show.", "small", GDesk.C.muted)
 	body_slot.add_child(_empty_note)
+	body_slot.child_entered_tree.connect(_on_slot_child_entered)
+	body_slot.child_exiting_tree.connect(_on_slot_child_exiting)
+
+
+func _on_slot_child_entered(n: Node) -> void:
+	"""Today's "Upgrades:" label, while it sits in G's sheet, takes G's text colour (and the
+	compact view's lift); its own colour comes back when LayoutController moves it home."""
+	if not (n is Label) or n == _empty_note:
+		return
+	var l := n as Label
+	if not l.has_meta("g_prev_ink"):
+		l.set_meta("g_prev_ink", l.get_theme_color(&"font_color"))
+	l.set_meta("g_lift", true)
+	GDesk.set_step(l, "body")
+	GDesk.set_ink(l, GDesk.C.muted)
+
+
+func _on_slot_child_exiting(n: Node) -> void:
+	if not (n is Label) or not n.has_meta("g_prev_ink"):
+		return
+	var l := n as Label
+	l.add_theme_color_override(&"font_color", l.get_meta("g_prev_ink"))
+	l.remove_theme_font_size_override(&"font_size")
+	for m in ["g_prev_ink", "g_ink", "g_lift", "g_size"]:
+		l.remove_meta(m)
 
 
 func refresh() -> void:
