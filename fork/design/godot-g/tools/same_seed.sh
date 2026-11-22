@@ -8,6 +8,8 @@
 #   GODOT=/path/to/Godot_v4.5.1 bash fork/design/godot-g/tools/same_seed.sh [LAYOUTS...]
 #   LAYOUTS default to "classic g". On a checkout without G (today's game), copy
 #   godot/tests/visual/g_capture.gd and g_capture.tscn in first and run with "classic" only.
+#   MODE=shots OUT=/abs/dir ... saves the fixture's screenshots (PNG + JSON) instead; the
+#   run still prints its hash.
 #
 # Profiles go under ${SAME_SEED_DIR:-$PWD/.same-seed} and are removed first. On Linux,
 # xvfb-run is used when present (a 1920x1080 virtual screen). Tested on Linux (Godot 4.5.1); not yet on Windows.
@@ -17,6 +19,9 @@ LAYOUTS=${*:-classic g}
 ROOT=$(pwd)
 BASE=${SAME_SEED_DIR:-$ROOT/.same-seed}
 SEED=g-parity-1
+MODE=${MODE:-parity}
+ARGS="--mode=$MODE"
+[ -n "${OUT:-}" ] && { mkdir -p "$OUT"; ARGS="$ARGS --out=$OUT"; }
 [ -f godot/tests/visual/g_capture.tscn ] || { echo "no godot/tests/visual/g_capture.tscn here"; exit 2; }
 if [ -f tools/check_class_cache.py ]; then
   APPDATA="$BASE/class-cache" python tools/check_class_cache.py --repair > /dev/null 2>&1 \
@@ -45,12 +50,12 @@ for L in $LAYOUTS; do
     APPDATA="$P/appdata" HOME="$P/home" XDG_DATA_HOME="$P/data" XDG_CONFIG_HOME="$P/config" \
       XDG_CACHE_HOME="$P/cache" timeout 600 xvfb-run -a -s "-screen 0 1920x1080x24" "$GODOT" \
       --path godot --windowed --resolution 1920x1080 res://tests/visual/g_capture.tscn \
-      -- --mode=parity --layout=$L > "$LOG" 2>&1
+      -- $ARGS --layout=$L > "$LOG" 2>&1
   else
     APPDATA="$P/appdata" HOME="$P/home" XDG_DATA_HOME="$P/data" XDG_CONFIG_HOME="$P/config" \
       XDG_CACHE_HOME="$P/cache" timeout 600 "$GODOT" \
       --path godot --windowed --resolution 1920x1080 res://tests/visual/g_capture.tscn \
-      -- --mode=parity --layout=$L > "$LOG" 2>&1
+      -- $ARGS --layout=$L > "$LOG" 2>&1
   fi
   echo "[$L] exit $?  $(grep '^G_CAPTURE result' "$LOG")  log $LOG"
   HASH[$L]=$(grep "^G_CAPTURE HASH" "$LOG" | awk '{print $NF}')
